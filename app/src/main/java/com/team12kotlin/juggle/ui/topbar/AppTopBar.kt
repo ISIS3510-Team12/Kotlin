@@ -1,21 +1,28 @@
 package com.team12kotlin.juggle.ui.topbar
 
+import android.content.res.Configuration
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Groups
+import com.team12kotlin.juggle.R
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
@@ -32,7 +39,6 @@ fun AppTopBar(
 
     AppTopBarContent(
         modifier = modifier,
-        title = uiState.title,
         userInitial = uiState.userInitial,
         showGroupIcon = showGroupIcon ?: uiState.showGroupIcon,
         onMenuClick = {
@@ -46,30 +52,37 @@ fun AppTopBar(
     )
 }
 
+@Composable
+private fun TopBarTitleLogo(
+    darkTheme: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Image(
+        painter = painterResource(if (darkTheme) R.drawable.logo_dark else R.drawable.logo_light),
+        contentDescription = "Juggle",
+        modifier = modifier.height(35.dp),
+        contentScale = ContentScale.Fit
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AppTopBarContent(
-    title: String,
     userInitial: String,
     showGroupIcon: Boolean,
     modifier: Modifier = Modifier,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     onMenuClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
     val colors = TopAppBarDefaults.topAppBarColors(
         titleContentColor = MaterialTheme.colorScheme.primary
     )
-    val actions: @Composable () -> Unit = {
-        IconButton(onClick = onProfileClick) {
-            TextMonogram(userInitial)
-        }
-    }
-
     if (showGroupIcon) {
         CenterAlignedTopAppBar(
             modifier = modifier,
             colors = colors,
-            title = { Text(title) },
+            title = { TopBarTitleLogo(darkTheme = darkTheme) },
             navigationIcon = {
                 IconButton(onClick = onMenuClick) {
                     Icon(
@@ -78,39 +91,71 @@ private fun AppTopBarContent(
                     )
                 }
             },
-            actions = { actions() }
+            actions = {
+                IconButton(onClick = onProfileClick) {
+                    TextMonogram(userInitial)
+                }
+            }
         )
     } else {
-        // No navigation icon: start-aligned title so text sits to the left.
+        // No navigation icon: start-aligned logo so it sits to the left.
         TopAppBar(
             modifier = modifier,
             colors = colors,
-            title = { Text(title) },
-            actions = { actions() }
+            title = { TopBarTitleLogo(darkTheme = darkTheme) },
+            actions = {
+                IconButton(onClick = onProfileClick) {
+                    TextMonogram(userInitial)
+                }
+            }
         )
     }
 }
 
 @Preview
 @Composable
-private fun AppTopBarWithIconPreview() {
-    JuggleTheme {
+private fun AppTopBarWithIconLightPreview() {
+    JuggleTheme(darkTheme = false) {
         AppTopBarContent(
-            title = "[Cool App Icon/Logo here]",
             userInitial = "A",
-            showGroupIcon = true
+            showGroupIcon = true,
+            darkTheme = false
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AppTopBarWithIconDarkPreview() {
+    JuggleTheme(darkTheme = true) {
+        AppTopBarContent(
+            userInitial = "A",
+            showGroupIcon = true,
+            darkTheme = true
         )
     }
 }
 
 @Preview
 @Composable
-private fun AppTopBarWithoutIconPreview() {
-    JuggleTheme {
+private fun AppTopBarWithoutIconLightPreview() {
+    JuggleTheme(darkTheme = false) {
         AppTopBarContent(
-            title = "[Cool App Icon/Logo here]",
             userInitial = "A",
-            showGroupIcon = false
+            showGroupIcon = false,
+            darkTheme = false
+        )
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AppTopBarWithoutIconDarkPreview() {
+    JuggleTheme(darkTheme = true) {
+        AppTopBarContent(
+            userInitial = "A",
+            showGroupIcon = false,
+            darkTheme = true
         )
     }
 }
