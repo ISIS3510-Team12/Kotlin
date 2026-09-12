@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 
 data class TasksUiState(
     val query: String = "",
+    val currentGroup: String,
     val personalTasks: List<Task> = emptyList(),
     val groupTasks: List<Task> = emptyList()
 ) {
@@ -42,7 +43,8 @@ class TasksViewModel : ViewModel() {
                 Task(id = "g1", title = "Finish Something bruh", member = "Diego"),
                 Task(id = "g2", title = "Terminar", member = "Manuela"),
                 Task(id = "g3", title = "Work", member = "Shaiel")
-            )
+            ),
+            currentGroup = "API Pending"
         )
     )
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
@@ -58,5 +60,9 @@ class TasksViewModel : ViewModel() {
 
     fun onTaskClick(task: Task) {
         // TODO: navigate to task detail for task.id
+    }
+
+    fun onEditGroupClick() {
+        // TODO: navigate to edit-group for currentGroup
     }
 }

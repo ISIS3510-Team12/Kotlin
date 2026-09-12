@@ -1,7 +1,12 @@
 package com.team12kotlin.juggle.ui.tasks
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -11,9 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Search
+import com.composables.icons.materialsymbols.outlinedfilled.Edit
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import kotlinx.coroutines.FlowPreview
 
@@ -29,7 +37,8 @@ import kotlinx.coroutines.FlowPreview
 fun TasksScreen(
     modifier: Modifier = Modifier,
     viewModel: TasksViewModel = viewModel(),
-    onTaskClick: (Task) -> Unit = {}
+    onTaskClick: (Task) -> Unit = {},
+    onEditGroupClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchBarState = rememberSearchBarState()
@@ -38,6 +47,36 @@ fun TasksScreen(
     Column(
         modifier = modifier.verticalScroll(rememberScrollState())
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    style = MaterialTheme.typography.headlineMedium, text = "Current Group"
+                )
+                Text(
+                    style = MaterialTheme.typography.headlineSmall, text = uiState.currentGroup
+                )
+            }
+            TextButton(
+                onClick = {
+                    viewModel.onEditGroupClick()
+                    onEditGroupClick()
+                },
+
+            ) {
+                Icon(
+                    imageVector = MaterialSymbols.OutlinedFilled.Edit,
+                    contentDescription = "Edit group"
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Edit group")
+            }
+        }
         SearchBar(
             state = searchBarState,
             inputField = {
