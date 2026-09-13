@@ -14,8 +14,10 @@ import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
@@ -27,9 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
+import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Keyboard_arrow_down
 import com.composables.icons.materialsymbols.outlined.Search
 import com.composables.icons.materialsymbols.outlinedfilled.Edit
@@ -54,8 +58,37 @@ fun TasksScreen(
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState(uiState.query)
 
+    Scaffold(
+        modifier = modifier,
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    viewModel.onCreateTask()
+                    onNavigateToCreateTask()
+                },
+                modifier = Modifier.padding(bottom = 104.dp),
+                icon = {
+                    Icon(
+                        MaterialSymbols.Outlined.Add,
+                        contentDescription = "Add",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Create Task",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                },
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        }
+    ) { innerPadding ->
     Column(
-        modifier = modifier.verticalScroll(rememberScrollState())
+        modifier = Modifier
+            .padding(innerPadding)
+            .verticalScroll(rememberScrollState())
     ) {
         Row(
             modifier = Modifier
@@ -150,9 +183,8 @@ fun TasksScreen(
                 }
             }
         }
-        // Clearance so the floating bottom bar never covers the button above,
-        // even when scrolled to the end.
         Spacer(modifier = Modifier.height(136.dp))
+    }
     }
 }
 

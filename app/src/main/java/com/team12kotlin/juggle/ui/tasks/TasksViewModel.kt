@@ -40,7 +40,7 @@ class TasksViewModel : ViewModel() {
                 Task(id = "p6", title = "Work")
             ),
             groupTasks = listOf(
-                Task(id = "g1", title = "Finish Something bruh", member = "Diego"),
+                Task(id = "g1", title = "Finish Something bruh", member = "Diego", isImportant = true),
                 Task(id = "g2", title = "Terminar", member = "Manuela"),
                 Task(id = "g3", title = "Work", member = "Shaiel")
             ),
@@ -68,5 +68,9 @@ class TasksViewModel : ViewModel() {
 
     fun onAllTasksClick() {
         // TODO: navigate to the all-tasks list
+    }
+
+    fun onCreateTask() {
+        // TODO: navigate to create-task
     }
 }

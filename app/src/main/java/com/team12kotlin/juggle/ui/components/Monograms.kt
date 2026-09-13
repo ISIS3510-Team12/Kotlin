@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.ui.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -10,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,13 +25,15 @@ import com.composables.icons.materialsymbols.outlined.Question_mark
 fun TextMonogram(
     text: String,
     modifier: Modifier = Modifier,
-    size: Dp = 40.dp
+    size: Dp = 40.dp,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer
 ) {
     Surface(
         modifier = modifier.size(size),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.onSecondaryContainer,
-        contentColor = MaterialTheme.colorScheme.secondaryContainer
+        shape = CircleShape,
+        color = containerColor,
+        contentColor = contentColor
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
@@ -48,13 +52,15 @@ fun IconMonogram(
     icon: ImageVector,
     contentDescription: String,
     modifier: Modifier = Modifier,
-    size: Dp = 40.dp
+    size: Dp = 40.dp,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer
 ) {
     Surface(
         modifier = modifier.size(size),
-        shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.onSecondaryContainer,
-        contentColor = MaterialTheme.colorScheme.secondaryContainer
+        shape = CircleShape,
+        color = containerColor,
+        contentColor = contentColor
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

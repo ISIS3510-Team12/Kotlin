@@ -3,9 +3,6 @@ package com.team12kotlin.juggle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -14,16 +11,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Add
 import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
@@ -90,27 +83,6 @@ fun AppRoot(
                     }
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
-            )
-            ExtendedFloatingActionButton(
-                onClick = { },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 16.dp, bottom = 128.dp),
-                icon = {
-                    Icon(
-                        MaterialSymbols.Outlined.Add,
-                        contentDescription = "Add",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                },
-                text = {
-                    Text(
-                        text = "Create Task",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
         }
     }
