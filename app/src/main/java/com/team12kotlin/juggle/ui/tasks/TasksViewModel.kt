@@ -65,4 +65,8 @@ class TasksViewModel : ViewModel() {
     fun onEditGroupClick() {
         // TODO: navigate to edit-group for currentGroup
     }
+
+    fun onAllTasksClick() {
+        // TODO: navigate to the all-tasks list
+    }
 }

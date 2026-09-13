@@ -24,6 +24,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Groups
 import com.team12kotlin.juggle.R
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,7 +34,7 @@ fun AppTopBar(
     viewModel: TopBarViewModel = viewModel(),
     showGroupIcon: Boolean? = null,
     onMenuClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: (NavigationDestination) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -47,7 +48,7 @@ fun AppTopBar(
         },
         onProfileClick = {
             viewModel.onProfileClick()
-            onProfileClick()
+            onProfileClick(NavigationDestination.Profile)
         }
     )
 }
@@ -98,7 +99,6 @@ private fun AppTopBarContent(
             }
         )
     } else {
-        // No navigation icon: start-aligned logo so it sits to the left.
         TopAppBar(
             modifier = modifier,
             colors = colors,

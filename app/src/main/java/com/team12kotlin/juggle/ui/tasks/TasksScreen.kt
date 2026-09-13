@@ -1,15 +1,18 @@
 package com.team12kotlin.juggle.ui.tasks
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
+import com.composables.icons.materialsymbols.outlined.Keyboard_arrow_down
 import com.composables.icons.materialsymbols.outlined.Search
 import com.composables.icons.materialsymbols.outlinedfilled.Edit
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -38,7 +42,13 @@ fun TasksScreen(
     modifier: Modifier = Modifier,
     viewModel: TasksViewModel = viewModel(),
     onTaskClick: (Task) -> Unit = {},
-    onEditGroupClick: () -> Unit = {}
+    onEditGroupClick: () -> Unit = {},
+    onAllTasksClick: () -> Unit = {},
+    onNavigateToCreateTask: () -> Unit = {},
+    onNavigateToEditGroup: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToGroups: () -> Unit = {},
+    onNavigateToCalendar: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchBarState = rememberSearchBarState()
@@ -95,7 +105,7 @@ fun TasksScreen(
                     }
                 )
             },
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(20.dp).fillMaxWidth()
         )
         TasksSection(
             title = "Your pending tasks",
@@ -113,6 +123,36 @@ fun TasksScreen(
                 onTaskClick(it)
             }
         )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            TextButton(
+                onClick = {
+                    viewModel.onAllTasksClick()
+                    onAllTasksClick()
+                },
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = MaterialSymbols.Outlined.Keyboard_arrow_down,
+                        contentDescription = "All tasks"
+                    )
+                    Text(text = "All tasks")
+                }
+            }
+        }
+        // Clearance so the floating bottom bar never covers the button above,
+        // even when scrolled to the end.
+        Spacer(modifier = Modifier.height(136.dp))
     }
 }
 

@@ -28,8 +28,8 @@ fun TextMonogram(
     Surface(
         modifier = modifier.size(size),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        color = MaterialTheme.colorScheme.onSecondaryContainer,
+        contentColor = MaterialTheme.colorScheme.secondaryContainer
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
@@ -53,8 +53,8 @@ fun IconMonogram(
     Surface(
         modifier = modifier.size(size),
         shape = MaterialTheme.shapes.medium,
-        color = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        color = MaterialTheme.colorScheme.onSecondaryContainer,
+        contentColor = MaterialTheme.colorScheme.secondaryContainer
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

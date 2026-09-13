@@ -18,6 +18,5 @@ class NavbarViewModel : ViewModel() {
 
     fun onDestinationSelected(destination: NavigationDestination) {
         _uiState.update { it.copy(selectedDestination = destination) }
-        // TODO: Do the navi
     }
 }

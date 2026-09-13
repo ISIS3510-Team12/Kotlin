@@ -47,6 +47,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation("androidx.navigation:navigation-compose:2.9.4")
     implementation("androidx.compose.ui:ui-text-google-fonts:1.12.0")
     implementation("com.composables:icons-material-symbols-outlined-cmp:2.2.1")
     implementation("com.composables:icons-material-symbols-rounded-cmp:2.2.1")
