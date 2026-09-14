@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.team12kotlin.juggle.ui.groups.GroupsScreen
 import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
@@ -61,7 +62,7 @@ fun AppRoot(
                     TasksScreen(modifier = Modifier.fillMaxSize())
                 }
                 composable(NavigationDestination.Groups.route) {
-                    PlaceholderScreen(label = "Groups")
+                    GroupsScreen(modifier= Modifier.fillMaxSize())
                 }
                 composable(NavigationDestination.Calendar.route) {
                     PlaceholderScreen(label = "Calendar")
