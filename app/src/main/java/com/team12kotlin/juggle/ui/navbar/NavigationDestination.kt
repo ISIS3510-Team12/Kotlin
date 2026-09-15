@@ -36,6 +36,13 @@ enum class NavigationDestination(
         icon = MaterialSymbols.OutlinedFilled.Groups,
         showInNavBar = true
     ),
+
+    CreateGroup(
+        route = "groups/create",
+        label = "Create Groups",
+        contentDescription = "Create Groups",
+        icon = MaterialSymbols.OutlinedFilled.Groups,
+    ),
     Calendar(
         route = "calendar",
         label = "Calendar",
