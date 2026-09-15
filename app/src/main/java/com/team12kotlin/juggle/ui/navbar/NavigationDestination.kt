@@ -29,6 +29,12 @@ enum class NavigationDestination(
         icon = MaterialSymbols.Outlined.Checklist,
         showInNavBar = true
     ),
+    AllTasks(
+        route = "tasks/all",
+        label = "All Tasks",
+        contentDescription = "All Tasks",
+        icon = MaterialSymbols.Outlined.Checklist,
+    ),
     Groups(
         route = "groups",
         label = "Groups",

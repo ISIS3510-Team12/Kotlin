@@ -20,6 +20,7 @@ import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Exclamation
 import com.team12kotlin.juggle.ui.components.IconMonogram
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @Composable
@@ -101,7 +102,7 @@ private fun TaskCardPreview() {
 @Composable
 private fun OwnTaskCardPreview(){
     JuggleTheme {
-        TaskCard(Task(id="preview", title = "Sample task"))
+        TaskCard(Task(id = "preview", title = "Sample task"))
     }
 }
 
