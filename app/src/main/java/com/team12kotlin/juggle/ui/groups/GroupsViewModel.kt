@@ -49,10 +49,10 @@ class GroupsViewModel : ViewModel() {
     }
 
     fun onGroupClick(group: Group) {
-        // TODO: navigate to task detail for task.id
+        // TODO: navigate to group detail for group.id
     }
 
     fun onCreateGroup() {
-        // TODO: navigate to create-task
+        // TODO: navigate to create-group
     }
 }
