@@ -1,6 +1,7 @@
 package com.team12kotlin.juggle.ui.tasks
 
 import androidx.lifecycle.ViewModel
+import com.team12kotlin.juggle.ui.dto.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,7 +41,12 @@ class TasksViewModel : ViewModel() {
                 Task(id = "p6", title = "Work")
             ),
             groupTasks = listOf(
-                Task(id = "g1", title = "Finish Something bruh", member = "Diego", isImportant = true),
+                Task(
+                    id = "g1",
+                    title = "Finish Something bruh",
+                    member = "Diego",
+                    isImportant = true
+                ),
                 Task(id = "g2", title = "Terminar", member = "Manuela"),
                 Task(id = "g3", title = "Work", member = "Shaiel")
             ),

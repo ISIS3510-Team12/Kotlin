@@ -27,7 +27,9 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.dto.Group
+import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import kotlinx.coroutines.FlowPreview
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
@@ -36,6 +38,7 @@ fun GroupsScreen (
     modifier: Modifier = Modifier,
     viewModel: GroupsViewModel = viewModel(),
     onNavigateToCreateGroup: () -> Unit = {},
+    onProfileClick: (NavigationDestination) -> Unit = {},
     onGroupClick: (Group) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -44,6 +47,9 @@ fun GroupsScreen (
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            AppTopBar(onProfileClick = onProfileClick)
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {

@@ -23,6 +23,7 @@ import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
+import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 
@@ -43,12 +44,7 @@ fun AppRoot(
     }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            AppTopBar(onProfileClick = { destination ->
-                navController.navigate(destination.route)
-            })
-        }
+        modifier = modifier.fillMaxSize()
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(
@@ -57,14 +53,36 @@ fun AppRoot(
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable(NavigationDestination.Home.route) {
-                    PlaceholderScreen(label = "Home")
+                    PlaceholderScreen(
+                        label = "Home",
+                        onProfileClick = { navController.navigate(it.route) }
+                    )
                 }
                 composable(NavigationDestination.Tasks.route) {
-                    TasksScreen(modifier = Modifier.fillMaxSize())
+                    TasksScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onProfileClick = { navController.navigate(it.route) },
+                        onAllTasksClick = {
+                            navController.navigate(NavigationDestination.AllTasks.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+                }
+                composable(NavigationDestination.AllTasks.route) {
+                    AllTasksScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
+                    )
                 }
                 composable(NavigationDestination.Groups.route) {
                     GroupsScreen(
                         modifier= Modifier.fillMaxSize(),
+                        onProfileClick = { navController.navigate(it.route) },
                         onNavigateToCreateGroup = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -91,10 +109,16 @@ fun AppRoot(
                     )
                 }
                 composable(NavigationDestination.Calendar.route) {
-                    PlaceholderScreen(label = "Calendar")
+                    PlaceholderScreen(
+                        label = "Calendar",
+                        onProfileClick = { navController.navigate(it.route) }
+                    )
                 }
                 composable (NavigationDestination.Profile.route){
-                    PlaceholderScreen(label = "Profile")
+                    PlaceholderScreen(
+                        label = "Profile",
+                        onProfileClick = { navController.navigate(it.route) }
+                    )
                 }
 
             }
@@ -116,8 +140,21 @@ fun AppRoot(
 }
 
 @Composable
-private fun PlaceholderScreen(label: String) {
-        Text(label)
+private fun PlaceholderScreen(
+    label: String,
+    modifier: Modifier = Modifier,
+    onProfileClick: (NavigationDestination) -> Unit = {}
+) {
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            AppTopBar(onProfileClick = onProfileClick)
+        }
+    ) { innerPadding ->
+        Box(modifier = Modifier.padding(innerPadding)) {
+            Text(label)
+        }
+    }
 }
 
 @Preview(showBackground = true)

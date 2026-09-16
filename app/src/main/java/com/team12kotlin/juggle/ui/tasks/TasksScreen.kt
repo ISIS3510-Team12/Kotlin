@@ -37,7 +37,10 @@ import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Keyboard_arrow_down
 import com.composables.icons.materialsymbols.outlined.Search
 import com.composables.icons.materialsymbols.outlinedfilled.Edit
+import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import kotlinx.coroutines.FlowPreview
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
@@ -48,6 +51,7 @@ fun TasksScreen(
     onTaskClick: (Task) -> Unit = {},
     onEditGroupClick: () -> Unit = {},
     onAllTasksClick: () -> Unit = {},
+    onProfileClick: (NavigationDestination) -> Unit = {},
     onNavigateToCreateTask: () -> Unit = {},
     onNavigateToEditGroup: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
@@ -60,6 +64,9 @@ fun TasksScreen(
 
     Scaffold(
         modifier = modifier,
+        topBar = {
+            AppTopBar(onProfileClick = onProfileClick)
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
