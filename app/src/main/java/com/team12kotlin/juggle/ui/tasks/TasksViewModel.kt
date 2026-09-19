@@ -1,11 +1,13 @@
 package com.team12kotlin.juggle.ui.tasks
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.ui.dto.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class TasksUiState(
     val query: String = "",
@@ -30,6 +32,17 @@ data class TasksUiState(
 
 class TasksViewModel : ViewModel() {
 
+    private val staticGroupTasks = listOf(
+        Task(
+            id = "g1",
+            title = "Finish Something bruh",
+            member = "Diego",
+            isImportant = true
+        ),
+        Task(id = "g2", title = "Terminar", member = "Manuela"),
+        Task(id = "g3", title = "Work", member = "Shaiel")
+    )
+
     private val _uiState = MutableStateFlow(
         TasksUiState(
             personalTasks = listOf(
@@ -40,20 +53,19 @@ class TasksViewModel : ViewModel() {
                 Task(id = "p5", title = "Terminar"),
                 Task(id = "p6", title = "Work")
             ),
-            groupTasks = listOf(
-                Task(
-                    id = "g1",
-                    title = "Finish Something bruh",
-                    member = "Diego",
-                    isImportant = true
-                ),
-                Task(id = "g2", title = "Terminar", member = "Manuela"),
-                Task(id = "g3", title = "Work", member = "Shaiel")
-            ),
+            groupTasks = staticGroupTasks,
             currentGroup = "API Pending"
         )
     )
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            TasksRepository.groupTasks.collect { sharedTasks ->
+                _uiState.update { it.copy(groupTasks = staticGroupTasks + sharedTasks) }
+            }
+        }
+    }
 
     fun onQueryChange(query: String) {
         _uiState.update { it.copy(query = query) }
