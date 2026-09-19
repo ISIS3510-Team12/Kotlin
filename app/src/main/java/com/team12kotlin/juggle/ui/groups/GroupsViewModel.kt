@@ -1,12 +1,14 @@
 package com.team12kotlin.juggle.ui.groups
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.tasks.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class GroupsUiState(
     val query: String = "",
@@ -28,16 +30,16 @@ data class GroupsUiState(
 
 class GroupsViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        GroupsUiState(
-            groups = listOf(
-                Group(name = "The best group", description = "we got this!"),
-                Group(name = "Academic Victims", description = "only one of us is going to survive the semester"),
-                Group(name = "Mobile divas", description = "Slaaaaaayyyyyy")
-            ),
-        )
-    )
+    private val _uiState = MutableStateFlow(GroupsUiState())
     val uiState: StateFlow<GroupsUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            GroupsRepository.groups.collect { groups ->
+                _uiState.update { it.copy(groups = groups) }
+            }
+        }
+    }
 
     fun onQueryChange(query: String) {
         _uiState.update { it.copy(query = query) }
