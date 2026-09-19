@@ -49,6 +49,20 @@ enum class NavigationDestination(
         contentDescription = "Create Groups",
         icon = MaterialSymbols.OutlinedFilled.Groups,
     ),
+
+    GroupDetail(
+        route = "groups/{groupId}",
+        label = "Group Detail",
+        contentDescription = "Group Detail",
+        icon = MaterialSymbols.OutlinedFilled.Groups,
+    ),
+
+    EditGroup(
+        route = "groups/{groupId}/edit",
+        label = "Edit Group",
+        contentDescription = "Edit Group",
+        icon = MaterialSymbols.OutlinedFilled.Groups,
+    ),
     Calendar(
         route = "calendar",
         label = "Calendar",
