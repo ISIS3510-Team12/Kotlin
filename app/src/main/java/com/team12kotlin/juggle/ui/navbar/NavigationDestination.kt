@@ -5,6 +5,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Calendar_month
 import com.composables.icons.materialsymbols.outlined.Checklist
 import com.composables.icons.materialsymbols.outlined.Home
+import com.composables.icons.materialsymbols.outlined.Person
 import com.composables.icons.materialsymbols.outlined.Preview_off
 import com.composables.icons.materialsymbols.outlinedfilled.Groups
 
@@ -15,6 +16,24 @@ enum class NavigationDestination(
     val icon: ImageVector,
     val showInNavBar: Boolean = false
 ) {
+    Onboarding(
+        route = "onboarding",
+        label = "Onboarding",
+        contentDescription = "Onboarding",
+        icon = MaterialSymbols.Outlined.Home
+    ),
+    SignUp(
+        route = "signup",
+        label = "Sign Up",
+        contentDescription = "Sign Up",
+        icon = MaterialSymbols.Outlined.Person
+    ),
+    SignIn(
+        route = "signin",
+        label = "Sign In",
+        contentDescription = "Sign In",
+        icon = MaterialSymbols.Outlined.Person
+    ),
     Home(
         route = "home",
         label = "Home",

@@ -22,6 +22,9 @@ import com.team12kotlin.juggle.ui.groups.create.CreateGroupScreen
 import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
+import com.team12kotlin.juggle.ui.auth.SignInScreen
+import com.team12kotlin.juggle.ui.auth.SignUpScreen
+import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -49,9 +52,57 @@ fun AppRoot(
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(
                 navController = navController,
-                startDestination = NavigationDestination.Tasks.route,
+                startDestination = NavigationDestination.Onboarding.route,
                 modifier = Modifier.fillMaxSize()
             ) {
+                composable(NavigationDestination.Onboarding.route) {
+                    OnboardingScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onGetStartedClick = {
+                            navController.navigate(NavigationDestination.SignUp.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+                composable(NavigationDestination.SignUp.route) {
+                    SignUpScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onSignUpClick = {
+                            navController.navigate(NavigationDestination.Tasks.route) {
+                                popUpTo(NavigationDestination.Onboarding.route) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        },
+                        onSignInClick = {
+                            navController.navigate(NavigationDestination.SignIn.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+                composable(NavigationDestination.SignIn.route) {
+                    SignInScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onSignInClick = {
+                            navController.navigate(NavigationDestination.Tasks.route) {
+                                popUpTo(NavigationDestination.Onboarding.route) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        },
+                        onSignUpClick = {
+                            navController.navigate(NavigationDestination.SignUp.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
                 composable(NavigationDestination.Home.route) {
                     PlaceholderScreen(
                         label = "Home",
@@ -122,6 +173,10 @@ fun AppRoot(
                 }
 
             }
+            if (currentRoute != NavigationDestination.Onboarding.route &&
+                currentRoute != NavigationDestination.SignUp.route &&
+                currentRoute != NavigationDestination.SignIn.route
+            ) {
             AppNavigationBar(
                 viewModel = navbarViewModel,
                 onDestinationSelected = { destination ->
@@ -135,6 +190,7 @@ fun AppRoot(
                 },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
+            }
         }
     }
 }
