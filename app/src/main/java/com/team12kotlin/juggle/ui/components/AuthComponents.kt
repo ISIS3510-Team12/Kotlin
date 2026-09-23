@@ -43,15 +43,18 @@ fun PillButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
     textStyle: TextStyle? = null
 ) {
     /**
-    * Button with a rounded corner shape.
-    **/
+     * Filled, fully-rounded ("pill") primary action button used across the auth and
+     * onboarding flows.
+     */
     Button(
         onClick = onClick,
         modifier = modifier,
+        enabled = enabled,
         shape = RoundedCornerShape(percent = 50),
         contentPadding = contentPadding
     ) {
@@ -68,11 +71,10 @@ fun PillButton(
 fun OrDivider(
     modifier: Modifier = Modifier,
     text: String = "OR"
-)
+) {
     /**
      * The divider for both Sign in and Sign up screens.
      */
- {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -93,11 +95,10 @@ fun GoogleSignInButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     text: String = "Sign in with Google"
-)
+) {
     /**
      * "Sign in with Google" button with the Google logo.
      */
-{
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
@@ -127,10 +128,13 @@ fun AuthTextField(
     label: String,
     modifier: Modifier = Modifier,
     leadingIcon: (@Composable () -> Unit)? = null,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isError: Boolean = false,
+    supportingText: String? = null
 ) {
     /**
-     * A textField for the Auth.
+     * Outlined single line text field used by the auth forms, with an optional
+     * leading icon and optional error state / supporting text.
      */
     OutlinedTextField(
         value = value,
@@ -139,6 +143,8 @@ fun AuthTextField(
         label = { Text(label) },
         leadingIcon = leadingIcon,
         singleLine = true,
+        isError = isError,
+        supportingText = supportingText?.let { { Text(it) } },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
     )
 }
@@ -151,12 +157,14 @@ fun PasswordField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
-    leadingIcon: (@Composable () -> Unit)? = null
+    leadingIcon: (@Composable () -> Unit)? = null,
+    isError: Boolean = false,
+    supportingText: String? = null
 ) {
     /**
-    * Outlined password field with a leading icon (optional) and a built in
-    * show/hide visibility toggle.
-    */
+     * Outlined password field with a leading icon (optional), an optional error
+     * state / supporting text, and a built in show/hide visibility toggle.
+     */
     var visible by remember { mutableStateOf(false) }
 
     OutlinedTextField(
@@ -166,6 +174,8 @@ fun PasswordField(
         label = { Text(label) },
         leadingIcon = leadingIcon,
         singleLine = true,
+        isError = isError,
+        supportingText = supportingText?.let { { Text(it) } },
         visualTransformation = if (visible) {
             VisualTransformation.None
         } else {

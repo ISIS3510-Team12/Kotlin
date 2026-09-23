@@ -42,7 +42,7 @@ fun OnboardingScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
     ) {
-        // Hero: centered logo on the primary background.
+        // Hero - centered logo on the primary background.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -63,7 +63,7 @@ fun OnboardingScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(fraction = 0.56f),
+                .fillMaxHeight(fraction = 0.5f),
             color = MaterialTheme.colorScheme.surfaceContainerLowest,
             shape = RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp)
         ) {
@@ -73,16 +73,7 @@ fun OnboardingScreen(
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(48.dp))
-
-                OnboardingProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    progress = 0.5f
-                )
-
-                Spacer(modifier = Modifier.height(1.dp))
-
-                // Illustration fills the flexible space between progress and text.
+                Spacer(modifier = Modifier.height(20.dp))
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -92,7 +83,7 @@ fun OnboardingScreen(
                     Image(
                         painter = painterResource(id = R.drawable.ic_multitasking),
                         contentDescription = null,
-                        modifier = Modifier.size(255.dp)
+                        modifier = Modifier.size(300.dp)
                     )
                 }
 
@@ -127,38 +118,6 @@ fun OnboardingScreen(
     }
 }
 
-
-@Composable
-private fun OnboardingProgressIndicator(
-    progress: Float,
-    modifier: Modifier = Modifier
-) {
-    val trackShape = RoundedCornerShape(percent = 50)
-    Box(
-        modifier = modifier.height(4.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .weight(progress.coerceIn(0f, 1f))
-                    .height(4.dp)
-                    .clip(trackShape)
-                    .background(MaterialTheme.colorScheme.primary)
-            )
-            Box(
-                modifier = Modifier
-                    .weight((1f - progress).coerceIn(0f, 1f))
-                    .height(4.dp)
-                    .clip(trackShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-            )
-        }
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

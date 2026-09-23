@@ -16,14 +16,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.team12kotlin.juggle.ui.components.AuthTextField
@@ -37,14 +38,21 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 @Composable
 fun SignInScreen(
     modifier: Modifier = Modifier,
+    viewModel: SignInViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onSignInClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onGoogleSignInClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.navigateToSuccess) {
+        if (uiState.navigateToSuccess) {
+            onSignInClick()
+            viewModel.onNavigatedToSuccess()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -73,24 +81,38 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             AuthTextField(
-                value = username,
-                onValueChange = { username = it },
-                label = "Username"
+                value = uiState.email,
+                onValueChange = viewModel::onEmailChange,
+                label = "Email",
+                keyboardType = KeyboardType.Email,
+                isError = uiState.emailError != null,
+                supportingText = uiState.emailError
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             PasswordField(
-                value = password,
-                onValueChange = { password = it },
-                label = "Password"
+                value = uiState.password,
+                onValueChange = viewModel::onPasswordChange,
+                label = "Password",
+                isError = uiState.passwordError != null,
+                supportingText = uiState.passwordError
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            PillButton(text = "Sign In", onClick = onSignInClick)
+            PillButton(
+                text = "Sign In",
+                onClick = viewModel::onSignInSubmit,
+                enabled = uiState.canSubmit
+            )
 
-            TextButton(onClick = onForgotPasswordClick) {
+            TextButton(
+                onClick = {
+                    viewModel.onForgotPassword()
+                    onForgotPasswordClick()
+                }
+            ) {
                 Text(
                     text = "Forgot your password?",
                     style = MaterialTheme.typography.labelLarge

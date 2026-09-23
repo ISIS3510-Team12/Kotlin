@@ -15,15 +15,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Lock
@@ -40,16 +40,21 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 @Composable
 fun SignUpScreen(
     modifier: Modifier = Modifier,
+    viewModel: SignUpViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {},
     onGoogleSignInClick: () -> Unit = {},
     onSignInClick: () -> Unit = {}
 ) {
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // Consume the one-shot navigation signal, then clear it.
+    LaunchedEffect(uiState.navigateToSuccess) {
+        if (uiState.navigateToSuccess) {
+            onSignUpClick()
+            viewModel.onNavigatedToSuccess()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -79,47 +84,61 @@ fun SignUpScreen(
 
             // Name group.
             AuthTextField(
-                value = firstName,
-                onValueChange = { firstName = it },
+                value = uiState.firstName,
+                onValueChange = viewModel::onFirstNameChange,
                 label = "First Name",
-                leadingIcon = { Icon(MaterialSymbols.Outlined.Person, contentDescription = null) }
+                leadingIcon = { Icon(MaterialSymbols.Outlined.Person, contentDescription = null) },
+                isError = uiState.firstNameError != null,
+                supportingText = uiState.firstNameError
             )
             Spacer(modifier = Modifier.height(4.dp))
             AuthTextField(
-                value = lastName,
-                onValueChange = { lastName = it },
+                value = uiState.lastName,
+                onValueChange = viewModel::onLastNameChange,
                 label = "Last Name",
-                leadingIcon = { Icon(MaterialSymbols.Outlined.Person, contentDescription = null) }
+                leadingIcon = { Icon(MaterialSymbols.Outlined.Person, contentDescription = null) },
+                isError = uiState.lastNameError != null,
+                supportingText = uiState.lastNameError
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             // Credentials group.
             AuthTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = uiState.email,
+                onValueChange = viewModel::onEmailChange,
                 label = "Email",
                 leadingIcon = { Icon(MaterialSymbols.Outlined.Mail, contentDescription = null) },
-                keyboardType = KeyboardType.Email
+                keyboardType = KeyboardType.Email,
+                isError = uiState.emailError != null,
+                supportingText = uiState.emailError
             )
             Spacer(modifier = Modifier.height(4.dp))
             PasswordField(
-                value = password,
-                onValueChange = { password = it },
+                value = uiState.password,
+                onValueChange = viewModel::onPasswordChange,
                 label = "Password",
-                leadingIcon = { Icon(MaterialSymbols.Outlined.Lock, contentDescription = null) }
+                leadingIcon = { Icon(MaterialSymbols.Outlined.Lock, contentDescription = null) },
+                isError = uiState.passwordError != null,
+                supportingText = uiState.passwordError
             )
             Spacer(modifier = Modifier.height(4.dp))
             PasswordField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
+                value = uiState.confirmPassword,
+                onValueChange = viewModel::onConfirmPasswordChange,
                 label = "Confirm Password",
-                leadingIcon = { Icon(MaterialSymbols.Outlined.Lock, contentDescription = null) }
+                leadingIcon = { Icon(MaterialSymbols.Outlined.Lock, contentDescription = null) },
+                isError = uiState.confirmPasswordError != null,
+                supportingText = uiState.confirmPasswordError
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            PillButton(text = "Sign Up", onClick = onSignUpClick)
+            PillButton(
+                text = "Sign Up",
+                onClick = viewModel::onSignUpSubmit,
+                enabled = uiState.canSubmit
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
