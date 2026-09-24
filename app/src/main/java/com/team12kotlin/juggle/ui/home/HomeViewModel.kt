@@ -14,7 +14,8 @@ data class HomeUiState(
     val tasks: List<Task> = emptyList(),
     val user: User,
     val notifications: List<Notification> = emptyList(),
-    val selectedTab: Int = 0
+    val selectedTab: Int = 0,
+    val showBottomSheet: Boolean = false
 ) {
     val upcomingTasks: List<Task>
         get() = tasks
@@ -42,11 +43,22 @@ class HomeViewModel : ViewModel() {
                 Task(id = "p5", title = "Terminar"),
                 Task(id = "p6", title = "Work")
             ),
+            notifications = listOf(
+                Notification(id=1, title="Finished task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete")
+            ),
         )
     )
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     fun onTabSelected(tab: Int) {
         _uiState.update { it.copy(selectedTab = tab) }
+    }
+
+    fun onQuickActionPress() {
+        _uiState.update { it.copy(showBottomSheet = true) }
+    }
+
+    fun onDismissalBottomSheet() {
+        _uiState.update { it.copy(showBottomSheet = false) }
     }
 }

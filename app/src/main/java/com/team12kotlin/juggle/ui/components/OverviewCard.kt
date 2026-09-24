@@ -45,7 +45,7 @@ fun OverviewCard(
         ) {
             Column(
                 modifier = modifier
-                    .widthIn(min = 150.dp)
+                    .widthIn(min = 170.dp)
                     .padding(start = 10.dp, top = 10.dp, end = 10.dp, bottom = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.Start,

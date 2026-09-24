@@ -55,6 +55,7 @@ dependencies {
     implementation("com.composables:icons-material-symbols-outlined-filled-cmp:2.2.1")
     implementation("com.composables:icons-material-symbols-rounded-filled-cmp:2.2.1")
     implementation("com.composables:icons-material-symbols-sharp-filled-cmp:2.2.1")
+    implementation(libs.androidx.material3)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

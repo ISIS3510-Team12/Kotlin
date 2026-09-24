@@ -25,6 +25,7 @@ import com.team12kotlin.juggle.ui.auth.SignInScreen
 import com.team12kotlin.juggle.ui.auth.SignUpScreen
 import com.team12kotlin.juggle.ui.groups.GroupsScreen
 import com.team12kotlin.juggle.ui.groups.create.CreateGroupScreen
+import com.team12kotlin.juggle.ui.home.HomeScreen
 import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
@@ -112,9 +113,9 @@ fun AppRoot(
                     )
                 }
                 composable(NavigationDestination.Home.route) {
-                    PlaceholderScreen(
-                        label = "Home",
-                        onProfileClick = { navController.navigate(it.route) }
+                    HomeScreen(
+                        modifier = Modifier,
+                        onProfileClick = { navController.navigate(it.route) },
                     )
                 }
                 composable(NavigationDestination.Tasks.route) {
