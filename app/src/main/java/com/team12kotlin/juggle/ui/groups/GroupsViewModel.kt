@@ -2,7 +2,6 @@ package com.team12kotlin.juggle.ui.groups
 
 import androidx.lifecycle.ViewModel
 import com.team12kotlin.juggle.ui.dto.Group
-import com.team12kotlin.juggle.ui.tasks.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
