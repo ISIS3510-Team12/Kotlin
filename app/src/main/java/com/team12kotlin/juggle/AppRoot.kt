@@ -1,8 +1,12 @@
 package com.team12kotlin.juggle
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,13 +21,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.team12kotlin.juggle.ui.auth.SignInScreen
+import com.team12kotlin.juggle.ui.auth.SignUpScreen
 import com.team12kotlin.juggle.ui.groups.GroupsScreen
 import com.team12kotlin.juggle.ui.groups.create.CreateGroupScreen
 import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
-import com.team12kotlin.juggle.ui.auth.SignInScreen
-import com.team12kotlin.juggle.ui.auth.SignUpScreen
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
@@ -47,7 +51,11 @@ fun AppRoot(
     }
 
     Scaffold(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        // Avoid the double top-bar in some devices
+        contentWindowInsets = WindowInsets.safeDrawing.only(
+            WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+        )
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(
@@ -173,6 +181,7 @@ fun AppRoot(
                 }
 
             }
+            // Avoid the nav bar from appearing on the onboarding, sign in and sign up.
             if (currentRoute != NavigationDestination.Onboarding.route &&
                 currentRoute != NavigationDestination.SignUp.route &&
                 currentRoute != NavigationDestination.SignIn.route
