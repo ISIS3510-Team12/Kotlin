@@ -29,7 +29,7 @@ fun AppNavigationBar(
 
     NavigationBar(
         modifier = modifier
-            .padding(horizontal = 16.dp, vertical = 16.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)
             .clip(RoundedCornerShape(80.dp)),
         windowInsets = WindowInsets(0.dp),
     ) {
