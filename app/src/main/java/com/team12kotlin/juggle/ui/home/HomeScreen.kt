@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -21,9 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,9 +31,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Circle_notifications
+import com.composables.icons.materialsymbols.roundedfilled.Groups
 import com.composables.icons.materialsymbols.roundedfilled.List_alt
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.components.OverviewCard
+import com.team12kotlin.juggle.ui.components.QuickActionItem
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
@@ -45,7 +43,6 @@ import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
@@ -54,11 +51,12 @@ fun HomeScreen (
     viewModel: HomeViewModel = viewModel(),
     onProfileClick: (NavigationDestination) -> Unit = {},
     onTaskClick: (Task) -> Unit = {},
-    onNotificationClick: (Notification) -> Unit = {}
+    onNotificationClick: (Notification) -> Unit = {},
+    onCreateTaskClick: (NavigationDestination) -> Unit = {},
+    onCreateGroupClick: (NavigationDestination) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState()
-    val scope = rememberCoroutineScope()
 
     val startCorner = 20.dp
     val endCorner = 20.dp
@@ -96,6 +94,7 @@ fun HomeScreen (
                         )
                         Row(
                             modifier = modifier
+                                .fillMaxWidth()
                                 .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
@@ -234,15 +233,45 @@ fun HomeScreen (
                         },
                         sheetState = sheetState
                     ) {
-                        // Sheet content
-                        Button(onClick = {
-                            scope.launch { sheetState.hide() }.invokeOnCompletion {
-                                if (!sheetState.isVisible) {
-                                    viewModel.onDismissalBottomSheet()
-                                }
+                        Column(
+                            modifier = modifier
+                                .padding(start = 30.dp, top = 10.dp, end = 30.dp, bottom = 30.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.Top),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Row(
+                                modifier = modifier
+                                    .fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    10.dp,
+                                    Alignment.CenterHorizontally
+                                ),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text="Quick Actions",
+                                    style=MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
-                        }) {
-                            Text("Hide bottom sheet")
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                QuickActionItem(
+                                    title = "Add task",
+                                    description = "Create a new task instantly",
+                                    icon = MaterialSymbols.RoundedFilled.List_alt,
+                                    onClick = onCreateTaskClick
+                                )
+                                QuickActionItem(
+                                    title = "Create new group",
+                                    description = "Create a group workspace",
+                                    icon = MaterialSymbols.RoundedFilled.Groups,
+                                    onClick = onCreateGroupClick
+                                )
+                            }
+
                         }
                     }
                 }

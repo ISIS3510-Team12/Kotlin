@@ -116,6 +116,16 @@ fun AppRoot(
                     HomeScreen(
                         modifier = Modifier,
                         onProfileClick = { navController.navigate(it.route) },
+                        onCreateGroupClick = {
+                            navController.navigate(NavigationDestination.CreateGroup.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                        // TODO: añadir las otras acciones para create task y ver el detail de una task
                     )
                 }
                 composable(NavigationDestination.Tasks.route) {
