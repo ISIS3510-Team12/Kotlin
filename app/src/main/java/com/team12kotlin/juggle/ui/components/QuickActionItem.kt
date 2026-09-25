@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_right_alt
 import com.composables.icons.materialsymbols.roundedfilled.Groups
-import com.team12kotlin.juggle.ui.home.QuickActionItem
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
