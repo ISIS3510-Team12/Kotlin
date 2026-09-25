@@ -31,6 +31,7 @@ import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
+import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 
@@ -129,6 +130,11 @@ fun AppRoot(
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                        },
+                        onNavigateToCreateTask = {
+                            navController.navigate(NavigationDestination.CreateTask.route) {
+                                launchSingleTop = true
+                            }
                         }
                     )
                 }
@@ -138,9 +144,16 @@ fun AppRoot(
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+                composable(NavigationDestination.CreateTask.route) {
+                    CreateTaskScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onTaskCreated = { navController.popBackStack() }
+                    )
+                }
                 composable(NavigationDestination.Groups.route) {
                     GroupsScreen(
-                        modifier= Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         onProfileClick = { navController.navigate(it.route) },
                         onNavigateToCreateGroup = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
@@ -173,7 +186,7 @@ fun AppRoot(
                         onProfileClick = { navController.navigate(it.route) }
                     )
                 }
-                composable (NavigationDestination.Profile.route){
+                composable(NavigationDestination.Profile.route) {
                     PlaceholderScreen(
                         label = "Profile",
                         onProfileClick = { navController.navigate(it.route) }
@@ -186,19 +199,19 @@ fun AppRoot(
                 currentRoute != NavigationDestination.SignUp.route &&
                 currentRoute != NavigationDestination.SignIn.route
             ) {
-            AppNavigationBar(
-                viewModel = navbarViewModel,
-                onDestinationSelected = { destination ->
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+                AppNavigationBar(
+                    viewModel = navbarViewModel,
+                    onDestinationSelected = { destination ->
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }
