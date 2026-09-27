@@ -41,7 +41,7 @@ fun QuickActionItem(
         ) {
             Row(
                 modifier = modifier
-                    .padding(start = 16.dp, top = 5.dp, end = 16.dp, bottom = 0.dp),
+                    .padding(start = 5.dp, top = 5.dp, end = 5.dp, bottom = 0.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -50,6 +50,8 @@ fun QuickActionItem(
                     contentDescription = title
                 )
                 Column(
+                    modifier = modifier
+                        .padding(start = 0.dp, top = 0.dp, end = 48.dp, bottom = 0.dp),
                     verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
                     horizontalAlignment = Alignment.Start,
                 ) {

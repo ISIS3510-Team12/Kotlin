@@ -160,7 +160,7 @@ fun HomeScreen (
                     ) {
                         Tab(
                             selected = selectedTab == 0,
-                            onClick = { viewModel.onTabSelected(1) },
+                            onClick = { viewModel.onTabSelected(0) },
                             text = {
                                 Text(
                                     text = "Upcoming tasks",
@@ -172,7 +172,7 @@ fun HomeScreen (
                         )
                         Tab(
                             selected = selectedTab == 1,
-                            onClick = { viewModel.onTabSelected(0) },
+                            onClick = { viewModel.onTabSelected(1) },
                             text = {
                                 Text(
                                     text = "Recent Activity",
