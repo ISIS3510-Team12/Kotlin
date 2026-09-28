@@ -7,9 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-/**
- * A group shown in the "Your Groups" navigation drawer.
- */
 data class DrawerItem(
     val name: String,
     val pendingTasks: Int = 0,
@@ -42,24 +39,8 @@ class TasksViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         TasksUiState(
-            personalTasks = listOf(
-                Task(id = "p1", title = "Finish Something bruh", isImportant = true),
-                Task(id = "p2", title = "Terminar"),
-                Task(id = "p3", title = "Work"),
-                Task(id = "p4", title = "Finish Something bruh"),
-                Task(id = "p5", title = "Terminar"),
-                Task(id = "p6", title = "Work")
-            ),
-            groupTasks = listOf(
-                Task(
-                    id = "g1",
-                    title = "Finish Something bruh",
-                    member = "Diego",
-                    isImportant = true
-                ),
-                Task(id = "g2", title = "Terminar", member = "Manuela"),
-                Task(id = "g3", title = "Work", member = "Shaiel")
-            ),
+            personalTasks = TaskRepository.personalTasks,
+            groupTasks = TaskRepository.groupTasks,
             currentGroup = "API Pending",
             groups = listOf(
                 DrawerItem(name = "App Devs", pendingTasks = 67, selected = true),

@@ -60,6 +60,12 @@ enum class NavigationDestination(
         contentDescription = "Create Task",
         icon = MaterialSymbols.Outlined.Checklist,
     ),
+    ViewTask(
+        route = "tasks/view",
+        label = "View Task",
+        contentDescription = "View Task",
+        icon = MaterialSymbols.Outlined.Checklist,
+    ),
     Groups(
         route = "groups",
         label = "Groups",

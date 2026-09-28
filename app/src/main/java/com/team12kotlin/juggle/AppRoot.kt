@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.team12kotlin.juggle.ui.auth.SignInScreen
 import com.team12kotlin.juggle.ui.auth.SignUpScreen
 import com.team12kotlin.juggle.ui.groups.GroupsScreen
@@ -33,6 +35,7 @@ import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
+import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 
@@ -133,6 +136,11 @@ fun AppRoot(
                     TasksScreen(
                         modifier = Modifier.fillMaxSize(),
                         onProfileClick = { navController.navigate(it.route) },
+                        onTaskClick = { task ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
+                                launchSingleTop = true
+                            }
+                        },
                         onAllTasksClick = {
                             navController.navigate(NavigationDestination.AllTasks.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -169,6 +177,15 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onTaskCreated = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = "${NavigationDestination.ViewTask.route}/{taskId}",
+                    arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                ) {
+                    ViewTaskScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
                 composable(NavigationDestination.Groups.route) {
