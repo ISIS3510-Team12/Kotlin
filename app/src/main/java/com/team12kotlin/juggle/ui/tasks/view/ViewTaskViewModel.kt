@@ -49,7 +49,7 @@ class ViewTaskViewModel(
         _uiState.update { it.copy(isFabMenuExpanded = false) }
         when (action) {
             TaskAction.MARK_AS_COMPLETE -> onMarkAsComplete()
-            TaskAction.EDIT_TASK -> onEditTask()
+            TaskAction.EDIT_TASK -> Unit
             TaskAction.DELETE_TASK -> onDeleteTask()
             TaskAction.ASK_FOR_HELP -> onAskForHelp()
             TaskAction.MARK_AS_STARTED -> onMarkAsStarted()
@@ -64,24 +64,12 @@ class ViewTaskViewModel(
         }
     }
 
-    fun onEditSchedule() {
-        // TODO: open the schedule editor when the data layer exists.
-    }
-
-    fun onEditMembers() {
-        // TODO: open the assigned-members editor when the data layer exists.
-    }
-
     fun onRelatedTaskClick(task: Task) {
         // TODO: navigate to the related task's detail.
     }
 
     private fun onMarkAsComplete() {
         // TODO: persist the completed status when the data layer exists.
-    }
-
-    private fun onEditTask() {
-        // TODO: navigate to the edit-task screen when it exists.
     }
 
     private fun onDeleteTask() {

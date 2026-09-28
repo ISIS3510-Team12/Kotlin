@@ -35,6 +35,7 @@ import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
+import com.team12kotlin.juggle.ui.tasks.edit.EditTaskScreen
 import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
@@ -185,7 +186,23 @@ fun AppRoot(
                 ) {
                     ViewTaskScreen(
                         modifier = Modifier.fillMaxSize(),
-                        onBackClick = { navController.popBackStack() }
+                        onBackClick = { navController.popBackStack() },
+                        onEditTask = { taskId ->
+                            navController.navigate("${NavigationDestination.EditTask.route}/$taskId") {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+                composable(
+                    route = "${NavigationDestination.EditTask.route}/{taskId}",
+                    arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                ) {
+                    EditTaskScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onTaskEdited = { navController.popBackStack() },
+                        onCancel = { navController.popBackStack() }
                     )
                 }
                 composable(NavigationDestination.Groups.route) {

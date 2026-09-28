@@ -67,7 +67,8 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 fun ViewTaskScreen(
     modifier: Modifier = Modifier,
     viewModel: ViewTaskViewModel = viewModel(),
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onEditTask: (taskId: String) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -136,7 +137,7 @@ fun ViewTaskScreen(
                     deadline = task.deadline ?: "No deadline set",
                     reminder = task.reminder,
                     onReminderToggle = viewModel::onReminderToggle,
-                    onEditClick = viewModel::onEditSchedule
+                    onEditClick = { onEditTask(task.id) }
                 )
 
                 // Assigned members
@@ -154,7 +155,7 @@ fun ViewTaskScreen(
                         modifier = Modifier.padding(start = 10.dp)
                     )
                     TextButton(
-                        onClick = viewModel::onEditMembers,
+                        onClick = { onEditTask(task.id) },
                         contentPadding = PaddingValues(horizontal = 12.dp)
                     ) {
                         Text("EDIT")
@@ -206,7 +207,14 @@ fun ViewTaskScreen(
         TaskActionsFabMenu(
             expanded = uiState.isFabMenuExpanded,
             onToggle = viewModel::onFabMenuToggle,
-            onAction = viewModel::onTaskAction,
+            onAction = { action ->
+                if (action == TaskAction.EDIT_TASK) {
+                    viewModel.onFabMenuDismiss()
+                    onEditTask(uiState.task.id)
+                } else {
+                    viewModel.onTaskAction(action)
+                }
+            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 104.dp)
