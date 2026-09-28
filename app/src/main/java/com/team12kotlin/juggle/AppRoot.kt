@@ -146,6 +146,15 @@ fun AppRoot(
                             navController.navigate(NavigationDestination.CreateTask.route) {
                                 launchSingleTop = true
                             }
+                        },
+                        onNavigateToCreateGroup = {
+                            navController.navigate(NavigationDestination.CreateGroup.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     )
                 }

@@ -13,18 +13,23 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,7 +48,7 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import kotlinx.coroutines.FlowPreview
 
-@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TasksScreen(
     modifier: Modifier = Modifier,
@@ -53,6 +58,7 @@ fun TasksScreen(
     onAllTasksClick: () -> Unit = {},
     onProfileClick: (NavigationDestination) -> Unit = {},
     onNavigateToCreateTask: () -> Unit = {},
+    onNavigateToCreateGroup: () -> Unit = {},
     onNavigateToEditGroup: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
     onNavigateToGroups: () -> Unit = {},
@@ -61,137 +67,161 @@ fun TasksScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState(uiState.query)
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            AppTopBar(onProfileClick = onProfileClick)
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    viewModel.onCreateTask()
-                    onNavigateToCreateTask()
+    // The "Your Groups" drawer lives in the Tasks view and opens from the top bar menu button.
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            GroupsDrawer(
+                groups = uiState.groups,
+                onGroupClick = { group ->
+                    viewModel.onGroupSelected(group)
+                    scope.launch { drawerState.close() }
                 },
-                modifier = Modifier.padding(bottom = 104.dp),
-                icon = {
-                    Icon(
-                        MaterialSymbols.Outlined.Add,
-                        contentDescription = "Add",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                },
-                text = {
-                    Text(
-                        text = "Create Task",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                onNewGroupClick = {
+                    scope.launch { drawerState.close() }
+                    onNavigateToCreateGroup()
+                }
             )
         }
-    ) { innerPadding ->
-    Column(
-        modifier = Modifier
-            .padding(innerPadding)
-            .verticalScroll(rememberScrollState())
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    style = MaterialTheme.typography.headlineMedium, text = "Current Group"
-                )
-                Text(
-                    style = MaterialTheme.typography.headlineSmall, text = uiState.currentGroup
-                )
-            }
-            TextButton(
-                onClick = {
-                    viewModel.onEditGroupClick()
-                    onEditGroupClick()
-                },
-
-            ) {
-                Icon(
-                    imageVector = MaterialSymbols.OutlinedFilled.Edit,
-                    contentDescription = "Edit group"
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Edit group")
-            }
-        }
-        SearchBar(
-            state = searchBarState,
-            inputField = {
-                SearchBarDefaults.InputField(
-                    searchBarState = searchBarState,
-                    textFieldState = textFieldState,
-                    onSearch = { viewModel.onSearch(it) },
-                    placeholder = {
-                        Text("Search for a task...")
-                    },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Search,
-                            contentDescription = "Search"
-                        )
-                    }
+        Scaffold(
+            modifier = modifier,
+            topBar = {
+                AppTopBar(
+                    showGroupIcon = true,
+                    onMenuClick = { scope.launch { drawerState.open() } },
+                    onProfileClick = onProfileClick
                 )
             },
-            modifier = Modifier.padding(20.dp).fillMaxWidth()
-        )
-        TasksSection(
-            title = "Your pending tasks",
-            tasks = uiState.filteredPersonalTasks,
-            onTaskClick = {
-                viewModel.onTaskClick(it)
-                onTaskClick(it)
+            floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        viewModel.onCreateTask()
+                        onNavigateToCreateTask()
+                    },
+                    modifier = Modifier.padding(bottom = 104.dp),
+                    icon = {
+                        Icon(
+                            MaterialSymbols.Outlined.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "Create Task",
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
             }
-        )
-        TasksSection(
-            title = "Pending group tasks",
-            tasks = uiState.filteredGroupTasks,
-            onTaskClick = {
-                viewModel.onTaskClick(it)
-                onTaskClick(it)
-            }
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            TextButton(
-                onClick = {
-                    viewModel.onAllTasksClick()
-                    onAllTasksClick()
-                },
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ),
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Outlined.Keyboard_arrow_down,
-                        contentDescription = "All tasks"
-                    )
-                    Text(text = "All tasks")
+                    Column {
+                        Text(
+                            style = MaterialTheme.typography.headlineMedium, text = "Current Group"
+                        )
+                        Text(
+                            style = MaterialTheme.typography.headlineSmall, text = uiState.currentGroup
+                        )
+                    }
+                    TextButton(
+                        onClick = {
+                            viewModel.onEditGroupClick()
+                            onEditGroupClick()
+                        },
+
+                    ) {
+                        Icon(
+                            imageVector = MaterialSymbols.OutlinedFilled.Edit,
+                            contentDescription = "Edit group"
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Edit group")
+                    }
                 }
+                SearchBar(
+                    state = searchBarState,
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            searchBarState = searchBarState,
+                            textFieldState = textFieldState,
+                            onSearch = { viewModel.onSearch(it) },
+                            placeholder = {
+                                Text("Search for a task...")
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = MaterialSymbols.Outlined.Search,
+                                    contentDescription = "Search"
+                                )
+                            }
+                        )
+                    },
+                    modifier = Modifier.padding(20.dp).fillMaxWidth()
+                )
+                TasksSection(
+                    title = "Your pending tasks",
+                    tasks = uiState.filteredPersonalTasks,
+                    onTaskClick = {
+                        viewModel.onTaskClick(it)
+                        onTaskClick(it)
+                    }
+                )
+                TasksSection(
+                    title = "Pending group tasks",
+                    tasks = uiState.filteredGroupTasks,
+                    onTaskClick = {
+                        viewModel.onTaskClick(it)
+                        onTaskClick(it)
+                    }
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TextButton(
+                        onClick = {
+                            viewModel.onAllTasksClick()
+                            onAllTasksClick()
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Keyboard_arrow_down,
+                                contentDescription = "All tasks"
+                            )
+                            Text(text = "All tasks")
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(136.dp))
             }
         }
-        Spacer(modifier = Modifier.height(136.dp))
-    }
     }
 }
 
