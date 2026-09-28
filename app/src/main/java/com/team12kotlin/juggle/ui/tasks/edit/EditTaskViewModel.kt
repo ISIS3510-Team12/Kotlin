@@ -2,6 +2,7 @@ package com.team12kotlin.juggle.ui.tasks.edit
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.tasks.TaskRepository
 import com.team12kotlin.juggle.ui.tasks.create.AssignableMember
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,31 +37,36 @@ class EditTaskViewModel(
 
     private val taskId: String? = savedStateHandle["taskId"]
 
-    private val _uiState = MutableStateFlow(buildInitialState())
-    val uiState: StateFlow<EditTaskUiState> = _uiState.asStateFlow()
-
-    private fun buildInitialState(): EditTaskUiState {
-        val task = taskId?.let { TaskRepository.findById(it) }
-        val allTaskTitles = (TaskRepository.personalTasks + TaskRepository.groupTasks)
+    private val taskOptions: List<String> =
+        (TaskRepository.personalTasks + TaskRepository.groupTasks)
             .map { it.title }
             .distinct()
 
-        return EditTaskUiState(
-            selectedTask = task?.title,
-            taskType = task?.taskType?.takeIf { it.isNotBlank() },
-            deadline = task?.deadline.orEmpty(),
-            isPriority = task?.isPriority ?: false,
-            needsHelp = task?.needsHelp ?: false,
-            notes = task?.description.orEmpty(),
-            assignedMembers = task?.members?.map { AssignableMember(name = it.firstName, selected = true) }
-                ?: emptyList(),
-            taskOptions = allTaskTitles,
-            taskTypeOptions = listOf("Coding", "Design", "Research", "Writing", "Meeting")
-        )
-    }
+    private val taskTypeOptions: List<String> =
+        listOf("Coding", "Design", "Research", "Writing", "Meeting")
 
-    fun onSelectedTaskChange(task: String) {
-        _uiState.update { it.copy(selectedTask = task) }
+    private val _uiState = MutableStateFlow(
+        stateForTask(taskId?.let { TaskRepository.findById(it) })
+    )
+    val uiState: StateFlow<EditTaskUiState> = _uiState.asStateFlow()
+
+    private fun stateForTask(task: Task?): EditTaskUiState = EditTaskUiState(
+        selectedTask = task?.title,
+        taskType = task?.taskType?.takeIf { it.isNotBlank() },
+        deadline = task?.deadline.orEmpty(),
+        isPriority = task?.isPriority ?: false,
+        needsHelp = task?.needsHelp ?: false,
+        notes = task?.description.orEmpty(),
+        assignedMembers = task?.members
+            ?.map { AssignableMember(name = it.firstName, selected = true) }
+            ?: emptyList(),
+        taskOptions = taskOptions,
+        taskTypeOptions = taskTypeOptions
+    )
+
+    fun onSelectedTaskChange(title: String) {
+        // It refreshes the whole state of the screen by finding the task by title and passing it to stateForTask
+        _uiState.value = stateForTask(TaskRepository.findByTitle(title))
     }
 
     fun onTaskTypeSelected(taskType: String) {

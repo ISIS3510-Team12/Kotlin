@@ -24,7 +24,10 @@ object TaskRepository {
             deadline = "September 5, 2026",
             reminder = Reminder(label = "1 day before", enabled = true),
             members = listOf(diego, manuela, shaiel),
-            relatedTasks = listOf(Task(id = "p4", title = "Finish Something bruh"),Task(id = "p4", title = "Finish Something bruh"),)
+            relatedTasks = listOf(
+                Task(id = "p4", title = "Finish Something bruh"),
+                Task(id = "p4", title = "Finish Something bruh"),
+            )
         ),
         Task(
             id = "p2",
@@ -87,4 +90,7 @@ object TaskRepository {
         (personalTasks + groupTasks).associateBy { it.id }
 
     fun findById(id: String): Task? = tasksById[id]
+
+    fun findByTitle(title: String): Task? =
+        (personalTasks + groupTasks).firstOrNull { it.title == title }
 }
