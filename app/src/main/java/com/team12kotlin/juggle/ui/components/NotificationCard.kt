@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add_circle
 import com.composables.icons.materialsymbols.outlined.Check_box
+import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlinedfilled.Edit
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -27,6 +30,8 @@ fun NotificationCard(
     notification: Notification,
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
+    showDismiss: Boolean = false,
+    onDismiss: () -> Unit = {},
     createIcon: ImageVector = MaterialSymbols.Outlined.Add_circle,
     editIcon: ImageVector = MaterialSymbols.OutlinedFilled.Edit,
     completeIcon: ImageVector = MaterialSymbols.Outlined.Check_box,
@@ -34,7 +39,7 @@ fun NotificationCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 10.dp),
         onClick = onClick,
     ) {
         Row(
@@ -42,7 +47,7 @@ fun NotificationCard(
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             if (notification.type == "create") {
                 IconMonogram(
@@ -67,7 +72,7 @@ fun NotificationCard(
                 )
             }
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = modifier,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
@@ -86,6 +91,16 @@ fun NotificationCard(
                     color = MaterialTheme.colorScheme.primary
                 )
             }
+            if (showDismiss) {
+                IconButton(
+                    onClick = onDismiss,
+                ) {
+                    Icon(
+                        imageVector = MaterialSymbols.Outlined.Delete,
+                        contentDescription = "Dismiss"
+                    )
+                }
+            }
         }
     }
 }
@@ -94,7 +109,7 @@ fun NotificationCard(
 @Composable
 private fun CompletedNotificationCardPreview() {
     JuggleTheme {
-        NotificationCard(Notification(id=1, title="Finished task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete"))
+        NotificationCard(Notification(id=1, title="Finished task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete"), showDismiss = true)
     }
 }
 
