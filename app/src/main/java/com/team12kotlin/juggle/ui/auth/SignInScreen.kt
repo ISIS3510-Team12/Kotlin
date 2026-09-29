@@ -107,6 +107,15 @@ fun SignInScreen(
                 enabled = uiState.canSubmit
             )
 
+            uiState.authError?.let { message ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             TextButton(
                 onClick = {
                     viewModel.onForgotPassword()

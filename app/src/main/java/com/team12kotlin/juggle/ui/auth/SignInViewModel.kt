@@ -2,7 +2,8 @@ package com.team12kotlin.juggle.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +15,7 @@ data class SignInUiState(
     val password: String = "",
     val emailError: String? = null,
     val passwordError: String? = null,
+    val authError: String? = null,
     val isSubmitting: Boolean = false,
     val navigateToSuccess: Boolean = false
 ) {
@@ -22,17 +24,19 @@ data class SignInUiState(
         get() = !isSubmitting
 }
 
-class SignInViewModel : ViewModel() {
+class SignInViewModel(
+    private val authRepository: AuthRepository = Dependencies.authRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignInUiState())
     val uiState: StateFlow<SignInUiState> = _uiState.asStateFlow()
 
     fun onEmailChange(email: String) {
-        _uiState.update { it.copy(email = email, emailError = null) }
+        _uiState.update { it.copy(email = email, emailError = null, authError = null) }
     }
 
     fun onPasswordChange(password: String) {
-        _uiState.update { it.copy(password = password, passwordError = null) }
+        _uiState.update { it.copy(password = password, passwordError = null, authError = null) }
     }
 
     fun onSignInSubmit() {
@@ -50,14 +54,23 @@ class SignInViewModel : ViewModel() {
         }
 
         _uiState.update {
-            it.copy(emailError = null, passwordError = null, isSubmitting = true)
+            it.copy(
+                emailError = null,
+                passwordError = null,
+                authError = null,
+                isSubmitting = true
+            )
         }
 
         viewModelScope.launch {
-            // TODO: replace with AuthRepository.signIn(username, password) when the
-            //  data layer exists :p
-            delay(600)
-            _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
+            try {
+                authRepository.signIn(state.email, state.password)
+                _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
+            } catch (error: Throwable) {
+                _uiState.update {
+                    it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
+                }
+            }
         }
     }
 

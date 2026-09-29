@@ -5,6 +5,7 @@ import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.dto.User
+import com.team12kotlin.juggle.ui.dto.UserCreateRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -50,4 +51,7 @@ interface JuggleApi {
 
     @GET("/users/current_user")
     suspend fun getCurrentUser(): User
+
+    @POST("/users/create_user")
+    suspend fun createUser(@Body body: UserCreateRequest): User
 }

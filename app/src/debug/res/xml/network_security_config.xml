@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Permit cleartext so the app can reach the local backend
+         (http://10.0.2.2:8000) and the Firebase Auth emulator
+         (http://10.0.2.2:9099). Release builds keep cleartext disabled. -->
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>
