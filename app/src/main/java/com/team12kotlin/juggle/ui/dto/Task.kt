@@ -20,6 +20,13 @@ enum class TaskStatus {
             NOT_STARTED -> "Not started"
             IN_PROGRESS -> "In progress"
         }
+
+    val serializedName: String
+        get() = when (this) {
+            COMPLETED -> "completed"
+            NOT_STARTED -> "not started"
+            IN_PROGRESS -> "in_progress"
+        }
 }
 
 @Serializable
