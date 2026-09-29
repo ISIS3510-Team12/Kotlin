@@ -1,0 +1,100 @@
+{
+  "project_info": {
+    "project_number": "932315820701",
+    "project_id": "juggle-65ff0",
+    "storage_bucket": "juggle-65ff0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932315820701:android:4319f841171227095dda74",
+        "android_client_info": {
+          "package_name": "com.example.team12_flutter_juggle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "932315820701-4nigbhm9adlvicavu7nn1cjm99ggm34t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.team12_flutter_juggle",
+            "certificate_hash": "477692ac3ef35e3609b3f15ef95f3305850c4f51"
+          }
+        },
+        {
+          "client_id": "932315820701-gv2l1rjsu682lebl4jh1ervfsl6nvmtc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.team12_flutter_juggle",
+            "certificate_hash": "5723c320cdf1713ef52c6c867a7159921e13697c"
+          }
+        },
+        {
+          "client_id": "932315820701-ml8ogq2mb1gdgaq9p4i3g1q60i6b7iuc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.team12_flutter_juggle",
+            "certificate_hash": "c78a42f83051e2fd7158306d6fba31f020f37f07"
+          }
+        },
+        {
+          "client_id": "932315820701-nv37bmfs3gmfq5eanb0uaj0cg6me0osa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.team12_flutter_juggle",
+            "certificate_hash": "403d9864e1cd79aad14a30cdb47cd4e9efb6ceeb"
+          }
+        },
+        {
+          "client_id": "932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAl_gMciG2_ipoXhUlKIH_4nQv1RQXCUpU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932315820701:android:eaf57c426ada28705dda74",
+        "android_client_info": {
+          "package_name": "com.team12kotlin.juggle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAl_gMciG2_ipoXhUlKIH_4nQv1RQXCUpU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
