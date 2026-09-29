@@ -33,6 +33,7 @@ import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
+import com.team12kotlin.juggle.ui.profile.notifications.NotificationsScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
@@ -245,6 +246,21 @@ fun AppRoot(
                     PlaceholderScreen(
                         label = "Profile",
                         onProfileClick = { navController.navigate(it.route) }
+                    )
+                }
+
+                composable(NavigationDestination.Notifications.route) {
+                    NotificationsScreen(
+                        modifier = modifier,
+                        goBack = {
+                            navController.navigate(NavigationDestination.Profile.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     )
                 }
 

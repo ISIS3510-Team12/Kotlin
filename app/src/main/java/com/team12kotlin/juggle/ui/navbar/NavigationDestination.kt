@@ -5,6 +5,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Calendar_month
 import com.composables.icons.materialsymbols.outlined.Checklist
 import com.composables.icons.materialsymbols.outlined.Home
+import com.composables.icons.materialsymbols.outlined.Notifications
 import com.composables.icons.materialsymbols.outlined.Person
 import com.composables.icons.materialsymbols.outlined.Preview_off
 import com.composables.icons.materialsymbols.outlinedfilled.Groups
@@ -99,6 +100,13 @@ enum class NavigationDestination(
         label = "Profile",
         contentDescription = "Profile",
         icon = MaterialSymbols.Outlined.Preview_off
+    ),
+
+    Notifications(
+        route = "notifications",
+        label = "Notifications",
+        contentDescription = "Notifications",
+        icon = MaterialSymbols.Outlined.Notifications
     );
 
     companion object {
