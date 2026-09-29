@@ -7,11 +7,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+data class DrawerItem(
+    val name: String,
+    val pendingTasks: Int = 0,
+    val selected: Boolean = false
+)
+
 data class TasksUiState(
     val query: String = "",
     val currentGroup: String,
     val personalTasks: List<Task> = emptyList(),
-    val groupTasks: List<Task> = emptyList()
+    val groupTasks: List<Task> = emptyList(),
+    val groups: List<DrawerItem> = emptyList()
 ) {
     val filteredPersonalTasks: List<Task>
         get() = personalTasks.filterFor(query)
@@ -23,7 +30,7 @@ data class TasksUiState(
         if (q.isEmpty()) return this
         return filter {
             it.title.lowercase().contains(q) ||
-                (it.member?.lowercase()?.contains(q) == true)
+                    (it.member?.lowercase()?.contains(q) == true)
         }
     }
 }
@@ -32,25 +39,14 @@ class TasksViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         TasksUiState(
-            personalTasks = listOf(
-                Task(id = "p1", title = "Finish Something bruh", isImportant = true),
-                Task(id = "p2", title = "Terminar"),
-                Task(id = "p3", title = "Work"),
-                Task(id = "p4", title = "Finish Something bruh"),
-                Task(id = "p5", title = "Terminar"),
-                Task(id = "p6", title = "Work")
-            ),
-            groupTasks = listOf(
-                Task(
-                    id = "g1",
-                    title = "Finish Something bruh",
-                    member = "Diego",
-                    isImportant = true
-                ),
-                Task(id = "g2", title = "Terminar", member = "Manuela"),
-                Task(id = "g3", title = "Work", member = "Shaiel")
-            ),
-            currentGroup = "API Pending"
+            personalTasks = TaskRepository.personalTasks,
+            groupTasks = TaskRepository.groupTasks,
+            currentGroup = "API Pending",
+            groups = listOf(
+                DrawerItem(name = "App Devs", pendingTasks = 67, selected = true),
+                DrawerItem(name = "Group 1"),
+                DrawerItem(name = "Group 2")
+            )
         )
     )
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
@@ -78,5 +74,15 @@ class TasksViewModel : ViewModel() {
 
     fun onCreateTask() {
         // TODO: navigate to create-task
+    }
+
+    fun onGroupSelected(group: DrawerItem) {
+        _uiState.update { state ->
+            state.copy(
+                currentGroup = group.name,
+                groups = state.groups.map { it.copy(selected = it.name == group.name) }
+            )
+        }
+        // TODO: load the selected group's tasks when the data layer exists.
     }
 }

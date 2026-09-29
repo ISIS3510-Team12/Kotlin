@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.team12kotlin.juggle.ui.auth.SignInScreen
 import com.team12kotlin.juggle.ui.auth.SignUpScreen
 import com.team12kotlin.juggle.ui.groups.GroupsScreen
@@ -32,6 +34,9 @@ import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
+import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
+import com.team12kotlin.juggle.ui.tasks.edit.EditTaskScreen
+import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 
@@ -132,8 +137,27 @@ fun AppRoot(
                     TasksScreen(
                         modifier = Modifier.fillMaxSize(),
                         onProfileClick = { navController.navigate(it.route) },
+                        onTaskClick = { task ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
+                                launchSingleTop = true
+                            }
+                        },
                         onAllTasksClick = {
                             navController.navigate(NavigationDestination.AllTasks.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        onNavigateToCreateTask = {
+                            navController.navigate(NavigationDestination.CreateTask.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNavigateToCreateGroup = {
+                            navController.navigate(NavigationDestination.CreateGroup.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
@@ -149,9 +173,41 @@ fun AppRoot(
                         onBackClick = { navController.popBackStack() }
                     )
                 }
+                composable(NavigationDestination.CreateTask.route) {
+                    CreateTaskScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onTaskCreated = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = "${NavigationDestination.ViewTask.route}/{taskId}",
+                    arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                ) {
+                    ViewTaskScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onEditTask = { taskId ->
+                            navController.navigate("${NavigationDestination.EditTask.route}/$taskId") {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+                composable(
+                    route = "${NavigationDestination.EditTask.route}/{taskId}",
+                    arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                ) {
+                    EditTaskScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onTaskEdited = { navController.popBackStack() },
+                        onCancel = { navController.popBackStack() }
+                    )
+                }
                 composable(NavigationDestination.Groups.route) {
                     GroupsScreen(
-                        modifier= Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         onProfileClick = { navController.navigate(it.route) },
                         onNavigateToCreateGroup = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
@@ -184,7 +240,7 @@ fun AppRoot(
                         onProfileClick = { navController.navigate(it.route) }
                     )
                 }
-                composable (NavigationDestination.Profile.route){
+                composable(NavigationDestination.Profile.route) {
                     PlaceholderScreen(
                         label = "Profile",
                         onProfileClick = { navController.navigate(it.route) }
@@ -197,19 +253,19 @@ fun AppRoot(
                 currentRoute != NavigationDestination.SignUp.route &&
                 currentRoute != NavigationDestination.SignIn.route
             ) {
-            AppNavigationBar(
-                viewModel = navbarViewModel,
-                onDestinationSelected = { destination ->
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+                AppNavigationBar(
+                    viewModel = navbarViewModel,
+                    onDestinationSelected = { destination ->
+                        navController.navigate(destination.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
+                    },
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
             }
         }
     }
