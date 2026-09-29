@@ -68,7 +68,7 @@ fun ViewTaskScreen(
     modifier: Modifier = Modifier,
     viewModel: ViewTaskViewModel = viewModel(),
     onBackClick: () -> Unit = {},
-    onEditTask: (taskId: String) -> Unit = {}
+    onEditTask: (taskId: Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -135,7 +135,7 @@ fun ViewTaskScreen(
                 // Scheduled card
                 ScheduledCard(
                     deadline = task.deadline ?: "No deadline set",
-                    reminder = task.reminder,
+                    reminder = task.reminders.firstOrNull(),
                     onReminderToggle = viewModel::onReminderToggle,
                     onEditClick = { onEditTask(task.id) }
                 )

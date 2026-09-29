@@ -31,13 +31,30 @@ enum class TaskStatus {
 
 @Serializable
 data class Reminder(
-    val label: String,
-    val enabled: Boolean = false
+    val id: Int = 0,
+    val enabled: Boolean = false,
+    @SerialName("scheduled_at")
+    val scheduledAt: String? = null,
+    @SerialName("sent_at")
+    val sentAt: String? = null,
+    @SerialName("acted_at")
+    val actedAt: String? = null,
+    val label: String = ""
+)
+
+@Serializable
+data class RelatedTask(
+    val id: Int = 0,
+    val title: String = "",
+    val status: TaskStatus = TaskStatus.NOT_STARTED,
+    @SerialName("needs_help")
+    val needsHelp: Boolean = false,
+    val deadline: String? = null
 )
 
 @Serializable
 data class Task(
-    val id: String,
+    val id: Int = 0,
     val title: String,
     @SerialName("task_type")
     val taskType: String = "",
@@ -49,13 +66,20 @@ data class Task(
     val deadline: String? = null,
     val description: String = "",
     @SerialName("user_id")
-    val ownerId: String? = null,
+    val ownerId: String = "",
     @SerialName("project_id")
-    val projectId: String? = null,
-    val members: List<User> = emptyList(),
-    val reminder: Reminder? = null,
-    val relatedTasks: List<Task> = emptyList(),
+    val projectId: Int? = null,
+    val assignees: List<User> = emptyList(),
+    val reminders: List<Reminder> = emptyList(),
+    @SerialName("related_tasks")
+    val relatedTaskRefs: List<RelatedTask> = emptyList(),
     val member: String? = null,
     val isImportant: Boolean = false,
-    val dueLabel: String = "Tomorrow - 12 hours left"
+    val dueLabel: String = "",
+    @Deprecated("Use assignees", ReplaceWith("assignees"))
+    val members: List<User> = emptyList(),
+    @Deprecated("Use relatedTaskRefs", ReplaceWith("relatedTaskRefs"))
+    val relatedTasks: List<Task> = emptyList(),
+    @Deprecated("Use reminders", ReplaceWith("reminders"))
+    val reminder: Reminder? = null
 )

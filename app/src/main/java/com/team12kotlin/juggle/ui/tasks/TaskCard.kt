@@ -94,7 +94,7 @@ fun TaskCard(
 @Composable
 private fun TaskCardPreview() {
     JuggleTheme {
-        TaskCard(Task(id = "preview", title = "Sample task", member = "Alex"))
+        TaskCard(Task(id = 0, title = "Sample task", member = "Alex"))
     }
 }
 
@@ -102,7 +102,7 @@ private fun TaskCardPreview() {
 @Composable
 private fun OwnTaskCardPreview(){
     JuggleTheme {
-        TaskCard(Task(id = "preview", title = "Sample task"))
+        TaskCard(Task(id = 0, title = "Sample task"))
     }
 }
 
@@ -110,6 +110,6 @@ private fun OwnTaskCardPreview(){
 @Composable
 private fun ImportantTaskCardPreview() {
     JuggleTheme {
-        TaskCard(Task(id = "preview-important", title = "Sample task", isImportant = true))
+        TaskCard(Task(id = 0, title = "Sample task", isImportant = true))
     }
 }

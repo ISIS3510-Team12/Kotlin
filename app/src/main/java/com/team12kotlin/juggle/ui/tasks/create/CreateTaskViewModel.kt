@@ -66,7 +66,7 @@ class CreateTaskViewModel : ViewModel() {
             ),
             relatedTasks = listOf(
                 RelatedTask(
-                    task = Task(id = "r1", title = "Finish the figma", member = "Diego"),
+                    task = Task(id = 0, title = "Finish the figma", member = "Diego"),
                     dueLabel = "Due date: Tomorrow"
                 )
             )

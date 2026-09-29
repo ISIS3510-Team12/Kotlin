@@ -78,7 +78,7 @@ fun EditTaskScreen(
                 .padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CurrentGroupTab(groupName = uiState.currentGroup, modifier = contentPadding)
+            CurrentGroupTab(groupName = "App Devs", modifier = contentPadding)
 
             DropdownField(
                 value = uiState.selectedTask,

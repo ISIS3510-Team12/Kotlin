@@ -2,20 +2,23 @@ package com.team12kotlin.juggle.ui.tasks.edit
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
-import com.team12kotlin.juggle.ui.tasks.TaskRepository
+import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.tasks.create.AssignableMember
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import com.team12kotlin.juggle.data.Dependencies
 
 /**
  * UI state for the Edit Task screen. Mirrors the create form but is pre-filled from the
  * task being edited and keyed by a "selected task" dropdown.
  */
 data class EditTaskUiState(
-    val currentGroup: String = "App Devs",
     val selectedTask: String? = null,
     val taskType: String? = null,
     val assignedMembers: List<AssignableMember> = emptyList(),
@@ -25,48 +28,70 @@ data class EditTaskUiState(
     val needsHelp: Boolean = false,
     val notes: String = "",
     val taskOptions: List<String> = emptyList(),
-    val taskTypeOptions: List<String> = emptyList()
+    val taskTypeOptions: List<String> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 ) {
     /** A task must be selected before edits can be saved. */
     val canSave: Boolean get() = !selectedTask.isNullOrBlank()
 }
 
 class EditTaskViewModel(
-    savedStateHandle: SavedStateHandle
+    savedStateHandle: SavedStateHandle,
+    private val repository: TaskRepository = Dependencies.taskRepository
 ) : ViewModel() {
 
-    private val taskId: String? = savedStateHandle["taskId"]
-
-    private val taskOptions: List<String> =
-        (TaskRepository.personalTasks + TaskRepository.groupTasks)
-            .map { it.title }
-            .distinct()
+    private val taskId: Int? = savedStateHandle.get<String>("taskId")?.toIntOrNull()
 
     private val taskTypeOptions: List<String> =
         listOf("Coding", "Design", "Research", "Writing", "Meeting")
 
+    private var loadedTasks: List<Task> = emptyList()
+
     private val _uiState = MutableStateFlow(
-        stateForTask(taskId?.let { TaskRepository.findById(it) })
+        EditTaskUiState(taskTypeOptions = taskTypeOptions)
     )
     val uiState: StateFlow<EditTaskUiState> = _uiState.asStateFlow()
 
-    private fun stateForTask(task: Task?): EditTaskUiState = EditTaskUiState(
-        selectedTask = task?.title,
-        taskType = task?.taskType?.takeIf { it.isNotBlank() },
-        deadline = task?.deadline.orEmpty(),
-        isPriority = task?.isPriority ?: false,
-        needsHelp = task?.needsHelp ?: false,
-        notes = task?.description.orEmpty(),
-        assignedMembers = task?.members
-            ?.map { AssignableMember(name = it.firstName, selected = true) }
-            ?: emptyList(),
-        taskOptions = taskOptions,
-        taskTypeOptions = taskTypeOptions
-    )
+    init {
+        loadTask()
+    }
+
+    fun loadTask() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            runCatching { repository.getTasks() }
+                .onSuccess { tasks ->
+                    loadedTasks = tasks
+                    val selected = tasks.firstOrNull { it.id == taskId }
+                    _uiState.value = stateForTask(selected, tasks)
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
+    }
+
+    private fun stateForTask(task: Task?, tasks: List<Task>): EditTaskUiState =
+        EditTaskUiState(
+            selectedTask = task?.title,
+            taskType = task?.taskType?.takeIf { it.isNotBlank() },
+            deadline = task?.deadline.orEmpty(),
+            isPriority = task?.isPriority ?: false,
+            needsHelp = task?.needsHelp ?: false,
+            notes = task?.description.orEmpty(),
+            assignedMembers = task?.assignees
+                ?.map { AssignableMember(name = it.firstName, selected = true) }
+                ?: emptyList(),
+            taskOptions = tasks.map { it.title }.distinct(),
+            taskTypeOptions = taskTypeOptions
+        )
 
     fun onSelectedTaskChange(title: String) {
-        // It refreshes the whole state of the screen by finding the task by title and passing it to stateForTask
-        _uiState.value = stateForTask(TaskRepository.findByTitle(title))
+        _uiState.value = stateForTask(
+            loadedTasks.firstOrNull { it.title == title },
+            loadedTasks
+        )
     }
 
     fun onTaskTypeSelected(taskType: String) {
@@ -104,6 +129,29 @@ class EditTaskViewModel(
     }
 
     fun onEditTask() {
-        // TODO: persist the task edits when the data layer exists.
+        val id = taskId ?: return
+        val state = _uiState.value
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            runCatching {
+                repository.updateTask(
+                    id,
+                    TaskUpdateRequest(
+                        title = state.selectedTask,
+                        taskType = state.taskType,
+                        description = state.notes,
+                        isPriority = state.isPriority,
+                        needsHelp = state.needsHelp,
+                        deadline = state.deadline
+                    )
+                )
+            }
+                .onSuccess {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
     }
 }
