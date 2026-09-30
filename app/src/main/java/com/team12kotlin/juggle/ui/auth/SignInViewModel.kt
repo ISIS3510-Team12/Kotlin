@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.AuthRepository
+import com.team12kotlin.juggle.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,7 +26,8 @@ data class SignInUiState(
 }
 
 class SignInViewModel(
-    private val authRepository: AuthRepository = Dependencies.authRepository
+    private val authRepository: AuthRepository = Dependencies.authRepository,
+    private val userRepository: UserRepository = Dependencies.userRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignInUiState())
@@ -71,6 +73,30 @@ class SignInViewModel(
                     it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
                 }
             }
+        }
+    }
+
+    fun onGoogleSignIn(idToken: String) {
+        if (_uiState.value.isSubmitting) return
+
+        _uiState.update { it.copy(authError = null, isSubmitting = true) }
+
+        viewModelScope.launch {
+            try {
+                val user = authRepository.signInWithGoogle(idToken)
+                registerBackendUser(userRepository, user)
+                _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
+            } catch (error: Throwable) {
+                _uiState.update {
+                    it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
+                }
+            }
+        }
+    }
+
+    fun onGoogleSignInError(error: Throwable) {
+        _uiState.update {
+            it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
         }
     }
 

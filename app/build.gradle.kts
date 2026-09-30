@@ -24,6 +24,7 @@ android {
         buildConfigField("boolean", "USE_FIREBASE_EMULATOR", "true")
         buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"10.0.2.2\"")
         buildConfigField("int", "FIREBASE_AUTH_EMULATOR_PORT", "9099")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com\"")
     }
 
     buildTypes {
@@ -67,6 +68,10 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.google.identity.googleid)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.serialization)

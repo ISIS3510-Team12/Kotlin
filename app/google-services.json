@@ -75,6 +75,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "932315820701-jj56u3dq4g0c57gq37en81hdgf5uuapu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.team12kotlin.juggle",
+            "certificate_hash": "1b93c37d8720d3ef876b2ce60f85fe77565ab370"
+          }
+        },
+        {
           "client_id": "932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com",
           "client_type": 3
         }

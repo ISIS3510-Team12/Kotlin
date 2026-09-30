@@ -127,6 +127,30 @@ class SignUpViewModel(
         }
     }
 
+    fun onGoogleSignIn(idToken: String) {
+        if (_uiState.value.isSubmitting) return
+
+        _uiState.update { it.copy(authError = null, isSubmitting = true) }
+
+        viewModelScope.launch {
+            try {
+                val user = authRepository.signInWithGoogle(idToken)
+                registerBackendUser(userRepository, user)
+                _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
+            } catch (error: Throwable) {
+                _uiState.update {
+                    it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
+                }
+            }
+        }
+    }
+
+    fun onGoogleSignInError(error: Throwable) {
+        _uiState.update {
+            it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
+        }
+    }
+
     /** Clears the one-shot navigation flag after the screen has consumed it. */
     fun onNavigatedToSuccess() {
         _uiState.update { it.copy(navigateToSuccess = false) }
