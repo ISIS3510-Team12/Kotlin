@@ -2,6 +2,7 @@ package com.team12kotlin.juggle.ui.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
 
 data class DrawerItem(
+    val id: Int = 0,
     val name: String,
     val pendingTasks: Int = 0,
     val selected: Boolean = false
@@ -42,7 +44,8 @@ data class TasksUiState(
 }
 
 class TasksViewModel(
-    private val repository: TaskRepository = Dependencies.taskRepository
+    private val repository: TaskRepository = Dependencies.taskRepository,
+    private val groupRepository: GroupRepository = Dependencies.groupRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TasksUiState())
@@ -55,21 +58,44 @@ class TasksViewModel(
     fun loadTasks() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching { repository.getTasks() }
-                .onSuccess { tasks ->
-                    _uiState.update {
-                        it.copy(
-                            personalTasks = tasks.filter { task -> task.projectId == null },
-                            groupTasks = tasks.filter { task -> task.projectId != null },
-                            isLoading = false
-                        )
-                    }
+
+            val tasksResult = runCatching { repository.getTasks() }
+            val groups = runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
+
+            val tasks = tasksResult.getOrNull()
+            if (tasks == null) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = tasksResult.exceptionOrNull()?.message
+                    )
                 }
-                .onFailure { error ->
-                    _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.message)
-                    }
-                }
+                return@launch
+            }
+
+            // Pending counts are computed and returned by the backend (GET /groups).
+            val selectedId = groups.firstOrNull()?.id
+            val drawerItems = mutableListOf<DrawerItem>()
+            for (group in groups) {
+                drawerItems.add(
+                    DrawerItem(
+                        id = group.id,
+                        name = group.name,
+                        pendingTasks = group.pendingTaskCount,
+                        selected = group.id == selectedId
+                    )
+                )
+            }
+
+            _uiState.update {
+                it.copy(
+                    personalTasks = tasks.filter { task -> task.projectId == null },
+                    groupTasks = tasks.filter { task -> task.projectId != null },
+                    groups = drawerItems,
+                    currentGroup = drawerItems.firstOrNull()?.name ?: it.currentGroup,
+                    isLoading = false
+                )
+            }
         }
     }
 
@@ -97,7 +123,7 @@ class TasksViewModel(
         _uiState.update { state ->
             state.copy(
                 currentGroup = group.name,
-                groups = state.groups.map { it.copy(selected = it.name == group.name) }
+                groups = state.groups.map { it.copy(selected = it.id == group.id) }
             )
         }
     }

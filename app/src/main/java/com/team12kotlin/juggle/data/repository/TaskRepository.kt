@@ -1,10 +1,15 @@
 package com.team12kotlin.juggle.data.repository
 
 import com.team12kotlin.juggle.data.remote.JuggleApi
+import com.team12kotlin.juggle.ui.dto.Reminder
+import com.team12kotlin.juggle.ui.dto.ReminderRequest
+import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
 import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
+import com.team12kotlin.juggle.ui.dto.TimeBlock
+import com.team12kotlin.juggle.ui.dto.TimeBlockRequest
 
 class TaskRepository(
     private val api: JuggleApi
@@ -24,4 +29,21 @@ class TaskRepository(
     suspend fun deleteTask(taskId: Int) {
         api.deleteTask(taskId)
     }
+
+    // --- Reminders -------------------------------------------------------
+
+    suspend fun getReminders(taskId: Int): List<Reminder> = api.getReminders(taskId)
+
+    suspend fun createReminder(taskId: Int, request: ReminderRequest): Reminder =
+        api.createReminder(taskId, request)
+
+    suspend fun setReminderEnabled(taskId: Int, reminderId: Int, enabled: Boolean): Reminder =
+        api.updateReminder(taskId, reminderId, ReminderUpdateRequest(enabled = enabled))
+
+    // --- Time blocks -----------------------------------------------------
+
+    suspend fun getTimeBlocks(taskId: Int): List<TimeBlock> = api.getTimeBlocks(taskId)
+
+    suspend fun createTimeBlock(taskId: Int, request: TimeBlockRequest): TimeBlock =
+        api.createTimeBlock(taskId, request)
 }

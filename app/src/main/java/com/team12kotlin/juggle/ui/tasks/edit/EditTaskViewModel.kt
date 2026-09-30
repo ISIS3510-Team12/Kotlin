@@ -37,9 +37,10 @@ data class EditTaskUiState(
 }
 
 class EditTaskViewModel(
-    savedStateHandle: SavedStateHandle,
-    private val repository: TaskRepository = Dependencies.taskRepository
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val repository: TaskRepository = Dependencies.taskRepository
 
     private val taskId: Int? = savedStateHandle.get<String>("taskId")?.toIntOrNull()
 
@@ -60,10 +61,13 @@ class EditTaskViewModel(
     fun loadTask() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching { repository.getTasks() }
-                .onSuccess { tasks ->
+            runCatching {
+                val tasks = repository.getTasks()
+                val selected = taskId?.let { repository.getTask(it) }
+                tasks to selected
+            }
+                .onSuccess { (tasks, selected) ->
                     loadedTasks = tasks
-                    val selected = tasks.firstOrNull { it.id == taskId }
                     _uiState.value = stateForTask(selected, tasks)
                 }
                 .onFailure { error ->

@@ -53,6 +53,17 @@ data class RelatedTask(
 )
 
 @Serializable
+data class TimeBlock(
+    val id: Int = 0,
+    @SerialName("start_at")
+    val startAt: String = "",
+    @SerialName("end_at")
+    val endAt: String = "",
+    @SerialName("task_id")
+    val taskId: Int = 0
+)
+
+@Serializable
 data class Task(
     val id: Int = 0,
     val title: String,

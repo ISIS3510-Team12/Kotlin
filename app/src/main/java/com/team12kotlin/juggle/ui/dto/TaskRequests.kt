@@ -34,5 +34,31 @@ data class TaskUpdateRequest(
     val needsHelp: Boolean? = null,
     val deadline: String? = null,
     @SerialName("project_id")
-    val projectId: Int? = null
+    val projectId: Int? = null,
+    @SerialName("assignee_ids")
+    val assigneeIds: List<String>? = null,
+    @SerialName("related_task_ids")
+    val relatedTaskIds: List<Int>? = null
+)
+
+@Serializable
+data class ReminderRequest(
+    @SerialName("scheduled_at")
+    val scheduledAt: String,
+    val enabled: Boolean = true
+)
+
+@Serializable
+data class ReminderUpdateRequest(
+    @SerialName("scheduled_at")
+    val scheduledAt: String? = null,
+    val enabled: Boolean? = null
+)
+
+@Serializable
+data class TimeBlockRequest(
+    @SerialName("start_at")
+    val startAt: String,
+    @SerialName("end_at")
+    val endAt: String
 )
