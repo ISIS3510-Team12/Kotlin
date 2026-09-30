@@ -172,6 +172,11 @@ fun AppRoot(
                 composable(NavigationDestination.AllTasks.route) {
                     AllTasksScreen(
                         modifier = Modifier.fillMaxSize(),
+                        onTaskClick = { task ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
+                                launchSingleTop = true
+                            }
+                        },
                         onBackClick = { navController.popBackStack() }
                     )
                 }

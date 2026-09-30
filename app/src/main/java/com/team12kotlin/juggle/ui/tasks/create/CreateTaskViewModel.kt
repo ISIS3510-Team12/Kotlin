@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.update
  */
 data class AssignableMember(
     val name: String,
-    val selected: Boolean = false
+    val selected: Boolean = false,
+    val userId: String = ""
 ) {
     val initial: String get() = name.take(1).uppercase()
 }

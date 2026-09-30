@@ -9,8 +9,8 @@ data class Group(
     val name: String,
     val description: String = "",
     val deadline: String? = null,
-    @SerialName("members")
-    val members: MutableList<User> = mutableListOf(),
+    @SerialName("users")
+    val users: MutableList<User> = mutableListOf(),
     @SerialName("pending_task_count")
     val pendingTaskCount: Int = 0
 )

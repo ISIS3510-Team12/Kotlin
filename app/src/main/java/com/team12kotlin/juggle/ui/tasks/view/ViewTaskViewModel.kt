@@ -40,10 +40,6 @@ class ViewTaskViewModel(
     private val _uiState = MutableStateFlow(ViewTaskUiState(task = MISSING_TASK))
     val uiState: StateFlow<ViewTaskUiState> = _uiState.asStateFlow()
 
-    init {
-        loadTask()
-    }
-
     fun loadTask() {
         val id = taskId
         if (id == null) {

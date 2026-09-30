@@ -178,7 +178,7 @@ fun TasksScreen(
                 )
                 TasksSection(
                     title = "Your pending tasks",
-                    tasks = uiState.filteredPersonalTasks,
+                    tasks = uiState.filteredOwnTasks,
                     onTaskClick = {
                         viewModel.onTaskClick(it)
                         onTaskClick(it)

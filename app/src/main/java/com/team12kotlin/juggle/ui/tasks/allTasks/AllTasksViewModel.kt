@@ -33,7 +33,7 @@ class AllTasksViewModel(
     fun loadTasks() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching { repository.getTasks() }
+            runCatching { repository.getAllTasks() }
                 .onSuccess { tasks ->
                     _uiState.update {
                         it.copy(

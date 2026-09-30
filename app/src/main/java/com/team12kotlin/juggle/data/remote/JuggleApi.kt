@@ -27,6 +27,15 @@ interface JuggleApi {
     @GET("/tasks")
     suspend fun getTasks(): List<Task>
 
+    @GET("/tasks/own/{group_id}")
+    suspend fun getOwnTasks(@Path("group_id") groupId: Int): List<Task>
+
+    @GET("/tasks/group/{group_id}")
+    suspend fun getGroupTasks(@Path("group_id") groupId: Int): List<Task>
+
+    @GET("/tasks/all")
+    suspend fun getAllTasks(): List<Task>
+
     @GET("/tasks/{task_id}")
     suspend fun getTask(@Path("task_id") taskId: Int): Task
 

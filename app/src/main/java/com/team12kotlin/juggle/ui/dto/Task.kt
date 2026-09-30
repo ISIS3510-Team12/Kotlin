@@ -80,6 +80,8 @@ data class Task(
     val ownerId: String = "",
     @SerialName("project_id")
     val projectId: Int? = null,
+    @SerialName("group_id")
+    val groupId: Int? = null,
     val assignees: List<User> = emptyList(),
     val reminders: List<Reminder> = emptyList(),
     @SerialName("related_tasks")

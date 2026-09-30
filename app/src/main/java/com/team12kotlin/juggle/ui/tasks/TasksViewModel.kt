@@ -22,14 +22,15 @@ data class DrawerItem(
 data class TasksUiState(
     val query: String = "",
     val currentGroup: String = "",
-    val personalTasks: List<Task> = emptyList(),
+    val ownTasks: List<Task> = emptyList(),
     val groupTasks: List<Task> = emptyList(),
     val groups: List<DrawerItem> = emptyList(),
+    val selectedGroupId: Int? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 ) {
-    val filteredPersonalTasks: List<Task>
-        get() = personalTasks.filterFor(query)
+    val filteredOwnTasks: List<Task>
+        get() = ownTasks.filterFor(query)
     val filteredGroupTasks: List<Task>
         get() = groupTasks.filterFor(query)
 
@@ -52,29 +53,17 @@ class TasksViewModel(
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
 
     init {
-        loadTasks()
+        loadGroups()
     }
 
-    fun loadTasks() {
+    fun loadGroups() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            val tasksResult = runCatching { repository.getTasks() }
-            val groups = runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
-
-            val tasks = tasksResult.getOrNull()
-            if (tasks == null) {
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMessage = tasksResult.exceptionOrNull()?.message
-                    )
-                }
-                return@launch
-            }
-
-            // Pending counts are computed and returned by the backend (GET /groups).
+            val groupsResult = runCatching { groupRepository.getGroups() }
+            val groups = groupsResult.getOrDefault(emptyList())
             val selectedId = groups.firstOrNull()?.id
+
             val drawerItems = mutableListOf<DrawerItem>()
             for (group in groups) {
                 drawerItems.add(
@@ -89,11 +78,35 @@ class TasksViewModel(
 
             _uiState.update {
                 it.copy(
-                    personalTasks = tasks.filter { task -> task.projectId == null },
-                    groupTasks = tasks.filter { task -> task.projectId != null },
                     groups = drawerItems,
+                    selectedGroupId = selectedId,
                     currentGroup = drawerItems.firstOrNull()?.name ?: it.currentGroup,
-                    isLoading = false
+                    isLoading = false,
+                    errorMessage = groupsResult.exceptionOrNull()?.message
+                )
+            }
+
+            if (selectedId != null) {
+                loadTasksForGroup(selectedId)
+            }
+        }
+    }
+
+    fun loadTasksForGroup(groupId: Int) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val ownResult = runCatching { repository.getOwnTasks(groupId) }
+            val groupResult = runCatching { repository.getGroupTasks(groupId) }
+
+            val error = ownResult.exceptionOrNull() ?: groupResult.exceptionOrNull()
+
+            _uiState.update {
+                it.copy(
+                    ownTasks = ownResult.getOrDefault(it.ownTasks),
+                    groupTasks = groupResult.getOrDefault(it.groupTasks),
+                    isLoading = false,
+                    errorMessage = error?.message
                 )
             }
         }
@@ -123,8 +136,10 @@ class TasksViewModel(
         _uiState.update { state ->
             state.copy(
                 currentGroup = group.name,
+                selectedGroupId = group.id,
                 groups = state.groups.map { it.copy(selected = it.id == group.id) }
             )
         }
+        loadTasksForGroup(group.id)
     }
 }

@@ -16,6 +16,12 @@ class TaskRepository(
 ) {
     suspend fun getTasks(): List<Task> = api.getTasks()
 
+    suspend fun getOwnTasks(groupId: Int): List<Task> = api.getOwnTasks(groupId)
+
+    suspend fun getGroupTasks(groupId: Int): List<Task> = api.getGroupTasks(groupId)
+
+    suspend fun getAllTasks(): List<Task> = api.getAllTasks()
+
     suspend fun getTask(taskId: Int): Task = api.getTask(taskId)
 
     suspend fun createTask(request: TaskCreateRequest): Task = api.createTask(request)
