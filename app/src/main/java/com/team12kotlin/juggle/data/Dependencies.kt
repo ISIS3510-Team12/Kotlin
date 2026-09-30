@@ -6,6 +6,7 @@ import com.team12kotlin.juggle.data.remote.AuthInterceptor
 import com.team12kotlin.juggle.data.remote.JuggleApi
 import com.team12kotlin.juggle.data.repository.AuthRepository
 import com.team12kotlin.juggle.data.repository.GroupRepository
+import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import kotlinx.serialization.json.Json
@@ -61,5 +62,6 @@ object Dependencies {
     val authRepository: AuthRepository by lazy { AuthRepository(firebaseAuth) }
     val taskRepository: TaskRepository by lazy { TaskRepository(api) }
     val groupRepository: GroupRepository by lazy { GroupRepository(api) }
+    val projectRepository: ProjectRepository by lazy { ProjectRepository(api) }
     val userRepository: UserRepository by lazy { UserRepository(api) }
 }

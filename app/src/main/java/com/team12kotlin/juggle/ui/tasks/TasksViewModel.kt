@@ -56,6 +56,10 @@ class TasksViewModel(
         loadGroups()
     }
 
+    fun refreshCurrentGroup() {
+        _uiState.value.selectedGroupId?.let { loadTasksForGroup(it) }
+    }
+
     fun loadGroups() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }

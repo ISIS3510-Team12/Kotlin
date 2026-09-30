@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,9 +39,13 @@ fun CreateTaskScreen(
     modifier: Modifier = Modifier,
     viewModel: CreateTaskViewModel = viewModel(),
     onBackClick: () -> Unit = {},
-    onTaskCreated: () -> Unit = {}
+    onTaskCreated: (taskId: Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.createdTaskId) {
+        uiState.createdTaskId?.let(onTaskCreated)
+    }
 
     Scaffold(
         modifier = modifier,
@@ -58,7 +63,7 @@ fun CreateTaskScreen(
             )
         }
     ) { innerPadding ->
-        // Horizontal padding is applied per-item (via `contentPadding`) rather than on the
+        // Horizontal padding is applied per-item rather than on the
         // whole Column, so the assigned-members strip can scroll edge-to-edge.
         val horizontalPadding = 16.dp
         val contentPadding = Modifier
@@ -91,10 +96,10 @@ fun CreateTaskScreen(
             )
 
             DropdownField(
-                value = uiState.associatedProject,
+                value = uiState.selectedProjectName,
                 label = "Associated project",
-                options = uiState.projectOptions,
-                onOptionSelected = viewModel::onAssociatedProjectSelected,
+                options = uiState.projects.map { it.name },
+                onOptionSelected = viewModel::onProjectSelected,
                 modifier = contentPadding
             )
 
@@ -169,17 +174,23 @@ fun CreateTaskScreen(
                 }
             }
 
+            uiState.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = contentPadding
+                )
+            }
+
             Button(
-                onClick = {
-                    viewModel.onCreateTask()
-                    onTaskCreated()
-                },
+                onClick = viewModel::onCreateTask,
                 enabled = uiState.canCreate,
                 modifier = contentPadding
             ) {
                 Icon(imageVector = MaterialSymbols.Outlined.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Create Task")
+                Text(if (uiState.isLoading) "Creating..." else "Create Task")
             }
 
             Spacer(modifier = Modifier.height(96.dp))

@@ -1,6 +1,7 @@
 package com.team12kotlin.juggle.data.remote
 
 import com.team12kotlin.juggle.ui.dto.Group
+import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
@@ -87,6 +88,9 @@ interface JuggleApi {
 
     @GET("/groups/{group_id}")
     suspend fun getGroup(@Path("group_id") groupId: Int): Group
+
+    @GET("/projects/group/{group_id}")
+    suspend fun getProjects(@Path("group_id") groupId: Int): List<Project>
 
     @GET("/users/current_user")
     suspend fun getCurrentUser(): User

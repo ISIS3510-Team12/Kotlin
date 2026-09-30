@@ -285,7 +285,7 @@ internal fun RelatedTaskItem(
         supportingContent = { Text(relatedTask.dueLabel) },
         leadingContent = {
             TextMonogram(
-                text = relatedTask.task.member?.take(1)?.uppercase()
+                text = relatedTask.task.assignees.firstOrNull()?.firstName?.take(1)?.uppercase()
                     ?: relatedTask.task.title.take(1).uppercase()
             )
         },

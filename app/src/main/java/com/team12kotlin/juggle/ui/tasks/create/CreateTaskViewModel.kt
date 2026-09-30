@@ -1,15 +1,23 @@
 package com.team12kotlin.juggle.ui.tasks.create
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.repository.GroupRepository
+import com.team12kotlin.juggle.data.repository.ProjectRepository
+import com.team12kotlin.juggle.data.repository.TaskRepository
+import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
+import com.team12kotlin.juggle.utils.taskDue
+import com.team12kotlin.juggle.utils.toIsoDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-/**
- * A member that can be assigned to a task, rendered as a monogram + name chip.
- */
 data class AssignableMember(
     val name: String,
     val selected: Boolean = false,
@@ -18,14 +26,18 @@ data class AssignableMember(
     val initial: String get() = name.take(1).uppercase()
 }
 
-/**
- * UI state for the Create Task screen.
- */
+data class RelatedTask(
+    val task: Task,
+    val dueLabel: String,
+    val selected: Boolean = false
+)
+
 data class CreateTaskUiState(
-    val currentGroup: String = "App Devs",
+    val currentGroup: String = "",
     val title: String = "",
     val taskType: String? = null,
-    val associatedProject: String? = null,
+    val projects: List<Project> = emptyList(),
+    val selectedProjectId: Int? = null,
     val assignedMembers: List<AssignableMember> = emptyList(),
     val deadline: String = "",
     val time: String = "",
@@ -34,46 +46,86 @@ data class CreateTaskUiState(
     val notes: String = "",
     val relatedTasks: List<RelatedTask> = emptyList(),
     val taskTypeOptions: List<String> = emptyList(),
-    val projectOptions: List<String> = emptyList()
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val createdTaskId: Int? = null
 ) {
-    /** The task title is required, so creation is only enabled once it is filled. */
-    val canCreate: Boolean get() = title.isNotBlank()
+    val canCreate: Boolean
+        get() = title.isNotBlank() &&
+                taskType != null &&
+                deadline.isNotBlank() &&
+                selectedProjectId != null &&
+                !isLoading
+
+    val selectedProjectName: String?
+        get() = projects.firstOrNull { it.id == selectedProjectId }?.name
 }
 
-/**
- * A task that can be linked to the one being created.
- */
-data class RelatedTask(
-    val task: Task,
-    val dueLabel: String,
-    val selected: Boolean = false
-)
+class CreateTaskViewModel(
+    savedStateHandle: SavedStateHandle
+) : ViewModel() {
 
-class CreateTaskViewModel : ViewModel() {
+    private val taskRepository: TaskRepository = Dependencies.taskRepository
+    private val groupRepository: GroupRepository = Dependencies.groupRepository
+    private val projectRepository: ProjectRepository = Dependencies.projectRepository
 
-    private val _uiState = MutableStateFlow(
-        CreateTaskUiState(
-            currentGroup = "App Devs",
-            taskTypeOptions = listOf("Coding", "Design", "Research", "Writing", "Meeting"),
-            projectOptions = listOf("Project #1", "Project #2", "Project #3"),
-            assignedMembers = listOf(
-                AssignableMember(name = "Diego"),
-                AssignableMember(name = "Manuela"),
-                AssignableMember(name = "Shaiel"),
-                AssignableMember(name = "Victoria"),
-                AssignableMember(name = "Chu"),
-                AssignableMember(name = "Gabriel"),
-                AssignableMember(name = "Cristian")
-            ),
-            relatedTasks = listOf(
-                RelatedTask(
-                    task = Task(id = 0, title = "Finish the figma", member = "Diego"),
-                    dueLabel = "Due date: Tomorrow"
-                )
-            )
-        )
-    )
+    private val groupId: Int = savedStateHandle.get<Int>("groupId") ?: 0
+
+    private val taskTypeOptions: List<String> =
+        listOf("Coding", "Design", "Research", "Writing", "Meeting")
+
+    private val _uiState = MutableStateFlow(CreateTaskUiState(taskTypeOptions = taskTypeOptions))
     val uiState: StateFlow<CreateTaskUiState> = _uiState.asStateFlow()
+
+    init {
+        loadForm()
+    }
+
+    fun loadForm() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            runCatching {
+                val group = groupRepository.getGroup(groupId)
+                val projects = projectRepository.getProjects(groupId)
+                val groupTasks = taskRepository.getAllTasks()
+                Triple(group, projects, groupTasks)
+            }
+                .onSuccess { (group, projects, groupTasks) ->
+                    val members: MutableList<AssignableMember> = mutableListOf()
+                    for (user in group.users) {
+                        members.add(
+                            AssignableMember(name = user.firstName, userId = user.userId)
+                        )
+                    }
+
+                    val related: MutableList<RelatedTask> = mutableListOf()
+                    for (task in groupTasks) {
+                        if (task.groupId == groupId) {
+                            related.add(
+                                RelatedTask(
+                                    task = task,
+                                    dueLabel = taskDue(task.deadline)?.text.orEmpty()
+                                )
+                            )
+                        }
+                    }
+
+                    _uiState.update {
+                        it.copy(
+                            currentGroup = group.name,
+                            projects = projects,
+                            assignedMembers = members,
+                            relatedTasks = related,
+                            isLoading = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
+    }
 
     fun onTitleChange(title: String) {
         _uiState.update { it.copy(title = title) }
@@ -83,15 +135,20 @@ class CreateTaskViewModel : ViewModel() {
         _uiState.update { it.copy(taskType = taskType) }
     }
 
-    fun onAssociatedProjectSelected(project: String) {
-        _uiState.update { it.copy(associatedProject = project) }
+    fun onProjectSelected(projectName: String) {
+        val project = _uiState.value.projects.firstOrNull { it.name == projectName }
+        _uiState.update { it.copy(selectedProjectId = project?.id) }
     }
 
     fun onMemberToggled(member: AssignableMember) {
         _uiState.update { state ->
             state.copy(
                 assignedMembers = state.assignedMembers.map {
-                    if (it.name == member.name) it.copy(selected = !it.selected) else it
+                    if (it.userId == member.userId && it.name == member.name) {
+                        it.copy(selected = !it.selected)
+                    } else {
+                        it
+                    }
                 }
             )
         }
@@ -128,6 +185,52 @@ class CreateTaskViewModel : ViewModel() {
     }
 
     fun onCreateTask() {
-        // TODO: connect with API to create the task once the data layer exists.
+        val state = _uiState.value
+        if (!state.canCreate) return
+
+        val isoDeadline = toIsoDateTime(state.deadline, state.time)
+        if (isoDeadline == null) {
+            _uiState.update { it.copy(errorMessage = "Pick a valid deadline") }
+            return
+        }
+
+        val assigneeIds: MutableList<String> = mutableListOf()
+        for (member in state.assignedMembers) {
+            if (member.selected && member.userId.isNotBlank()) {
+                assigneeIds.add(member.userId)
+            }
+        }
+
+        val relatedTaskIds: MutableList<Int> = mutableListOf()
+        for (related in state.relatedTasks) {
+            if (related.selected) {
+                relatedTaskIds.add(related.task.id)
+            }
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            runCatching {
+                taskRepository.createTask(
+                    TaskCreateRequest(
+                        title = state.title,
+                        taskType = state.taskType ?: "",
+                        description = state.notes.takeIf { it.isNotBlank() },
+                        isPriority = state.isPriority,
+                        needsHelp = state.needsHelp,
+                        deadline = isoDeadline,
+                        projectId = state.selectedProjectId,
+                        assigneeIds = assigneeIds,
+                        relatedTaskIds = relatedTaskIds
+                    )
+                )
+            }
+                .onSuccess { task ->
+                    _uiState.update { it.copy(isLoading = false, createdTaskId = task.id) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
     }
 }
