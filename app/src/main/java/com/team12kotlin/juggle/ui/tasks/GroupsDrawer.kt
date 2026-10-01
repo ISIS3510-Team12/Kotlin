@@ -10,14 +10,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemColors
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
+import com.composables.icons.materialsymbols.outlined.Checklist
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @Composable
@@ -25,8 +28,12 @@ fun GroupsDrawer(
     groups: List<DrawerItem>,
     modifier: Modifier = Modifier,
     onGroupClick: (DrawerItem) -> Unit = {},
+    onAllTasksClick: () -> Unit = {},
     onNewGroupClick: () -> Unit = {}
 ) {
+    // The first group is the personal one.
+    val personalGroup = groups.firstOrNull()
+
     ModalDrawerSheet(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -34,13 +41,22 @@ fun GroupsDrawer(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(
-                text = "Your Groups",
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-            )
+            DrawerSectionTitle("Personal")
 
-            groups.forEach { group ->
+            if (personalGroup != null) {
+                NavigationDrawerItem(
+                    label = { Text("Personal") },
+                    selected = personalGroup.selected,
+                    onClick = { onGroupClick(personalGroup) },
+                    colors = drawerItemColors()
+                )
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            DrawerSectionTitle("Your groups")
+
+            groups.drop(1).forEach { group ->
                 NavigationDrawerItem(
                     label = { Text(group.name) },
                     selected = group.selected,
@@ -50,15 +66,23 @@ fun GroupsDrawer(
                     } else {
                         null
                     },
-                    colors = NavigationDrawerItemDefaults.colors(
-                        selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        selectedBadgeColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    colors = drawerItemColors()
                 )
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            NavigationDrawerItem(
+                label = { Text("All tasks") },
+                selected = false,
+                onClick = onAllTasksClick,
+                icon = {
+                    Icon(
+                        imageVector = MaterialSymbols.Outlined.Checklist,
+                        contentDescription = null
+                    )
+                }
+            )
 
             NavigationDrawerItem(
                 label = { Text("New Group") },
@@ -74,6 +98,23 @@ fun GroupsDrawer(
         }
     }
 }
+
+@Composable
+private fun DrawerSectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+    )
+}
+
+@Composable
+private fun drawerItemColors(): NavigationDrawerItemColors = NavigationDrawerItemDefaults.colors(
+    selectedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+    selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+    selectedBadgeColor = MaterialTheme.colorScheme.onSecondaryContainer
+)
 
 @Preview(showBackground = true)
 @Composable

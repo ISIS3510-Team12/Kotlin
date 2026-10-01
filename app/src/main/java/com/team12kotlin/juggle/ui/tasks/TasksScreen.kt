@@ -87,6 +87,11 @@ fun TasksScreen(
                     viewModel.onGroupSelected(group)
                     scope.launch { drawerState.close() }
                 },
+                onAllTasksClick = {
+                    scope.launch { drawerState.close() }
+                    viewModel.onAllTasksClick()
+                    onAllTasksClick()
+                },
                 onNewGroupClick = {
                     scope.launch { drawerState.close() }
                     onNavigateToCreateGroup()
@@ -199,33 +204,6 @@ fun TasksScreen(
                         onTaskClick(it)
                     }
                 )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    TextButton(
-                        onClick = {
-                            viewModel.onAllTasksClick()
-                            onAllTasksClick()
-                        },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        ),
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = MaterialSymbols.Outlined.Keyboard_arrow_down,
-                                contentDescription = "All tasks"
-                            )
-                            Text(text = "All tasks")
-                        }
-                    }
-                }
                 Spacer(modifier = Modifier.height(136.dp))
             }
         }
