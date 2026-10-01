@@ -35,7 +35,11 @@ interface JuggleApi {
     suspend fun getGroupTasks(@Path("group_id") groupId: Int): List<Task>
 
     @GET("/tasks/all")
-    suspend fun getAllTasks(): List<Task>
+    suspend fun getAllTasks(
+        @Query("due_within_days") dueWithinDays: Int? = null,
+        @Query("mine") mine: Boolean = false,
+        @Query("priority") priority: Boolean = false
+    ): List<Task>
 
     @GET("/tasks/{task_id}")
     suspend fun getTask(@Path("task_id") taskId: Int): Task
