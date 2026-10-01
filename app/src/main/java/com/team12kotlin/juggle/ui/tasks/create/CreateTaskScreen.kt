@@ -77,7 +77,13 @@ fun CreateTaskScreen(
                 .padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CurrentGroupTab(groupName = uiState.currentGroup, modifier = contentPadding)
+            DropdownField(
+                value = uiState.selectedGroupName,
+                label = "Group",
+                options = uiState.groups.map { it.name },
+                onOptionSelected = viewModel::onGroupSelected,
+                modifier = contentPadding
+            )
 
             OutlinedTextField(
                 value = uiState.title,
@@ -152,11 +158,10 @@ fun CreateTaskScreen(
                 modifier = contentPadding
             )
 
-            OutlinedTextField(
-                value = uiState.notes,
-                onValueChange = viewModel::onNotesChange,
-                modifier = contentPadding,
-                label = { Text("Notes & deliverable link") }
+            EvidencesField(
+                imageBytes = uiState.evidenceBytes,
+                onPhotoTaken = viewModel::onEvidenceTaken,
+                modifier = contentPadding
             )
 
             if (uiState.relatedTasks.isNotEmpty()) {
@@ -165,13 +170,13 @@ fun CreateTaskScreen(
                     style = MaterialTheme.typography.titleSmall,
                     modifier = contentPadding
                 )
-                uiState.relatedTasks.forEach { related ->
-                    RelatedTaskItem(
-                        relatedTask = related,
-                        onToggle = { viewModel.onRelatedTaskToggled(related) },
-                        modifier = contentPadding
-                    )
-                }
+                RelatedTasksPicker(
+                    query = uiState.relatedQuery,
+                    onQueryChange = viewModel::onRelatedQueryChange,
+                    tasks = uiState.filteredRelatedTasks,
+                    onToggle = viewModel::onRelatedTaskToggled,
+                    modifier = contentPadding
+                )
             }
 
             uiState.errorMessage?.let { message ->

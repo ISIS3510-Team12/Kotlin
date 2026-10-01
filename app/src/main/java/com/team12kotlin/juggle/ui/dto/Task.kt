@@ -82,17 +82,10 @@ data class Task(
     val projectId: Int? = null,
     @SerialName("group_id")
     val groupId: Int? = null,
+    @SerialName("has_photo")
+    val hasPhoto: Boolean = false,
     val assignees: List<User> = emptyList(),
     val reminders: List<Reminder> = emptyList(),
     @SerialName("related_tasks")
-    val relatedTaskRefs: List<RelatedTask> = emptyList(),
-    val member: String? = null,
-    val isImportant: Boolean = false,
-    val dueLabel: String = "",
-    @Deprecated("Use assignees", ReplaceWith("assignees"))
-    val members: List<User> = emptyList(),
-    @Deprecated("Use relatedTaskRefs", ReplaceWith("relatedTaskRefs"))
-    val relatedTasks: List<Task> = emptyList(),
-    @Deprecated("Use reminders", ReplaceWith("reminders"))
-    val reminder: Reminder? = null
+    val relatedTasks: List<RelatedTask> = emptyList()
 )

@@ -94,18 +94,18 @@ fun TaskCard(
 private fun TaskAvatar(task: Task, modifier: Modifier = Modifier) {
     val assignee = task.assignees.firstOrNull()
     when {
-        task.isPriority -> TextMonogram(
-            text = "!",
-            modifier = modifier,
-            containerColor = MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.onTertiary
-        )
         task.status == TaskStatus.COMPLETED -> IconMonogram(
             icon = MaterialSymbols.Outlined.Check,
             contentDescription = "Completed task",
             modifier = modifier,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        task.isPriority -> TextMonogram(
+            text = "!",
+            modifier = modifier,
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onTertiary
         )
         assignee != null -> TextMonogram(
             text = assignee.firstName.take(1).uppercase(),

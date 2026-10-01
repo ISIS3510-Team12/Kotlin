@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.repository.TaskRepository
+import com.team12kotlin.juggle.ui.dto.RelatedTask
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
@@ -25,6 +26,7 @@ enum class TaskAction(val label: String) {
 
 data class ViewTaskUiState(
     val task: Task,
+    val evidenceBytes: ByteArray? = null,
     val isFabMenuExpanded: Boolean = false,
     val errorMessage: String? = null
 )
@@ -46,9 +48,13 @@ class ViewTaskViewModel(
             return
         }
         viewModelScope.launch {
-            runCatching { repository.getTask(id) }
-                .onSuccess { task ->
-                    _uiState.update { it.copy(task = task) }
+            runCatching {
+                val task = repository.getTask(id)
+                val photo = if (task.hasPhoto) repository.getTaskPhoto(id) else null
+                task to photo
+            }
+                .onSuccess { (task, photo) ->
+                    _uiState.update { it.copy(task = task, evidenceBytes = photo) }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(errorMessage = error.message) }
@@ -99,9 +105,11 @@ class ViewTaskViewModel(
         }
     }
 
-    fun onRelatedTaskClick(task: Task) {
+    fun onRelatedTaskClick(related: RelatedTask) {
         // TODO: navigate to the related task's detail.
     }
+
+
 
     /** Runs a repository action for the current task, then refreshes it. */
     private fun runAction(action: suspend (taskId: Int) -> Unit) {
