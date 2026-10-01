@@ -20,7 +20,11 @@ class TaskRepository(
 
     suspend fun getGroupTasks(groupId: Int): List<Task> = api.getGroupTasks(groupId)
 
-    suspend fun getAllTasks(): List<Task> = api.getAllTasks()
+    suspend fun getAllTasks(
+        dueWithinDays: Int? = null,
+        mine: Boolean = false,
+        priority: Boolean = false
+    ): List<Task> = api.getAllTasks(dueWithinDays, mine, priority)
 
     suspend fun getTask(taskId: Int): Task = api.getTask(taskId)
 

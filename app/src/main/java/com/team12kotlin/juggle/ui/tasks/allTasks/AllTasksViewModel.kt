@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
 
+enum class AllTasksFilter(val label: String) {
+    URGENT("Urgent"),
+    DUE_SOON("Due soon"),
+    ASSIGNED_TO_ME("Assigned to me")
+}
+
 data class AllTasksUiState(
     val selectedFilterIndex: Int = 0,
     val personalTasks: List<Task> = emptyList(),
@@ -33,7 +39,15 @@ class AllTasksViewModel(
     fun loadTasks() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching { repository.getAllTasks() }
+
+            val filter = selectedFilter()
+            runCatching {
+                repository.getAllTasks(
+                    dueWithinDays = if (filter == AllTasksFilter.DUE_SOON) DUE_SOON_DAYS else null,
+                    mine = filter == AllTasksFilter.ASSIGNED_TO_ME,
+                    priority = filter == AllTasksFilter.URGENT
+                )
+            }
                 .onSuccess { tasks ->
                     _uiState.update {
                         it.copy(
@@ -53,8 +67,18 @@ class AllTasksViewModel(
 
     fun onFilterSelected(index: Int) {
         _uiState.update { it.copy(selectedFilterIndex = index) }
+        loadTasks()
     }
 
     fun onTaskClick(task: Task) {
+    }
+
+    private fun selectedFilter(): AllTasksFilter =
+        AllTasksFilter.entries.getOrElse(_uiState.value.selectedFilterIndex) {
+            AllTasksFilter.URGENT
+        }
+
+    private companion object {
+        const val DUE_SOON_DAYS = 7
     }
 }
