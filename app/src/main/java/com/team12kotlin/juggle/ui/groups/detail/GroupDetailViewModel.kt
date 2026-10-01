@@ -1,5 +1,6 @@
 package com.team12kotlin.juggle.ui.groups.detail
 
+import java.time.LocalDateTime
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.ui.dto.Group
@@ -50,20 +51,19 @@ class GroupDetailViewModel : ViewModel() {
             Task(
                 id = 1,
                 title = "Marketplace prototype",
-                member = members.getOrNull(0)?.firstName,
-                isImportant = true,
-                dueLabel = "Due in 3 days"
+                assignees = listOfNotNull(members.getOrNull(0)),
+                isPriority = true,
+                deadline = LocalDateTime.now().plusDays(3).withNano(0).toString()
             ),
             Task(
                 id = 2,
                 title = "Interview synthesis",
-                member = members.getOrNull(1)?.firstName,
-                dueLabel = "Due next week"
+                assignees = listOfNotNull(members.getOrNull(1)),
+                deadline = LocalDateTime.now().plusDays(7).withNano(0).toString()
             ),
             Task(
                 id = 3,
-                title = "Wiki milestone writeup",
-                dueLabel = "No due date yet"
+                title = "Wiki milestone writeup"
             )
         )
     }

@@ -2,11 +2,13 @@ package com.team12kotlin.juggle.ui.calendar
 
 import androidx.lifecycle.ViewModel
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.dto.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class CalendarUiState(
     val selectedDate: LocalDate = LocalDate.now(),
@@ -28,41 +30,37 @@ class CalendarViewModel : ViewModel() {
                     Task(
                         id = 101,
                         title = "Finish the figma",
-                        member = "Diego",
+                        assignees = listOf(User(userId = "Diego", firstName = "Diego")),
                         needsHelp = true,
-                        dueLabel = "Tomorrow - 12 hours left",
-                        deadline = today.toString()
+                        deadline = today.atTime(12, 0).toString()
                     )
                 )
                 add(
                     Task(
                         id = 102,
                         title = "Review pull request",
-                        member = "Manuela",
-                        dueLabel = "Tomorrow - 12 hours left",
-                        deadline = today.plusDays(1).toString()
+                        assignees = listOf(User(userId = "Manuela", firstName = "Manuela")),
+                        deadline = today.plusDays(1).atTime(12, 0).toString()
                     )
                 )
                 add(
                     Task(
                         id = 103,
                         title = "Prepare sprint slides",
-                        member = "Diego",
-                        isImportant = true,
-                        dueLabel = "In 3 days",
-                        deadline = today.plusDays(3).toString()
+                        assignees = listOf(User(userId = "Diego", firstName = "Diego")),
+                        isPriority = true,
+                        deadline = today.plusDays(3).atTime(12, 0).toString()
                     )
                 )
                 add(
                     Task(
                         id = 104,
                         title = "Submit MS4 report",
-                        member = "Shaiel",
-                        dueLabel = "2 days ago",
-                        deadline = today.minusDays(2).toString()
+                        assignees = listOf(User(userId = "Shaiel", firstName = "Shaiel")),
+                        deadline = today.minusDays(2).atTime(12, 0).toString()
                     )
                 )
-            }.groupBy { it.deadline?.let(LocalDate::parse) ?: today }
+            }.groupBy { it.deadline?.let { d -> LocalDateTime.parse(d).toLocalDate() } ?: today }
         )
     )
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()

@@ -49,6 +49,7 @@ import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.utils.taskDue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -205,11 +206,12 @@ private fun RelatedProjectCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (project.member != null) {
-                TextMonogram(text = project.member.take(1).uppercase())
+            val assigneeName = project.assignees.firstOrNull()?.firstName
+            if (assigneeName != null) {
+                TextMonogram(text = assigneeName.take(1).uppercase())
             } else {
                 IconMonogram(
-                    icon = if (project.isImportant) importantIcon else normalIcon,
+                    icon = if (project.isPriority) importantIcon else normalIcon,
                     contentDescription = "Project"
                 )
             }
@@ -219,7 +221,7 @@ private fun RelatedProjectCard(
             ) {
                 Text(project.title, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    text = project.dueLabel,
+                    text = taskDue(project.deadline)?.text ?: "No due date yet",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -233,7 +235,7 @@ private fun RelatedProjectCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (project.isImportant) {
+                    if (project.isPriority) {
                         Icon(
                             imageVector = MaterialSymbols.Outlined.Warning,
                             contentDescription = "Important",
@@ -267,8 +269,8 @@ private fun GroupDetailScreenPreview() {
                 )
             ),
             relatedProjects = listOf(
-                Task(id = 1, title = "Marketplace prototype", isImportant = true, dueLabel = "Due in 3 days"),
-                Task(id = 2, title = "Interview synthesis", member = "Manuela", dueLabel = "Due next week")
+                Task(id = 1, title = "Marketplace prototype", isPriority = true),
+                Task(id = 2, title = "Interview synthesis", assignees = listOf(User(userId = "u2", firstName = "Manuela")))
             )
         )
     }

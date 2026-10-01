@@ -42,8 +42,10 @@ import com.composables.icons.materialsymbols.outlined.Exclamation
 import com.team12kotlin.juggle.ui.components.IconMonogram
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -255,10 +257,11 @@ private fun ScheduleTaskCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                if (task.member != null) {
-                    TextMonogram(text = task.member.take(1).uppercase(), size = 28.dp)
-                    Text(text = task.member, style = MaterialTheme.typography.bodyMedium)
-                } else if (task.isImportant) {
+                val assigneeName = task.assignees.firstOrNull()?.firstName
+                if (assigneeName != null) {
+                    TextMonogram(text = assigneeName.take(1).uppercase(), size = 28.dp)
+                    Text(text = assigneeName, style = MaterialTheme.typography.bodyMedium)
+                } else if (task.isPriority) {
                     IconMonogram(
                         icon = MaterialSymbols.Outlined.Exclamation,
                         contentDescription = "Important task",
@@ -269,7 +272,7 @@ private fun ScheduleTaskCard(
                 }
             }
             Text(
-                text = task.dueLabel,
+                text = taskDue(task.deadline)?.text ?: "No due date",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -303,15 +306,15 @@ private fun CalendarScreenPreview() {
                 Task(
                     id = 1,
                     title = "Finish the figma",
-                    member = "Diego",
+                    assignees = listOf(User(userId = "Diego", firstName = "Diego")),
                     needsHelp = true,
-                    dueLabel = "Tomorrow - 12 hours left"
+                    deadline = today.plusDays(1).atTime(12, 0).toString()
                 ),
                 Task(
                     id = 2,
                     title = "Review pull request",
-                    member = "Manuela",
-                    dueLabel = "Tomorrow - 12 hours left"
+                    assignees = listOf(User(userId = "Manuela", firstName = "Manuela")),
+                    deadline = today.plusDays(1).atTime(12, 0).toString()
                 )
             )
         )
