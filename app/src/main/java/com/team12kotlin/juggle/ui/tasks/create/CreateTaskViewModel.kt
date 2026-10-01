@@ -46,6 +46,9 @@ data class CreateTaskUiState(
     val isPriority: Boolean = false,
     val needsHelp: Boolean = false,
     val notes: String = "",
+    val evidenceBytes: ByteArray? = null,
+    val evidenceMimeType: String? = null,
+    val evidenceDirty: Boolean = false,
     val relatedTasks: List<RelatedTask> = emptyList(),
     val relatedQuery: String = "",
     val taskTypeOptions: List<String> = emptyList(),
@@ -223,6 +226,12 @@ class CreateTaskViewModel(
         _uiState.update { it.copy(notes = notes) }
     }
 
+    fun onEvidenceTaken(bytes: ByteArray, mimeType: String) {
+        _uiState.update {
+            it.copy(evidenceBytes = bytes, evidenceMimeType = mimeType, evidenceDirty = true)
+        }
+    }
+
     fun onRelatedQueryChange(query: String) {
         _uiState.update { it.copy(relatedQuery = query) }
     }
@@ -234,6 +243,15 @@ class CreateTaskViewModel(
                     if (it.task.id == relatedTask.task.id) it.copy(selected = !it.selected) else it
                 }
             )
+        }
+    }
+
+    private suspend fun uploadEvidence(taskId: Int) {
+        val state = _uiState.value
+        val bytes = state.evidenceBytes
+        if (!state.evidenceDirty || bytes == null) return
+        runCatching {
+            taskRepository.uploadTaskPhoto(taskId, bytes, state.evidenceMimeType ?: "image/jpeg")
         }
     }
 
@@ -273,12 +291,14 @@ class CreateTaskViewModel(
                         needsHelp = state.needsHelp,
                         deadline = isoDeadline,
                         projectId = state.selectedProjectId,
+                        groupId = state.selectedGroupId,
                         assigneeIds = assigneeIds,
                         relatedTaskIds = relatedTaskIds
                     )
                 )
             }
                 .onSuccess { task ->
+                    uploadEvidence(task.id)
                     _uiState.update { it.copy(isLoading = false, createdTaskId = task.id) }
                 }
                 .onFailure { error ->

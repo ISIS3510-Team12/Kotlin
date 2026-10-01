@@ -10,6 +10,11 @@ import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.dto.TimeBlock
 import com.team12kotlin.juggle.ui.dto.TimeBlockRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 
 class TaskRepository(
     private val api: JuggleApi
@@ -38,6 +43,16 @@ class TaskRepository(
 
     suspend fun deleteTask(taskId: Int) {
         api.deleteTask(taskId)
+    }
+
+    suspend fun uploadTaskPhoto(taskId: Int, content: ByteArray, mimeType: String) {
+        val body = content.toRequestBody(mimeType.toMediaTypeOrNull())
+        val part = MultipartBody.Part.createFormData("file", "evidence", body)
+        api.uploadTaskPhoto(taskId, part)
+    }
+
+    suspend fun getTaskPhoto(taskId: Int): ByteArray? = withContext(Dispatchers.IO) {
+        runCatching { api.getTaskPhoto(taskId).bytes() }.getOrNull()
     }
 
     // --- Reminders -------------------------------------------------------

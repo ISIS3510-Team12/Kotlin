@@ -37,6 +37,9 @@ data class EditTaskUiState(
     val isPriority: Boolean = false,
     val needsHelp: Boolean = false,
     val notes: String = "",
+    val evidenceBytes: ByteArray? = null,
+    val evidenceMimeType: String? = null,
+    val evidenceDirty: Boolean = false,
     val taskTypeOptions: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -95,9 +98,10 @@ class EditTaskViewModel(
                 val groups = runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
                 val groupId = navGroupId ?: task.groupId
                 val projects = loadProjects(groupId)
-                val relatedIds = task.relatedTaskRefs.map { it.id }.toSet()
+                val relatedIds = task.relatedTasks.map { it.id }.toSet()
                 val related = loadRelated(groupId, relatedIds)
-                TaskEditData(task, groups, groupId, projects, related)
+                val photo = if (task.hasPhoto) repository.getTaskPhoto(id) else null
+                TaskEditData(task, groups, groupId, projects, related, photo)
             }
                 .onSuccess { data ->
                     _uiState.value = stateForTask(data)
@@ -194,6 +198,7 @@ class EditTaskViewModel(
             taskType = data.task.taskType.takeIf { it.isNotBlank() },
             assignedMembers = members,
             relatedTasks = data.relatedTasks,
+            evidenceBytes = data.photo,
             deadline = date,
             time = time,
             isPriority = data.task.isPriority,
@@ -245,6 +250,12 @@ class EditTaskViewModel(
         _uiState.update { it.copy(notes = notes) }
     }
 
+    fun onEvidenceTaken(bytes: ByteArray, mimeType: String) {
+        _uiState.update {
+            it.copy(evidenceBytes = bytes, evidenceMimeType = mimeType, evidenceDirty = true)
+        }
+    }
+
     fun onRelatedQueryChange(query: String) {
         _uiState.update { it.copy(relatedQuery = query) }
     }
@@ -256,6 +267,15 @@ class EditTaskViewModel(
                     if (it.task.id == relatedTask.task.id) it.copy(selected = !it.selected) else it
                 }
             )
+        }
+    }
+
+    private suspend fun uploadEvidence(taskId: Int) {
+        val state = _uiState.value
+        val bytes = state.evidenceBytes
+        if (!state.evidenceDirty || bytes == null) return
+        runCatching {
+            repository.uploadTaskPhoto(taskId, bytes, state.evidenceMimeType ?: "image/jpeg")
         }
     }
 
@@ -297,6 +317,7 @@ class EditTaskViewModel(
                 )
             }
                 .onSuccess {
+                    uploadEvidence(id)
                     _uiState.update { it.copy(isLoading = false, savedSuccessfully = true) }
                 }
                 .onFailure { error ->
@@ -314,6 +335,7 @@ class EditTaskViewModel(
         val groups: List<Group>,
         val groupId: Int?,
         val projects: List<Project>,
-        val relatedTasks: List<RelatedTask>
+        val relatedTasks: List<RelatedTask>,
+        val photo: ByteArray?
     )
 }

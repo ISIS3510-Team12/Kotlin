@@ -158,11 +158,10 @@ fun CreateTaskScreen(
                 modifier = contentPadding
             )
 
-            OutlinedTextField(
-                value = uiState.notes,
-                onValueChange = viewModel::onNotesChange,
-                modifier = contentPadding,
-                label = { Text("Notes & deliverable link") }
+            EvidencesField(
+                imageBytes = uiState.evidenceBytes,
+                onPhotoTaken = viewModel::onEvidenceTaken,
+                modifier = contentPadding
             )
 
             if (uiState.relatedTasks.isNotEmpty()) {

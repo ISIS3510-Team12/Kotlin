@@ -36,6 +36,7 @@ import com.composables.icons.materialsymbols.outlined.Check
 import com.team12kotlin.juggle.ui.tasks.create.AssignedMemberChip
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.tasks.create.DropdownField
+import com.team12kotlin.juggle.ui.tasks.create.EvidencesField
 import com.team12kotlin.juggle.ui.tasks.create.RelatedTasksPicker
 import com.team12kotlin.juggle.ui.tasks.create.TimePickerField
 import com.team12kotlin.juggle.ui.tasks.create.ToggleRow
@@ -168,11 +169,10 @@ fun EditTaskScreen(
                 modifier = contentPadding
             )
 
-            OutlinedTextField(
-                value = uiState.notes,
-                onValueChange = viewModel::onNotesChange,
-                modifier = contentPadding,
-                label = { Text("Notes & deliverable link") }
+            EvidencesField(
+                imageBytes = uiState.evidenceBytes,
+                onPhotoTaken = viewModel::onEvidenceTaken,
+                modifier = contentPadding
             )
 
             if (uiState.relatedTasks.isNotEmpty()) {

@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.time.LocalDate
 
 data class HomeUiState(
     val tasks: List<Task> = emptyList(),
@@ -19,15 +18,6 @@ data class HomeUiState(
 ) {
     val upcomingTasks: List<Task>
         get() = tasks
-
-    private fun List<Task>.filterFor(): List<Task> {
-        val currentDate = LocalDate.now()
-        // TODO: descomentar cuando se arregle el DTO de task
-        return filter { task -> task.dueLabel != null
-//            task.deadline != null && LocalDate.parse(task.deadline) < currentDate.plusDays(7)
-//                    && LocalDate.parse(task.deadline) >= currentDate
-        }
-    }
 }
 
 class HomeViewModel : ViewModel() {
@@ -36,7 +26,7 @@ class HomeViewModel : ViewModel() {
         HomeUiState(
             user = User(userId = "mock-user", firstName = "Victoria", email = "vs@gmail.com", major = "CS"),
             tasks = listOf(
-                Task(id = 1, title = "Finish Something bruh", isImportant = true),
+                Task(id = 1, title = "Finish Something bruh", isPriority = true),
                 Task(id = 2, title = "Terminar"),
                 Task(id = 3, title = "Work"),
                 Task(id = 4, title = "Finish Something bruh"),
