@@ -26,4 +26,8 @@ class AuthRepository(
         val result = firebaseAuth.signInWithCredential(credential).await()
         return result.user ?: error("Google sign in succeeded but returned no user")
     }
+
+    fun signOut() {
+        firebaseAuth.signOut()
+    }
 }
