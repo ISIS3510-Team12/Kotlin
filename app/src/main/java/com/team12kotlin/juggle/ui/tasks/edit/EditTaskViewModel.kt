@@ -4,12 +4,16 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.repository.GroupRepository
+import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Group
+import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.tasks.create.AssignableMember
+import com.team12kotlin.juggle.ui.tasks.create.RelatedTask
 import com.team12kotlin.juggle.utils.splitDeadline
+import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.toIsoDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +24,14 @@ import com.team12kotlin.juggle.data.Dependencies
 
 data class EditTaskUiState(
     val title: String = "",
-    val currentGroup: String = "",
+    val groups: List<Group> = emptyList(),
+    val selectedGroupId: Int? = null,
+    val projects: List<Project> = emptyList(),
+    val selectedProjectId: Int? = null,
     val taskType: String? = null,
     val assignedMembers: List<AssignableMember> = emptyList(),
+    val relatedTasks: List<RelatedTask> = emptyList(),
+    val relatedQuery: String = "",
     val deadline: String = "",
     val time: String = "",
     val isPriority: Boolean = false,
@@ -34,6 +43,19 @@ data class EditTaskUiState(
     val savedSuccessfully: Boolean = false
 ) {
     val canSave: Boolean get() = title.isNotBlank() && !isLoading
+
+    val selectedGroupName: String?
+        get() = groups.firstOrNull { it.id == selectedGroupId }?.name
+
+    val selectedProjectName: String?
+        get() = projects.firstOrNull { it.id == selectedProjectId }?.name
+
+    val filteredRelatedTasks: List<RelatedTask>
+        get() = if (relatedQuery.isBlank()) {
+            relatedTasks
+        } else {
+            relatedTasks.filter { it.task.title.contains(relatedQuery, ignoreCase = true) }
+        }
 }
 
 class EditTaskViewModel(
@@ -42,8 +64,10 @@ class EditTaskViewModel(
 
     private val repository: TaskRepository = Dependencies.taskRepository
     private val groupRepository: GroupRepository = Dependencies.groupRepository
+    private val projectRepository: ProjectRepository = Dependencies.projectRepository
 
     private val taskId: Int? = savedStateHandle.get<String>("taskId")?.toIntOrNull()
+    private val navGroupId: Int? = savedStateHandle.get<Int>("groupId")?.takeIf { it > 0 }
 
     private val taskTypeOptions: List<String> =
         listOf("Coding", "Design", "Research", "Writing", "Meeting")
@@ -69,10 +93,14 @@ class EditTaskViewModel(
             runCatching {
                 val task = repository.getTask(id)
                 val groups = runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
-                task to groups
+                val groupId = navGroupId ?: task.groupId
+                val projects = loadProjects(groupId)
+                val relatedIds = task.relatedTaskRefs.map { it.id }.toSet()
+                val related = loadRelated(groupId, relatedIds)
+                TaskEditData(task, groups, groupId, projects, related)
             }
-                .onSuccess { (task, groups) ->
-                    _uiState.value = stateForTask(task, groups)
+                .onSuccess { data ->
+                    _uiState.value = stateForTask(data)
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
@@ -80,13 +108,57 @@ class EditTaskViewModel(
         }
     }
 
-    private fun stateForTask(task: Task, groups: List<Group>): EditTaskUiState {
-        val currentGroup = groups.firstOrNull { it.id == task.groupId }?.name.orEmpty()
+    fun onGroupSelected(groupName: String) {
+        val group = _uiState.value.groups.firstOrNull { it.name == groupName }
+        val keepSelected = _uiState.value.relatedTasks
+            .filter { it.selected }
+            .map { it.task.id }
+            .toSet()
 
+        _uiState.update {
+            it.copy(selectedGroupId = group?.id, selectedProjectId = null, projects = emptyList())
+        }
+
+        viewModelScope.launch {
+            val projects = loadProjects(group?.id)
+            val related = loadRelated(group?.id, keepSelected)
+            _uiState.update { it.copy(projects = projects, relatedTasks = related) }
+        }
+    }
+
+    fun onProjectSelected(projectName: String) {
+        val project = _uiState.value.projects.firstOrNull { it.name == projectName }
+        _uiState.update { it.copy(selectedProjectId = project?.id) }
+    }
+
+    private suspend fun loadProjects(groupId: Int?): List<Project> {
+        if (groupId == null) return emptyList()
+        return runCatching { projectRepository.getProjects(groupId) }.getOrDefault(emptyList())
+    }
+
+    private suspend fun loadRelated(groupId: Int?, selectedIds: Set<Int>): List<RelatedTask> {
+        if (groupId == null) return emptyList()
+        val allTasks = runCatching { repository.getAllTasks() }.getOrDefault(emptyList())
+        val related: MutableList<RelatedTask> = mutableListOf()
+        for (task in allTasks) {
+            if (task.groupId == groupId) {
+                related.add(
+                    RelatedTask(
+                        task = task,
+                        dueLabel = taskDue(task.deadline)?.text.orEmpty(),
+                        selected = selectedIds.contains(task.id)
+                    )
+                )
+            }
+        }
+        return related
+    }
+
+    private fun stateForTask(data: TaskEditData): EditTaskUiState {
         val members: MutableList<AssignableMember> = mutableListOf()
         val seen: MutableSet<String> = mutableSetOf()
 
-        for (assignee in task.assignees) {
+        for (assignee in data.task.assignees) {
             if (seen.add(assignee.userId)) {
                 members.add(
                     AssignableMember(
@@ -97,7 +169,7 @@ class EditTaskViewModel(
                 )
             }
         }
-        for (group in groups) {
+        for (group in data.groups) {
             for (user in group.users) {
                 if (seen.add(user.userId)) {
                     members.add(
@@ -111,18 +183,22 @@ class EditTaskViewModel(
             }
         }
 
-        val (date, time) = splitDeadline(task.deadline)
+        val (date, time) = splitDeadline(data.task.deadline)
 
         return EditTaskUiState(
-            title = task.title,
-            currentGroup = currentGroup,
-            taskType = task.taskType.takeIf { it.isNotBlank() },
+            title = data.task.title,
+            groups = data.groups,
+            selectedGroupId = data.groupId,
+            projects = data.projects,
+            selectedProjectId = data.task.projectId,
+            taskType = data.task.taskType.takeIf { it.isNotBlank() },
             assignedMembers = members,
+            relatedTasks = data.relatedTasks,
             deadline = date,
             time = time,
-            isPriority = task.isPriority,
-            needsHelp = task.needsHelp,
-            notes = task.description,
+            isPriority = data.task.isPriority,
+            needsHelp = data.task.needsHelp,
+            notes = data.task.description,
             taskTypeOptions = taskTypeOptions
         )
     }
@@ -169,6 +245,20 @@ class EditTaskViewModel(
         _uiState.update { it.copy(notes = notes) }
     }
 
+    fun onRelatedQueryChange(query: String) {
+        _uiState.update { it.copy(relatedQuery = query) }
+    }
+
+    fun onRelatedTaskToggled(relatedTask: RelatedTask) {
+        _uiState.update { state ->
+            state.copy(
+                relatedTasks = state.relatedTasks.map {
+                    if (it.task.id == relatedTask.task.id) it.copy(selected = !it.selected) else it
+                }
+            )
+        }
+    }
+
     fun onEditTask() {
         val id = taskId ?: return
         val state = _uiState.value
@@ -178,6 +268,13 @@ class EditTaskViewModel(
         for (member in state.assignedMembers) {
             if (member.selected && member.userId.isNotBlank()) {
                 assigneeIds.add(member.userId)
+            }
+        }
+
+        val relatedTaskIds: MutableList<Int> = mutableListOf()
+        for (related in state.relatedTasks) {
+            if (related.selected) {
+                relatedTaskIds.add(related.task.id)
             }
         }
 
@@ -193,7 +290,9 @@ class EditTaskViewModel(
                         isPriority = state.isPriority,
                         needsHelp = state.needsHelp,
                         deadline = toIsoDateTime(state.deadline, state.time),
-                        assigneeIds = assigneeIds
+                        projectId = state.selectedProjectId,
+                        assigneeIds = assigneeIds,
+                        relatedTaskIds = relatedTaskIds
                     )
                 )
             }
@@ -209,4 +308,12 @@ class EditTaskViewModel(
     fun onSaved() {
         _uiState.update { it.copy(savedSuccessfully = false) }
     }
+
+    private data class TaskEditData(
+        val task: Task,
+        val groups: List<Group>,
+        val groupId: Int?,
+        val projects: List<Project>,
+        val relatedTasks: List<RelatedTask>
+    )
 }

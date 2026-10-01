@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Calendar_month
 import com.composables.icons.materialsymbols.outlined.Schedule
+import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -49,27 +53,6 @@ import java.util.Locale
 import java.util.TimeZone
 
 // Reusable building blocks for task forms (Create Task and, later, Edit Task).
-
-@Composable
-internal fun CurrentGroupTab(
-    groupName: String,
-    modifier: Modifier = Modifier
-) {
-    // The "Current Group" pill shown near the top of the screen.
-    Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            shape = RoundedCornerShape(8.dp)
-        ) {
-            Text(
-                text = "Current Group:  $groupName",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -293,6 +276,52 @@ internal fun RelatedTaskItem(
             Checkbox(checked = relatedTask.selected, onCheckedChange = { onToggle() })
         }
     )
+}
+
+private val RELATED_TASKS_HEIGHT = 216.dp
+
+@Composable
+internal fun RelatedTasksPicker(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    tasks: List<RelatedTask>,
+    onToggle: (RelatedTask) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // A searchable list of related tasks that shows three at a time and scrolls.
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            shape = RoundedCornerShape(100.dp),
+            placeholder = { Text("Search for a task...") },
+            leadingIcon = {
+                Icon(
+                    imageVector = MaterialSymbols.Outlined.Search,
+                    contentDescription = "Search"
+                )
+            }
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(RELATED_TASKS_HEIGHT)
+                .verticalScroll(rememberScrollState())
+        ) {
+            tasks.forEach { related ->
+                RelatedTaskItem(
+                    relatedTask = related,
+                    onToggle = { onToggle(related) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
 }
 
 private fun formatSelectedDate(millis: Long): String {

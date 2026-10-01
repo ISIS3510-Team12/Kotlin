@@ -34,9 +34,9 @@ import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Cancel
 import com.composables.icons.materialsymbols.outlined.Check
 import com.team12kotlin.juggle.ui.tasks.create.AssignedMemberChip
-import com.team12kotlin.juggle.ui.tasks.create.CurrentGroupTab
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.tasks.create.DropdownField
+import com.team12kotlin.juggle.ui.tasks.create.RelatedTasksPicker
 import com.team12kotlin.juggle.ui.tasks.create.TimePickerField
 import com.team12kotlin.juggle.ui.tasks.create.ToggleRow
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -87,9 +87,13 @@ fun EditTaskScreen(
                 .padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (uiState.currentGroup.isNotBlank()) {
-                CurrentGroupTab(groupName = uiState.currentGroup, modifier = contentPadding)
-            }
+            DropdownField(
+                value = uiState.selectedGroupName,
+                label = "Group",
+                options = uiState.groups.map { it.name },
+                onOptionSelected = viewModel::onGroupSelected,
+                modifier = contentPadding
+            )
 
             OutlinedTextField(
                 value = uiState.title,
@@ -104,6 +108,14 @@ fun EditTaskScreen(
                 label = "Task type",
                 options = uiState.taskTypeOptions,
                 onOptionSelected = viewModel::onTaskTypeSelected,
+                modifier = contentPadding
+            )
+
+            DropdownField(
+                value = uiState.selectedProjectName,
+                label = "Associated project",
+                options = uiState.projects.map { it.name },
+                onOptionSelected = viewModel::onProjectSelected,
                 modifier = contentPadding
             )
 
@@ -162,6 +174,21 @@ fun EditTaskScreen(
                 modifier = contentPadding,
                 label = { Text("Notes & deliverable link") }
             )
+
+            if (uiState.relatedTasks.isNotEmpty()) {
+                Text(
+                    text = "Related tasks",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = contentPadding
+                )
+                RelatedTasksPicker(
+                    query = uiState.relatedQuery,
+                    onQueryChange = viewModel::onRelatedQueryChange,
+                    tasks = uiState.filteredRelatedTasks,
+                    onToggle = viewModel::onRelatedTaskToggled,
+                    modifier = contentPadding
+                )
+            }
 
             uiState.errorMessage?.let { message ->
                 Text(
