@@ -20,7 +20,7 @@ data class GroupsUiState(
         return filter { group ->
             group.name.lowercase().contains(q)
                     || group.description.lowercase().contains(q)
-                    || group.members.any { member -> member.firstName.contains(q)}
+                    || group.users.any { member -> member.firstName.contains(q)}
         }
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,6 +37,7 @@ import com.team12kotlin.juggle.ui.tasks.create.AssignedMemberChip
 import com.team12kotlin.juggle.ui.tasks.create.CurrentGroupTab
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.tasks.create.DropdownField
+import com.team12kotlin.juggle.ui.tasks.create.TimePickerField
 import com.team12kotlin.juggle.ui.tasks.create.ToggleRow
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
@@ -49,6 +51,13 @@ fun EditTaskScreen(
     onCancel: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.savedSuccessfully) {
+        if (uiState.savedSuccessfully) {
+            viewModel.onSaved()
+            onTaskEdited()
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -78,14 +87,16 @@ fun EditTaskScreen(
                 .padding(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CurrentGroupTab(groupName = uiState.currentGroup, modifier = contentPadding)
+            if (uiState.currentGroup.isNotBlank()) {
+                CurrentGroupTab(groupName = uiState.currentGroup, modifier = contentPadding)
+            }
 
-            DropdownField(
-                value = uiState.selectedTask,
-                label = "Selected task",
-                options = uiState.taskOptions,
-                onOptionSelected = viewModel::onSelectedTaskChange,
-                modifier = contentPadding
+            OutlinedTextField(
+                value = uiState.title,
+                onValueChange = viewModel::onTitleChange,
+                modifier = contentPadding,
+                label = { Text("Task title") },
+                isError = uiState.title.isBlank()
             )
 
             DropdownField(
@@ -126,6 +137,11 @@ fun EditTaskScreen(
                 onDateSelected = viewModel::onDeadlineChange,
                 modifier = contentPadding
             )
+            TimePickerField(
+                value = uiState.time,
+                onTimeSelected = viewModel::onTimeChange,
+                modifier = contentPadding
+            )
 
             ToggleRow(
                 label = "Is priority",
@@ -147,21 +163,27 @@ fun EditTaskScreen(
                 label = { Text("Notes & deliverable link") }
             )
 
+            uiState.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = contentPadding
+                )
+            }
+
             Row(
                 modifier = contentPadding,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Button(
-                    onClick = {
-                        viewModel.onEditTask()
-                        onTaskEdited()
-                    },
+                    onClick = viewModel::onEditTask,
                     enabled = uiState.canSave,
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(imageVector = MaterialSymbols.Outlined.Check, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Edit task")
+                    Text(if (uiState.isLoading) "Saving..." else "Edit task")
                 }
                 OutlinedButton(
                     onClick = onCancel,

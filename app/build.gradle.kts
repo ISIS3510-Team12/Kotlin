@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -17,6 +19,12 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000\"")
+        buildConfigField("boolean", "USE_FIREBASE_EMULATOR", "true")
+        buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"10.0.2.2\"")
+        buildConfigField("int", "FIREBASE_AUTH_EMULATOR_PORT", "9099")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com\"")
     }
 
     buildTypes {
@@ -32,6 +40,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -56,6 +65,21 @@ dependencies {
     implementation("com.composables:icons-material-symbols-rounded-filled-cmp:2.2.1")
     implementation("com.composables:icons-material-symbols-sharp-filled-cmp:2.2.1")
     implementation(libs.androidx.material3)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.google.identity.googleid)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.serialization)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.play.services)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

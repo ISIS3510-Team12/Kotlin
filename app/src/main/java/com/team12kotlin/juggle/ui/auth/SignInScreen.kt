@@ -18,8 +18,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,7 +34,9 @@ import com.team12kotlin.juggle.ui.components.GoogleSignInButton
 import com.team12kotlin.juggle.ui.components.OrDivider
 import com.team12kotlin.juggle.ui.components.PasswordField
 import com.team12kotlin.juggle.ui.components.PillButton
+import com.team12kotlin.juggle.data.auth.requestGoogleIdToken
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,10 +46,21 @@ fun SignInScreen(
     onBackClick: () -> Unit = {},
     onSignInClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
-    onGoogleSignInClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    fun handleGoogleSignIn() {
+        scope.launch {
+            try {
+                viewModel.onGoogleSignIn(requestGoogleIdToken(context))
+            } catch (error: Throwable) {
+                viewModel.onGoogleSignInError(error)
+            }
+        }
+    }
 
     LaunchedEffect(uiState.navigateToSuccess) {
         if (uiState.navigateToSuccess) {
@@ -107,6 +122,15 @@ fun SignInScreen(
                 enabled = uiState.canSubmit
             )
 
+            uiState.authError?.let { message ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             TextButton(
                 onClick = {
                     viewModel.onForgotPassword()
@@ -125,7 +149,7 @@ fun SignInScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            GoogleSignInButton(onClick = onGoogleSignInClick)
+            GoogleSignInButton(onClick = { handleGoogleSignIn() })
 
             Spacer(modifier = Modifier.height(24.dp))
 

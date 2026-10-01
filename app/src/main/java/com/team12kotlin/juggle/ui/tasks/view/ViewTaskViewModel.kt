@@ -2,13 +2,17 @@ package com.team12kotlin.juggle.ui.tasks.view
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
-import com.team12kotlin.juggle.ui.tasks.TaskRepository
+import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import com.team12kotlin.juggle.data.Dependencies
 
 enum class TaskAction(val label: String) {
     MARK_AS_COMPLETE("Mark as complete"),
@@ -21,21 +25,36 @@ enum class TaskAction(val label: String) {
 
 data class ViewTaskUiState(
     val task: Task,
-    val isFabMenuExpanded: Boolean = false
+    val isFabMenuExpanded: Boolean = false,
+    val errorMessage: String? = null
 )
 
 class ViewTaskViewModel(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val taskId: String? = savedStateHandle["taskId"]
+    private val repository: TaskRepository = Dependencies.taskRepository
 
-    private val _uiState = MutableStateFlow(
-        ViewTaskUiState(
-            task = taskId?.let { TaskRepository.findById(it) } ?: MISSING_TASK
-        )
-    )
+    private val taskId: Int? = savedStateHandle.get<String>("taskId")?.toIntOrNull()
+
+    private val _uiState = MutableStateFlow(ViewTaskUiState(task = MISSING_TASK))
     val uiState: StateFlow<ViewTaskUiState> = _uiState.asStateFlow()
+
+    fun loadTask() {
+        val id = taskId
+        if (id == null) {
+            return
+        }
+        viewModelScope.launch {
+            runCatching { repository.getTask(id) }
+                .onSuccess { task ->
+                    _uiState.update { it.copy(task = task) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message) }
+                }
+        }
+    }
 
     fun onFabMenuToggle() {
         _uiState.update { it.copy(isFabMenuExpanded = !it.isFabMenuExpanded) }
@@ -58,9 +77,25 @@ class ViewTaskViewModel(
     }
 
     fun onReminderToggle(enabled: Boolean) {
+        val id = taskId ?: return
+        val reminder = _uiState.value.task.reminders.firstOrNull() ?: return
+
+        // Optimistically reflect the toggle, then persist it.
         _uiState.update { state ->
-            val reminder = state.task.reminder ?: return@update state
-            state.copy(task = state.task.copy(reminder = reminder.copy(enabled = enabled)))
+            state.copy(
+                task = state.task.copy(
+                    reminders = state.task.reminders.map {
+                        if (it.id == reminder.id) it.copy(enabled = enabled) else it
+                    }
+                )
+            )
+        }
+
+        viewModelScope.launch {
+            runCatching { repository.setReminderEnabled(id, reminder.id, enabled) }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message) }
+                }
         }
     }
 
@@ -68,30 +103,48 @@ class ViewTaskViewModel(
         // TODO: navigate to the related task's detail.
     }
 
-    private fun onMarkAsComplete() {
-        // TODO: persist the completed status when the data layer exists.
+    /** Runs a repository action for the current task, then refreshes it. */
+    private fun runAction(action: suspend (taskId: Int) -> Unit) {
+        val id = taskId ?: return
+        viewModelScope.launch {
+            runCatching { action(id) }
+                .onSuccess { loadTask() }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message) }
+                }
+        }
+    }
+
+    private fun onMarkAsComplete() = runAction { id ->
+        repository.changeStatus(id, TaskStatus.COMPLETED)
+    }
+
+    private fun onMarkAsStarted() = runAction { id ->
+        repository.changeStatus(id, TaskStatus.IN_PROGRESS)
+    }
+
+    private fun onAskForHelp() = runAction { id ->
+        repository.updateTask(id, TaskUpdateRequest(needsHelp = true))
     }
 
     private fun onDeleteTask() {
-        // TODO: delete the task and navigate back when the data layer exists.
-    }
-
-    private fun onAskForHelp() {
-        // TODO: flag the task as needing help when the data layer exists.
-    }
-
-    private fun onMarkAsStarted() {
-        // TODO: move the task to in-progress when the data layer exists.
+        val id = taskId ?: return
+        viewModelScope.launch {
+            runCatching { repository.deleteTask(id) }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message) }
+                }
+        }
     }
 
     private fun onAssignTimeSlot() {
-        // TODO: open the time-slot picker when it exists.
+        // TODO: open the time-slot picker, then call repository.createTimeBlock(...).
     }
 
     private companion object {
         // Fallback shown when a task id is missing or not found.
         val MISSING_TASK = Task(
-            id = "",
+            id = 0,
             title = "Task not found",
             status = TaskStatus.NOT_STARTED
         )

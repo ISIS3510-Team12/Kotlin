@@ -28,9 +28,9 @@ class CreateGroupViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(
         CreateGroupUiState(
             availableMembers = listOf(
-                User(firstName = "Diego Munévar", email="d.mun@gmail.com", major = "Comp Sci"),
-                User(firstName = "Manuela Lovera", email="m.ll@gmail.com", major = "Comp Sci"),
-                User(firstName = "Shaiel Jiménez", email="sm.j@gmail.com", major = "Comp Sci")
+                User(userId = "u1", firstName = "Diego Munévar", email = "d.mun@gmail.com", major = "Comp Sci"),
+                User(userId = "u2", firstName = "Manuela Lovera", email = "m.ll@gmail.com", major = "Comp Sci"),
+                User(userId = "u3", firstName = "Shaiel Jiménez", email = "sm.j@gmail.com", major = "Comp Sci")
             ),
         )
     )

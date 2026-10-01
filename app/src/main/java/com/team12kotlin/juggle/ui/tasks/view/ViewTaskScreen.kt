@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -68,12 +69,17 @@ fun ViewTaskScreen(
     modifier: Modifier = Modifier,
     viewModel: ViewTaskViewModel = viewModel(),
     onBackClick: () -> Unit = {},
-    onEditTask: (taskId: String) -> Unit = {}
+    onEditTask: (taskId: Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     BackHandler(enabled = uiState.isFabMenuExpanded) {
         viewModel.onFabMenuDismiss()
+    }
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.loadTask()
+        onPauseOrDispose { }
     }
 
     Box(modifier = modifier) {
@@ -135,7 +141,7 @@ fun ViewTaskScreen(
                 // Scheduled card
                 ScheduledCard(
                     deadline = task.deadline ?: "No deadline set",
-                    reminder = task.reminder,
+                    reminder = task.reminders.firstOrNull(),
                     onReminderToggle = viewModel::onReminderToggle,
                     onEditClick = { onEditTask(task.id) }
                 )
@@ -166,7 +172,7 @@ fun ViewTaskScreen(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
-                    task.members.forEach { member ->
+                    task.assignees.forEach { member ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -402,7 +408,7 @@ private fun RelatedTaskCard(
             .clickable { onClick() }
             .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        overlineContent = if (task.isImportant) {
+        overlineContent = if (task.needsHelp) {
             { Text("Needs Help.") }
         } else {
             null

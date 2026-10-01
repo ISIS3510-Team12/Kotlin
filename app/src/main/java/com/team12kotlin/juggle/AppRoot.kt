@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -152,8 +153,8 @@ fun AppRoot(
                                 restoreState = true
                             }
                         },
-                        onNavigateToCreateTask = {
-                            navController.navigate(NavigationDestination.CreateTask.route) {
+                        onNavigateToCreateTask = { groupId ->
+                            navController.navigate("${NavigationDestination.CreateTask.route}/$groupId") {
                                 launchSingleTop = true
                             }
                         },
@@ -171,14 +172,29 @@ fun AppRoot(
                 composable(NavigationDestination.AllTasks.route) {
                     AllTasksScreen(
                         modifier = Modifier.fillMaxSize(),
+                        onTaskClick = { task ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
+                                launchSingleTop = true
+                            }
+                        },
                         onBackClick = { navController.popBackStack() }
                     )
                 }
-                composable(NavigationDestination.CreateTask.route) {
+                composable(
+                    route = "${NavigationDestination.CreateTask.route}/{groupId}",
+                    arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+                ) {
                     CreateTaskScreen(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
-                        onTaskCreated = { navController.popBackStack() }
+                        onTaskCreated = { taskId ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/$taskId") {
+                                popUpTo("${NavigationDestination.CreateTask.route}/{groupId}") {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        }
                     )
                 }
                 composable(

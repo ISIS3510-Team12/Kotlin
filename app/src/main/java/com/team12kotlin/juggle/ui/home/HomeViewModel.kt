@@ -34,14 +34,14 @@ class HomeViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         HomeUiState(
-            user = User(firstName = "Victoria", email = "vs@gmail.com", major = "CS"),
+            user = User(userId = "mock-user", firstName = "Victoria", email = "vs@gmail.com", major = "CS"),
             tasks = listOf(
-                Task(id = "p1", title = "Finish Something bruh", isImportant = true),
-                Task(id = "p2", title = "Terminar"),
-                Task(id = "p3", title = "Work"),
-                Task(id = "p4", title = "Finish Something bruh"),
-                Task(id = "p5", title = "Terminar"),
-                Task(id = "p6", title = "Work")
+                Task(id = 1, title = "Finish Something bruh", isImportant = true),
+                Task(id = 2, title = "Terminar"),
+                Task(id = 3, title = "Work"),
+                Task(id = 4, title = "Finish Something bruh"),
+                Task(id = 5, title = "Terminar"),
+                Task(id = 6, title = "Work")
             ),
             notifications = listOf(
                 Notification(id=1, title="Finished task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete")

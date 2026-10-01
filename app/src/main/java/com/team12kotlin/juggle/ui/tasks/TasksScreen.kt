@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -57,7 +58,7 @@ fun TasksScreen(
     onEditGroupClick: () -> Unit = {},
     onAllTasksClick: () -> Unit = {},
     onProfileClick: (NavigationDestination) -> Unit = {},
-    onNavigateToCreateTask: () -> Unit = {},
+    onNavigateToCreateTask: (groupId: Int) -> Unit = {},
     onNavigateToCreateGroup: () -> Unit = {},
     onNavigateToEditGroup: () -> Unit = {},
     onNavigateToHome: () -> Unit = {},
@@ -65,6 +66,12 @@ fun TasksScreen(
     onNavigateToCalendar: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshCurrentGroup()
+        onPauseOrDispose { }
+    }
+
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState(uiState.query)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -100,7 +107,7 @@ fun TasksScreen(
                 ExtendedFloatingActionButton(
                     onClick = {
                         viewModel.onCreateTask()
-                        onNavigateToCreateTask()
+                        uiState.selectedGroupId?.let(onNavigateToCreateTask)
                     },
                     modifier = Modifier.padding(bottom = 104.dp),
                     icon = {
@@ -178,7 +185,7 @@ fun TasksScreen(
                 )
                 TasksSection(
                     title = "Your pending tasks",
-                    tasks = uiState.filteredPersonalTasks,
+                    tasks = uiState.filteredOwnTasks,
                     onTaskClick = {
                         viewModel.onTaskClick(it)
                         onTaskClick(it)

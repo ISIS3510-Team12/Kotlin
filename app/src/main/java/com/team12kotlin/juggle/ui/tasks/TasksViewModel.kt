@@ -1,13 +1,19 @@
 package com.team12kotlin.juggle.ui.tasks
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.repository.GroupRepository
+import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import com.team12kotlin.juggle.data.Dependencies
 
 data class DrawerItem(
+    val id: Int = 0,
     val name: String,
     val pendingTasks: Int = 0,
     val selected: Boolean = false
@@ -15,13 +21,16 @@ data class DrawerItem(
 
 data class TasksUiState(
     val query: String = "",
-    val currentGroup: String,
-    val personalTasks: List<Task> = emptyList(),
+    val currentGroup: String = "",
+    val ownTasks: List<Task> = emptyList(),
     val groupTasks: List<Task> = emptyList(),
-    val groups: List<DrawerItem> = emptyList()
+    val groups: List<DrawerItem> = emptyList(),
+    val selectedGroupId: Int? = null,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 ) {
-    val filteredPersonalTasks: List<Task>
-        get() = personalTasks.filterFor(query)
+    val filteredOwnTasks: List<Task>
+        get() = ownTasks.filterFor(query)
     val filteredGroupTasks: List<Task>
         get() = groupTasks.filterFor(query)
 
@@ -35,21 +44,77 @@ data class TasksUiState(
     }
 }
 
-class TasksViewModel : ViewModel() {
+class TasksViewModel(
+    private val repository: TaskRepository = Dependencies.taskRepository,
+    private val groupRepository: GroupRepository = Dependencies.groupRepository
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        TasksUiState(
-            personalTasks = TaskRepository.personalTasks,
-            groupTasks = TaskRepository.groupTasks,
-            currentGroup = "API Pending",
-            groups = listOf(
-                DrawerItem(name = "App Devs", pendingTasks = 67, selected = true),
-                DrawerItem(name = "Group 1"),
-                DrawerItem(name = "Group 2")
-            )
-        )
-    )
+    private val _uiState = MutableStateFlow(TasksUiState())
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
+
+    init {
+        loadGroups()
+    }
+
+    fun refreshCurrentGroup() {
+        _uiState.value.selectedGroupId?.let { loadTasksForGroup(it) }
+    }
+
+    fun loadGroups() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val groupsResult = runCatching { groupRepository.getGroups() }
+            val groups = groupsResult.getOrDefault(emptyList())
+            val selectedId = groups.firstOrNull()?.id
+
+            val drawerItems = mutableListOf<DrawerItem>()
+            for (group in groups) {
+                drawerItems.add(
+                    DrawerItem(
+                        id = group.id,
+                        name = group.name,
+                        pendingTasks = group.pendingTaskCount,
+                        selected = group.id == selectedId
+                    )
+                )
+            }
+
+            _uiState.update {
+                it.copy(
+                    groups = drawerItems,
+                    selectedGroupId = selectedId,
+                    currentGroup = drawerItems.firstOrNull()?.name ?: it.currentGroup,
+                    isLoading = false,
+                    errorMessage = groupsResult.exceptionOrNull()?.message
+                )
+            }
+
+            if (selectedId != null) {
+                loadTasksForGroup(selectedId)
+            }
+        }
+    }
+
+    fun loadTasksForGroup(groupId: Int) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val ownResult = runCatching { repository.getOwnTasks(groupId) }
+            val groupResult = runCatching { repository.getGroupTasks(groupId) }
+
+            val error = ownResult.exceptionOrNull() ?: groupResult.exceptionOrNull()
+
+            _uiState.update {
+                it.copy(
+                    ownTasks = ownResult.getOrDefault(it.ownTasks),
+                    groupTasks = groupResult.getOrDefault(it.groupTasks),
+                    isLoading = false,
+                    errorMessage = error?.message
+                )
+            }
+        }
+    }
 
     fun onQueryChange(query: String) {
         _uiState.update { it.copy(query = query) }
@@ -57,32 +122,28 @@ class TasksViewModel : ViewModel() {
 
     fun onSearch(query: String) {
         _uiState.update { it.copy(query = query) }
-        // TODO: trigger repository search / navigation when data layer exists
     }
 
     fun onTaskClick(task: Task) {
-        // TODO: navigate to task detail for task.id
     }
 
     fun onEditGroupClick() {
-        // TODO: navigate to edit-group for currentGroup
     }
 
     fun onAllTasksClick() {
-        // TODO: navigate to the all-tasks list
     }
 
     fun onCreateTask() {
-        // TODO: navigate to create-task
     }
 
     fun onGroupSelected(group: DrawerItem) {
         _uiState.update { state ->
             state.copy(
                 currentGroup = group.name,
-                groups = state.groups.map { it.copy(selected = it.name == group.name) }
+                selectedGroupId = group.id,
+                groups = state.groups.map { it.copy(selected = it.id == group.id) }
             )
         }
-        // TODO: load the selected group's tasks when the data layer exists.
+        loadTasksForGroup(group.id)
     }
 }

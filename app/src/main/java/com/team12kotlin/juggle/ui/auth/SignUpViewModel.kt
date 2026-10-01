@@ -2,12 +2,16 @@ package com.team12kotlin.juggle.ui.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.delay
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.repository.AuthRepository
+import com.team12kotlin.juggle.data.repository.UserRepository
+import com.team12kotlin.juggle.ui.dto.UserCreateRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 data class SignUpUiState(
     val firstName: String = "",
@@ -20,6 +24,7 @@ data class SignUpUiState(
     val emailError: String? = null,
     val passwordError: String? = null,
     val confirmPasswordError: String? = null,
+    val authError: String? = null,
     val isSubmitting: Boolean = false,
     val navigateToSuccess: Boolean = false
 ) {
@@ -28,29 +33,34 @@ data class SignUpUiState(
         get() = !isSubmitting
 }
 
-class SignUpViewModel : ViewModel() {
+class SignUpViewModel(
+    private val authRepository: AuthRepository = Dependencies.authRepository,
+    private val userRepository: UserRepository = Dependencies.userRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
 
     fun onFirstNameChange(value: String) {
-        _uiState.update { it.copy(firstName = value, firstNameError = null) }
+        _uiState.update { it.copy(firstName = value, firstNameError = null, authError = null) }
     }
 
     fun onLastNameChange(value: String) {
-        _uiState.update { it.copy(lastName = value, lastNameError = null) }
+        _uiState.update { it.copy(lastName = value, lastNameError = null, authError = null) }
     }
 
     fun onEmailChange(value: String) {
-        _uiState.update { it.copy(email = value, emailError = null) }
+        _uiState.update { it.copy(email = value, emailError = null, authError = null) }
     }
 
     fun onPasswordChange(value: String) {
-        _uiState.update { it.copy(password = value, passwordError = null) }
+        _uiState.update { it.copy(password = value, passwordError = null, authError = null) }
     }
 
     fun onConfirmPasswordChange(value: String) {
-        _uiState.update { it.copy(confirmPassword = value, confirmPasswordError = null) }
+        _uiState.update {
+            it.copy(confirmPassword = value, confirmPasswordError = null, authError = null)
+        }
     }
 
     fun onSignUpSubmit() {
@@ -92,14 +102,52 @@ class SignUpViewModel : ViewModel() {
                 emailError = null,
                 passwordError = null,
                 confirmPasswordError = null,
+                authError = null,
                 isSubmitting = true
             )
         }
 
         viewModelScope.launch {
-            // TODO: replace with AuthRepository.signUp(...) when there's logic xd
-            delay(600)
-            _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
+            try {
+                authRepository.signUp(state.email, state.password)
+                try {
+                    userRepository.createUser(
+                        UserCreateRequest(firstName = state.firstName, lastName = state.lastName)
+                    )
+                } catch (error: HttpException) {
+                    // The Firebase account may already have a backend profile-
+                    if (error.code() != 400) throw error
+                }
+                _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
+            } catch (error: Throwable) {
+                _uiState.update {
+                    it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
+                }
+            }
+        }
+    }
+
+    fun onGoogleSignIn(idToken: String) {
+        if (_uiState.value.isSubmitting) return
+
+        _uiState.update { it.copy(authError = null, isSubmitting = true) }
+
+        viewModelScope.launch {
+            try {
+                val user = authRepository.signInWithGoogle(idToken)
+                registerBackendUser(userRepository, user)
+                _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
+            } catch (error: Throwable) {
+                _uiState.update {
+                    it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
+                }
+            }
+        }
+    }
+
+    fun onGoogleSignInError(error: Throwable) {
+        _uiState.update {
+            it.copy(isSubmitting = false, authError = error.toAuthErrorMessage())
         }
     }
 
