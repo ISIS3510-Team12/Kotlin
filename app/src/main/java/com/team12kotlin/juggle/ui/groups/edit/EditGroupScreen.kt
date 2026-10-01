@@ -47,7 +47,7 @@ import kotlinx.coroutines.FlowPreview
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun EditGroupScreen(
-    groupId: String,
+    groupId: Int,
     modifier: Modifier = Modifier,
     viewModel: EditGroupViewModel = viewModel(),
     goBack: () -> Unit = {}
@@ -220,11 +220,11 @@ private fun EditGroupContent(
 @Composable
 private fun EditGroupScreenPreview() {
     val members = listOf(
-        User(firstName = "Diego Alejandro", email = "d.munevar@uniandes.edu.co", major = "Comp Sci"),
-        User(firstName = "Manuela", email = "m.loveral@uniandes.edu.co", major = "Comp Sci"),
-        User(firstName = "Shaiel Mateo", email = "sm.jimenez@uniandes.edu.co", major = "Comp Sci"),
-        User(firstName = "Juan Diego", email = "jd.perez@uniandes.edu.co", major = "Comp Sci"),
-        User(firstName = "Snoopy", email = "snoopy@uniandes.edu.co", major = "Comp Sci")
+        User(userId = "u1", firstName = "Diego Alejandro", email = "d.munevar@uniandes.edu.co", major = "Comp Sci"),
+        User(userId = "u2", firstName = "Manuela", email = "m.loveral@uniandes.edu.co", major = "Comp Sci"),
+        User(userId = "u3", firstName = "Shaiel Mateo", email = "sm.jimenez@uniandes.edu.co", major = "Comp Sci"),
+        User(userId = "u4", firstName = "Juan Diego", email = "jd.perez@uniandes.edu.co", major = "Comp Sci"),
+        User(userId = "u5", firstName = "Snoopy", email = "snoopy@uniandes.edu.co", major = "Comp Sci")
     )
     JuggleTheme {
         EditGroupContent(

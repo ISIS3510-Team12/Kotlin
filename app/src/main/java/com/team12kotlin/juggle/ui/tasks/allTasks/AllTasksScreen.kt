@@ -70,7 +70,7 @@ fun AllTasksScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ButtonGroupFilter(
-                filters = listOf("Urgent", "Due soon", "Assigned to me"),
+                filters = AllTasksFilter.entries.map { it.label },
                 selectedIndex = uiState.selectedFilterIndex,
                 onFilterSelected = { viewModel.onFilterSelected(it) },
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)

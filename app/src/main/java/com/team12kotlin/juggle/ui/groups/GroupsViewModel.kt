@@ -3,7 +3,6 @@ package com.team12kotlin.juggle.ui.groups
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.ui.dto.Group
-import com.team12kotlin.juggle.ui.tasks.Task
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +22,7 @@ data class GroupsUiState(
         return filter { group ->
             group.name.lowercase().contains(q)
                     || group.description.lowercase().contains(q)
-                    || group.members.any { member -> member.firstName.contains(q)}
+                    || group.users.any { member -> member.firstName.contains(q)}
         }
     }
 }

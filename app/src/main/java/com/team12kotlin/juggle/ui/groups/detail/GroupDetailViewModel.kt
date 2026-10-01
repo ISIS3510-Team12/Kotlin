@@ -21,9 +21,9 @@ class GroupDetailViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(GroupDetailUiState())
     val uiState: StateFlow<GroupDetailUiState> = _uiState.asStateFlow()
 
-    private var loadedGroupId: String? = null
+    private var loadedGroupId: Int? = null
 
-    fun load(groupId: String) {
+    fun load(groupId: Int) {
         if (loadedGroupId == groupId) return
         loadedGroupId = groupId
 
@@ -45,23 +45,23 @@ class GroupDetailViewModel : ViewModel() {
     }
 
     private fun mockRelatedProjectsFor(group: Group?): List<Task> {
-        val members = group?.members.orEmpty()
+        val members = group?.users.orEmpty()
         return listOf(
             Task(
-                id = "proj1",
+                id = 1,
                 title = "Marketplace prototype",
                 member = members.getOrNull(0)?.firstName,
                 isImportant = true,
                 dueLabel = "Due in 3 days"
             ),
             Task(
-                id = "proj2",
+                id = 2,
                 title = "Interview synthesis",
                 member = members.getOrNull(1)?.firstName,
                 dueLabel = "Due next week"
             ),
             Task(
-                id = "proj3",
+                id = 3,
                 title = "Wiki milestone writeup",
                 dueLabel = "No due date yet"
             )

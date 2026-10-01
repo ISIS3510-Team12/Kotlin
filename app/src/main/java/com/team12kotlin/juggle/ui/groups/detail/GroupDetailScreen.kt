@@ -53,7 +53,7 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailScreen(
-    groupId: String,
+    groupId: Int,
     modifier: Modifier = Modifier,
     viewModel: GroupDetailViewModel = viewModel(),
     onBackClick: () -> Unit = {}
@@ -144,7 +144,7 @@ private fun GroupDetailContent(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    group?.members.orEmpty().forEach { member ->
+                    group?.users.orEmpty().forEach { member ->
                         GroupMember(member)
                     }
                 }
@@ -257,18 +257,18 @@ private fun GroupDetailScreenPreview() {
     JuggleTheme {
         GroupDetailContent(
             group = Group(
-                id = "preview",
+                id = 1,
                 name = "Group name #1",
                 description = "ISIS-3510",
-                members = mutableListOf(
-                    User(firstName = "Diego", email = "d.munevar@uniandes.edu.co", major = "Comp Sci"),
-                    User(firstName = "Manuela", email = "m.loveral@uniandes.edu.co", major = "Comp Sci"),
-                    User(firstName = "Shaiel", email = "sm.jimenez@uniandes.edu.co", major = "Comp Sci")
+                users = mutableListOf(
+                    User(userId = "u1", firstName = "Diego", email = "d.munevar@uniandes.edu.co", major = "Comp Sci"),
+                    User(userId = "u2", firstName = "Manuela", email = "m.loveral@uniandes.edu.co", major = "Comp Sci"),
+                    User(userId = "u3", firstName = "Shaiel", email = "sm.jimenez@uniandes.edu.co", major = "Comp Sci")
                 )
             ),
             relatedProjects = listOf(
-                Task(id = "proj1", title = "Marketplace prototype", isImportant = true, dueLabel = "Due in 3 days"),
-                Task(id = "proj2", title = "Interview synthesis", member = "Manuela", dueLabel = "Due next week")
+                Task(id = 1, title = "Marketplace prototype", isImportant = true, dueLabel = "Due in 3 days"),
+                Task(id = 2, title = "Interview synthesis", member = "Manuela", dueLabel = "Due next week")
             )
         )
     }

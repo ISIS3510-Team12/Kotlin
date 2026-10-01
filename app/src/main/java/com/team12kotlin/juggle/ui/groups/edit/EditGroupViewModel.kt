@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 data class EditGroupUiState(
-    val groupId: String = "",
+    val groupId: Int = 0,
     val name: String = "",
     val description: String = "",
     val query: String = "",
@@ -33,9 +33,9 @@ class EditGroupViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(EditGroupUiState())
     val uiState: StateFlow<EditGroupUiState> = _uiState.asStateFlow()
 
-    private var loadedGroupId: String? = null
+    private var loadedGroupId: Int? = null
 
-    fun load(groupId: String) {
+    fun load(groupId: Int) {
         if (loadedGroupId == groupId) return
         loadedGroupId = groupId
 
@@ -46,7 +46,7 @@ class EditGroupViewModel : ViewModel() {
                 name = group?.name.orEmpty(),
                 description = group?.description.orEmpty(),
                 directory = GroupsRepository.directory,
-                selectedMembers = group?.members.orEmpty().toSet()
+                selectedMembers = group?.users.orEmpty().toSet()
             )
         }
     }
@@ -78,7 +78,7 @@ class EditGroupViewModel : ViewModel() {
             group.copy(
                 name = state.name,
                 description = state.description,
-                members = state.selectedMembers.toMutableList()
+                users = state.selectedMembers.toMutableList()
             )
         }
     }

@@ -242,9 +242,9 @@ private fun ScheduleTaskCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            if (task.tag != null) {
+            if (task.needsHelp) {
                 Text(
-                    text = task.tag,
+                    text = "Needs Help.",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.Bold
@@ -301,17 +301,16 @@ private fun CalendarScreenPreview() {
             selectedDate = today,
             tasks = listOf(
                 Task(
-                    id = "preview1",
+                    id = 1,
                     title = "Finish the figma",
                     member = "Diego",
-                    tag = "Needs Help.",
+                    needsHelp = true,
                     dueLabel = "Tomorrow - 12 hours left"
                 ),
                 Task(
-                    id = "preview2",
-                    title = "Finish the figma",
-                    member = "Diego",
-                    tag = "Needs Help.",
+                    id = 2,
+                    title = "Review pull request",
+                    member = "Manuela",
                     dueLabel = "Tomorrow - 12 hours left"
                 )
             )

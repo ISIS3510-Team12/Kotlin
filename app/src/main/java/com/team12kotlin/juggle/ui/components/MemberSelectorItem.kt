@@ -56,6 +56,6 @@ fun MemberSelectorItem (
 @Composable
 private fun MemberSelectorItemPreview() {
     JuggleTheme() {
-        MemberSelectorItem(User(firstName = "Isabel Ripoll", email="isa.r@gmail.com", major = "Comp Sci"))
+        MemberSelectorItem(User(userId = "u1", firstName = "Isabel Ripoll", email = "isa.r@gmail.com", major = "Comp Sci"))
     }
 }

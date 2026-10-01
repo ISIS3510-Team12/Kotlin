@@ -5,6 +5,8 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Calendar_month
 import com.composables.icons.materialsymbols.outlined.Checklist
 import com.composables.icons.materialsymbols.outlined.Home
+import com.composables.icons.materialsymbols.outlined.Notifications
+import com.composables.icons.materialsymbols.outlined.Person
 import com.composables.icons.materialsymbols.outlined.Preview_off
 import com.composables.icons.materialsymbols.outlinedfilled.Groups
 
@@ -15,6 +17,24 @@ enum class NavigationDestination(
     val icon: ImageVector,
     val showInNavBar: Boolean = false
 ) {
+    Onboarding(
+        route = "onboarding",
+        label = "Onboarding",
+        contentDescription = "Onboarding",
+        icon = MaterialSymbols.Outlined.Home
+    ),
+    SignUp(
+        route = "signup",
+        label = "Sign Up",
+        contentDescription = "Sign Up",
+        icon = MaterialSymbols.Outlined.Person
+    ),
+    SignIn(
+        route = "signin",
+        label = "Sign In",
+        contentDescription = "Sign In",
+        icon = MaterialSymbols.Outlined.Person
+    ),
     Home(
         route = "home",
         label = "Home",
@@ -33,6 +53,24 @@ enum class NavigationDestination(
         route = "tasks/all",
         label = "All Tasks",
         contentDescription = "All Tasks",
+        icon = MaterialSymbols.Outlined.Checklist,
+    ),
+    CreateTask(
+        route = "tasks/create",
+        label = "Create Task",
+        contentDescription = "Create Task",
+        icon = MaterialSymbols.Outlined.Checklist,
+    ),
+    ViewTask(
+        route = "tasks/view",
+        label = "View Task",
+        contentDescription = "View Task",
+        icon = MaterialSymbols.Outlined.Checklist,
+    ),
+    EditTask(
+        route = "tasks/edit",
+        label = "Edit Task",
+        contentDescription = "Edit Task",
         icon = MaterialSymbols.Outlined.Checklist,
     ),
     Groups(
@@ -76,6 +114,13 @@ enum class NavigationDestination(
         label = "Profile",
         contentDescription = "Profile",
         icon = MaterialSymbols.Outlined.Preview_off
+    ),
+
+    Notifications(
+        route = "notifications",
+        label = "Notifications",
+        contentDescription = "Notifications",
+        icon = MaterialSymbols.Outlined.Notifications
     );
 
     companion object {
