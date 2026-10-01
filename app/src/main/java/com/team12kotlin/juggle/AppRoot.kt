@@ -154,7 +154,7 @@ fun AppRoot(
                             }
                         },
                         onNavigateToCreateTask = { groupId ->
-                            navController.navigate("${NavigationDestination.CreateTask.route}/$groupId") {
+                            navController.navigate("${NavigationDestination.CreateTask.route}?groupId=$groupId") {
                                 launchSingleTop = true
                             }
                         },
@@ -181,15 +181,20 @@ fun AppRoot(
                     )
                 }
                 composable(
-                    route = "${NavigationDestination.CreateTask.route}/{groupId}",
-                    arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+                    route = "${NavigationDestination.CreateTask.route}?groupId={groupId}",
+                    arguments = listOf(
+                        navArgument("groupId") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                        }
+                    )
                 ) {
                     CreateTaskScreen(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onTaskCreated = { taskId ->
                             navController.navigate("${NavigationDestination.ViewTask.route}/$taskId") {
-                                popUpTo("${NavigationDestination.CreateTask.route}/{groupId}") {
+                                popUpTo("${NavigationDestination.CreateTask.route}?groupId={groupId}") {
                                     inclusive = true
                                 }
                                 launchSingleTop = true
@@ -212,8 +217,14 @@ fun AppRoot(
                     )
                 }
                 composable(
-                    route = "${NavigationDestination.EditTask.route}/{taskId}",
-                    arguments = listOf(navArgument("taskId") { type = NavType.StringType })
+                    route = "${NavigationDestination.EditTask.route}/{taskId}?groupId={groupId}",
+                    arguments = listOf(
+                        navArgument("taskId") { type = NavType.StringType },
+                        navArgument("groupId") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                        }
+                    )
                 ) {
                     EditTaskScreen(
                         modifier = Modifier.fillMaxSize(),

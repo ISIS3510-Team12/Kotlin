@@ -39,7 +39,7 @@ data class TasksUiState(
         if (q.isEmpty()) return this
         return filter {
             it.title.lowercase().contains(q) ||
-                    (it.member?.lowercase()?.contains(q) == true)
+                    it.assignees.any { member -> member.firstName.lowercase().contains(q) }
         }
     }
 }

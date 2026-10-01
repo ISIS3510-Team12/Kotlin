@@ -59,8 +59,11 @@ import com.composables.icons.materialsymbols.outlined.Info
 import com.composables.icons.materialsymbols.outlined.Star
 import com.composables.icons.materialsymbols.outlined.Stars
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.ui.dto.RelatedTask
 import com.team12kotlin.juggle.ui.dto.Reminder
+import com.team12kotlin.juggle.ui.tasks.create.EvidenceView
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -191,6 +194,9 @@ fun ViewTaskScreen(
                     }
                 }
 
+                // Evidences
+                EvidenceView(imageBytes = uiState.evidenceBytes)
+
                 // Related tasks / subtasks
                 if (task.relatedTasks.isNotEmpty()) {
                     Text(
@@ -200,7 +206,7 @@ fun ViewTaskScreen(
                     )
                     task.relatedTasks.forEach { related ->
                         RelatedTaskCard(
-                            task = related,
+                            related = related,
                             onClick = { viewModel.onRelatedTaskClick(related) }
                         )
                     }
@@ -398,7 +404,7 @@ private fun LabeledRow(
 
 @Composable
 private fun RelatedTaskCard(
-    task: Task,
+    related: RelatedTask,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -408,29 +414,26 @@ private fun RelatedTaskCard(
             .clickable { onClick() }
             .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)),
         colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-        overlineContent = if (task.needsHelp) {
+        overlineContent = if (related.needsHelp) {
             { Text("Needs Help.") }
         } else {
             null
         },
         headlineContent = {
             Text(
-                text = task.title,
+                text = related.title,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         },
         supportingContent = {
             Column {
-                task.member?.let { Text(it) }
-                Text(task.dueLabel)
+                val due = taskDue(related.deadline)
+                Text(due?.text ?: related.status.label)
             }
         },
         leadingContent = {
-            TextMonogram(
-                text = task.member?.take(1)?.uppercase()
-                    ?: task.title.take(1).uppercase()
-            )
+            TextMonogram(text = related.title.take(1).uppercase())
         }
     )
 }

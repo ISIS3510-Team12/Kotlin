@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
+import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
@@ -33,7 +34,8 @@ data class RelatedTask(
 )
 
 data class CreateTaskUiState(
-    val currentGroup: String = "",
+    val groups: List<Group> = emptyList(),
+    val selectedGroupId: Int? = null,
     val title: String = "",
     val taskType: String? = null,
     val projects: List<Project> = emptyList(),
@@ -44,7 +46,11 @@ data class CreateTaskUiState(
     val isPriority: Boolean = false,
     val needsHelp: Boolean = false,
     val notes: String = "",
+    val evidenceBytes: ByteArray? = null,
+    val evidenceMimeType: String? = null,
+    val evidenceDirty: Boolean = false,
     val relatedTasks: List<RelatedTask> = emptyList(),
+    val relatedQuery: String = "",
     val taskTypeOptions: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -57,8 +63,18 @@ data class CreateTaskUiState(
                 selectedProjectId != null &&
                 !isLoading
 
+    val selectedGroupName: String?
+        get() = groups.firstOrNull { it.id == selectedGroupId }?.name
+
     val selectedProjectName: String?
         get() = projects.firstOrNull { it.id == selectedProjectId }?.name
+
+    val filteredRelatedTasks: List<RelatedTask>
+        get() = if (relatedQuery.isBlank()) {
+            relatedTasks
+        } else {
+            relatedTasks.filter { it.task.title.contains(relatedQuery, ignoreCase = true) }
+        }
 }
 
 class CreateTaskViewModel(
@@ -69,7 +85,8 @@ class CreateTaskViewModel(
     private val groupRepository: GroupRepository = Dependencies.groupRepository
     private val projectRepository: ProjectRepository = Dependencies.projectRepository
 
-    private val groupId: Int = savedStateHandle.get<Int>("groupId") ?: 0
+    private val navGroupId: Int? =
+        savedStateHandle.get<Int>("groupId")?.takeIf { it > 0 }
 
     private val taskTypeOptions: List<String> =
         listOf("Coding", "Design", "Research", "Writing", "Meeting")
@@ -85,22 +102,59 @@ class CreateTaskViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+            runCatching { groupRepository.getGroups() }
+                .onSuccess { groups ->
+                    _uiState.update {
+                        it.copy(
+                            groups = groups,
+                            selectedGroupId = navGroupId,
+                            isLoading = false
+                        )
+                    }
+                    loadGroupData(navGroupId)
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
+    }
+
+    fun onGroupSelected(groupName: String) {
+        val group = _uiState.value.groups.firstOrNull { it.name == groupName }
+        _uiState.update {
+            it.copy(selectedGroupId = group?.id, selectedProjectId = null)
+        }
+        loadGroupData(group?.id)
+    }
+
+    private fun loadGroupData(groupId: Int?) {
+        if (groupId == null) {
+            _uiState.update {
+                it.copy(
+                    projects = emptyList(),
+                    assignedMembers = emptyList(),
+                    relatedTasks = emptyList(),
+                    selectedProjectId = null
+                )
+            }
+            return
+        }
+
+        viewModelScope.launch {
             runCatching {
                 val group = groupRepository.getGroup(groupId)
                 val projects = projectRepository.getProjects(groupId)
-                val groupTasks = taskRepository.getAllTasks()
-                Triple(group, projects, groupTasks)
+                val allTasks = taskRepository.getAllTasks()
+                Triple(group, projects, allTasks)
             }
-                .onSuccess { (group, projects, groupTasks) ->
+                .onSuccess { (group, projects, allTasks) ->
                     val members: MutableList<AssignableMember> = mutableListOf()
                     for (user in group.users) {
-                        members.add(
-                            AssignableMember(name = user.firstName, userId = user.userId)
-                        )
+                        members.add(AssignableMember(name = user.firstName, userId = user.userId))
                     }
 
                     val related: MutableList<RelatedTask> = mutableListOf()
-                    for (task in groupTasks) {
+                    for (task in allTasks) {
                         if (task.groupId == groupId) {
                             related.add(
                                 RelatedTask(
@@ -113,16 +167,14 @@ class CreateTaskViewModel(
 
                     _uiState.update {
                         it.copy(
-                            currentGroup = group.name,
                             projects = projects,
                             assignedMembers = members,
-                            relatedTasks = related,
-                            isLoading = false
+                            relatedTasks = related
                         )
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(errorMessage = error.message) }
                 }
         }
     }
@@ -174,6 +226,16 @@ class CreateTaskViewModel(
         _uiState.update { it.copy(notes = notes) }
     }
 
+    fun onEvidenceTaken(bytes: ByteArray, mimeType: String) {
+        _uiState.update {
+            it.copy(evidenceBytes = bytes, evidenceMimeType = mimeType, evidenceDirty = true)
+        }
+    }
+
+    fun onRelatedQueryChange(query: String) {
+        _uiState.update { it.copy(relatedQuery = query) }
+    }
+
     fun onRelatedTaskToggled(relatedTask: RelatedTask) {
         _uiState.update { state ->
             state.copy(
@@ -181,6 +243,15 @@ class CreateTaskViewModel(
                     if (it.task.id == relatedTask.task.id) it.copy(selected = !it.selected) else it
                 }
             )
+        }
+    }
+
+    private suspend fun uploadEvidence(taskId: Int) {
+        val state = _uiState.value
+        val bytes = state.evidenceBytes
+        if (!state.evidenceDirty || bytes == null) return
+        runCatching {
+            taskRepository.uploadTaskPhoto(taskId, bytes, state.evidenceMimeType ?: "image/jpeg")
         }
     }
 
@@ -220,12 +291,14 @@ class CreateTaskViewModel(
                         needsHelp = state.needsHelp,
                         deadline = isoDeadline,
                         projectId = state.selectedProjectId,
+                        groupId = state.selectedGroupId,
                         assigneeIds = assigneeIds,
                         relatedTaskIds = relatedTaskIds
                     )
                 )
             }
                 .onSuccess { task ->
+                    uploadEvidence(task.id)
                     _uiState.update { it.copy(isLoading = false, createdTaskId = task.id) }
                 }
                 .onFailure { error ->
