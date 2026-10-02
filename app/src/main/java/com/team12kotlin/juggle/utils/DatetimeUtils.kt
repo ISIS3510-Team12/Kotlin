@@ -56,7 +56,7 @@ fun taskDue(deadline: String?): TaskDue? {
     return TaskDue("$dayLabel - $hourText left", false)
 }
 
-private fun parseDeadline(deadline: String): LocalDateTime? {
+fun parseDeadline(deadline: String): LocalDateTime? {
     return try {
         OffsetDateTime.parse(deadline).toLocalDateTime()
     } catch (_: Exception) {

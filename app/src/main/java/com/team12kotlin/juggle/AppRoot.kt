@@ -312,7 +312,12 @@ fun AppRoot(
                 composable(NavigationDestination.Calendar.route) {
                     CalendarScreen(
                         modifier = Modifier.fillMaxSize(),
-                        onProfileClick = { navController.navigate(it.route) }
+                        onProfileClick = { navController.navigate(it.route) },
+                        onTaskClick = { task ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
+                                launchSingleTop = true
+                            }
+                        }
                     )
                 }
                 composable(NavigationDestination.Profile.route) {
