@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
@@ -15,8 +17,10 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -27,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -43,6 +48,8 @@ import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import kotlinx.coroutines.FlowPreview
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
@@ -52,11 +59,16 @@ fun HomeScreen (
     onProfileClick: (NavigationDestination) -> Unit = {},
     onTaskClick: (Task) -> Unit = {},
     onNotificationClick: (Notification) -> Unit = {},
-    onCreateTaskClick: (NavigationDestination) -> Unit = {},
-    onCreateGroupClick: (NavigationDestination) -> Unit = {},
+    onCreateTaskClick: (Int) -> Unit = {},
+    onCreateGroupClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.load()
+        onPauseOrDispose { }
+    }
 
     val startCorner = 20.dp
     val endCorner = 20.dp
@@ -100,7 +112,7 @@ fun HomeScreen (
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Saturday, September 12, 2026",
+                                text = LocalDate.now().format(HOME_DATE),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             OutlinedButton(
@@ -144,12 +156,12 @@ fun HomeScreen (
                         OverviewCard(
                             icon = MaterialSymbols.RoundedFilled.List_alt,
                             title = "Tasks",
-                            count = uiState.tasks.size
+                            count = uiState.taskCount
                         )
                         OverviewCard(
                             icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
                             title = "Notifications",
-                            count = uiState.notifications.size
+                            count = uiState.notificationCount
                         )
                     }
                     val selectedTab = uiState.selectedTab
@@ -226,6 +238,7 @@ fun HomeScreen (
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(136.dp))
                 if (uiState.showBottomSheet) {
                     ModalBottomSheet(
                         onDismissRequest = {
@@ -262,7 +275,7 @@ fun HomeScreen (
                                     title = "Add task",
                                     description = "Create a new task instantly",
                                     icon = MaterialSymbols.RoundedFilled.List_alt,
-                                    onClick = onCreateTaskClick
+                                    onClick = { uiState.firstGroupId?.let(onCreateTaskClick) }
                                 )
                                 QuickActionItem(
                                     title = "Create new group",
@@ -279,6 +292,8 @@ fun HomeScreen (
         }
     }
 }
+
+private val HOME_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")
 
 @Preview(showBackground = true)
 @Composable

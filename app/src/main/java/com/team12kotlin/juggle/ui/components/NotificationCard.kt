@@ -40,6 +40,7 @@ fun NotificationCard(
     createIcon: ImageVector = MaterialSymbols.Outlined.Add_circle,
     editIcon: ImageVector = MaterialSymbols.OutlinedFilled.Edit,
     completeIcon: ImageVector = MaterialSymbols.Outlined.Check_box,
+    deleteIcon: ImageVector = MaterialSymbols.Outlined.Delete,
 ) {
     val cardContent: @Composable ColumnScope.() -> Unit = {
         Row(
@@ -67,6 +68,13 @@ fun NotificationCard(
                 IconMonogram(
                     icon = completeIcon,
                     contentDescription = "Complete",
+                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    contentColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            } else if (notification.type == "delete") {
+                IconMonogram(
+                    icon = deleteIcon,
+                    contentDescription = "Delete",
                     containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     contentColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -147,5 +155,13 @@ private fun EditedNotificationCardPreview(){
 private fun CreatedNotificationCardPreview() {
     JuggleTheme {
         NotificationCard(Notification(id=1, title="Create task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "create"))
+    }
+}
+
+@Preview
+@Composable
+private fun DeleteNotificationCardPreview() {
+    JuggleTheme {
+        NotificationCard(Notification(id=1, title="Deleted task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "delete"), showDismiss = true)
     }
 }

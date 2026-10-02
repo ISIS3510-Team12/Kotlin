@@ -84,7 +84,7 @@ class SignInViewModel(
         viewModelScope.launch {
             try {
                 val user = authRepository.signInWithGoogle(idToken)
-                registerBackendUser(userRepository, user)
+                registerBackendUser(authRepository, userRepository, user)
                 _uiState.update { it.copy(isSubmitting = false, navigateToSuccess = true) }
             } catch (error: Throwable) {
                 _uiState.update {

@@ -1,43 +1,48 @@
 package com.team12kotlin.juggle.ui.home
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.repository.AuthRepository
+import com.team12kotlin.juggle.data.repository.GroupRepository
+import com.team12kotlin.juggle.data.repository.NotificationRepository
+import com.team12kotlin.juggle.data.repository.TaskRepository
+import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 data class HomeUiState(
-    val tasks: List<Task> = emptyList(),
-    val user: User,
+    val user: User = User(userId = "", firstName = ""),
+    val upcomingTasks: List<Task> = emptyList(),
     val notifications: List<Notification> = emptyList(),
     val selectedTab: Int = 0,
-    val showBottomSheet: Boolean = false
+    val showBottomSheet: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
+    val firstGroupId: Int? = null,
 ) {
-    val upcomingTasks: List<Task>
-        get() = tasks
+    val taskCount: Int get() = upcomingTasks.size
+    val notificationCount: Int get() = notifications.size
 }
 
 class HomeViewModel : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        HomeUiState(
-            user = User(userId = "mock-user", firstName = "Victoria", email = "vs@gmail.com", major = "CS"),
-            tasks = listOf(
-                Task(id = 1, title = "Finish Something bruh", isPriority = true),
-                Task(id = 2, title = "Terminar"),
-                Task(id = 3, title = "Work"),
-                Task(id = 4, title = "Finish Something bruh"),
-                Task(id = 5, title = "Terminar"),
-                Task(id = 6, title = "Work")
-            ),
-            notifications = listOf(
-                Notification(id=1, title="Finished task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete")
-            ),
-        )
-    )
+    private val authRepository: AuthRepository = Dependencies.authRepository
+    private val userRepository: UserRepository = Dependencies.userRepository
+    private val taskRepository: TaskRepository = Dependencies.taskRepository
+    private val notificationRepository: NotificationRepository = Dependencies.notificationRepository
+    private val groupRepository: GroupRepository = Dependencies.groupRepository
+
+    private val _uiState = MutableStateFlow(HomeUiState(user = currentFirebaseUser()))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     fun onTabSelected(tab: Int) {
@@ -50,5 +55,84 @@ class HomeViewModel : ViewModel() {
 
     fun onDismissalBottomSheet() {
         _uiState.update { it.copy(showBottomSheet = false) }
+    }
+
+    fun load() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            runCatching {
+                val user = userRepository.getCurrentUser()
+                val tasks = taskRepository.getAllTasks(dueWithinDays = UPCOMING_DAYS, mine = true)
+                val notifications = notificationRepository.getNotifications()
+                val groups = groupRepository.getGroups()
+                Loaded(user, tasks, notifications, groups.firstOrNull()?.id)
+            }
+                .onSuccess { loaded ->
+                    _uiState.update {
+                        it.copy(
+                            user = loaded.user,
+                            upcomingTasks = loaded.tasks,
+                            notifications = loaded.notifications.map { item -> item.toNotification() },
+                            firstGroupId = loaded.firstGroupId,
+                            isLoading = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
+    }
+
+    private fun currentFirebaseUser(): User {
+        val current = authRepository.currentUser ?: return User(userId = "", firstName = "")
+        val firstName = current.displayName?.trim()?.substringBefore(' ').orEmpty()
+        return User(userId = current.uid, firstName = firstName)
+    }
+
+    private data class Loaded(
+        val user: User,
+        val tasks: List<Task>,
+        val notifications: List<TaskNotification>,
+        val firstGroupId: Int?
+    )
+
+    private companion object {
+        const val UPCOMING_DAYS = 7
+    }
+}
+
+private val NOTIFICATION_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
+
+private fun TaskNotification.toNotification(): Notification {
+    val action = when (eventType) {
+        "created" -> "Created"
+        "updated" -> "Edited"
+        "completed" -> "Completed"
+        "deleted" -> "Deleted"
+        else -> "Updated"
+    }
+    val type = when (eventType) {
+        "created" -> "create"
+        "updated" -> "edit"
+        "completed" -> "complete"
+        "deleted" -> "delete"
+        else -> "edit"
+    }
+    return Notification(
+        id = id,
+        title = "$action: $taskTitle",
+        date = formatNotificationDate(occurredAt),
+        origin = groupName.orEmpty(),
+        type = type
+    )
+}
+
+private fun formatNotificationDate(value: String): String {
+    return try {
+        LocalDateTime.parse(value).format(NOTIFICATION_DATE)
+    } catch (_: Exception) {
+        value
     }
 }
