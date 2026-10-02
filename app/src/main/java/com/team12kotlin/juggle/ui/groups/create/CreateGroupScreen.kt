@@ -3,8 +3,10 @@ package com.team12kotlin.juggle.ui.groups.create
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -23,14 +25,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -48,20 +48,16 @@ import kotlinx.coroutines.FlowPreview
 fun CreateGroupScreen(
     modifier: Modifier = Modifier,
     viewModel: CreateGroupViewModel = viewModel(),
-    goBack: () -> Unit = {}
+    goBack: () -> Unit = {},
+    onCreated: (notice: String?) -> Unit = { goBack() }
 ) {
-    val createGroup = remember {
-        {
-            //TODO: connect with api to create a group (verify non empty parameters)
-            goBack()
-        }
-    }
-
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(uiState.created) {
+        if (uiState.created) onCreated(uiState.notice)
+    }
     val searchBarState = rememberSearchBarState()
     val searchTextFieldState = rememberTextFieldState(uiState.query)
-    var nameTextField by remember { mutableStateOf("") }
-    var descriptionTextField by remember { mutableStateOf("") }
 
     Scaffold(
         modifier = modifier,
@@ -97,18 +93,18 @@ fun CreateGroupScreen(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 0.dp),
-                value = nameTextField,
+                value = uiState.name,
                 supportingText = { Text("This will be the main name of the group") },
-                onValueChange = { nameTextField = it },
+                onValueChange = viewModel::onNameChange,
                 label = { Text("Group Name") },
             )
             OutlinedTextField(
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 0.dp),
-                value = descriptionTextField,
+                value = uiState.description,
                 supportingText = { Text("This will be the description of the group") },
-                onValueChange = { descriptionTextField = it },
+                onValueChange = viewModel::onDescriptionChange,
                 label = { Text("Group Description") },
             )
         }
@@ -153,9 +149,22 @@ fun CreateGroupScreen(
             verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
             horizontalAlignment = Alignment.Start,
         ) {
-            uiState.availableMembers.forEach { member ->
-                MemberSelectorItem(member)
+            uiState.filteredAvailableMembers.forEach { member ->
+                MemberSelectorItem(
+                    member = member,
+                    checkedState = member.userId in uiState.selectedIds,
+                    onChecked = viewModel::onToggleMember
+                )
             }
+        }
+
+        uiState.errorMessage?.let { message ->
+            Text(
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
         }
 
         Row(
@@ -166,7 +175,8 @@ fun CreateGroupScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Button(
-                onClick = createGroup
+                onClick = viewModel::onCreateGroup,
+                enabled = uiState.canCreate
             ) {
                 Row(
                     modifier = modifier
@@ -198,6 +208,8 @@ fun CreateGroupScreen(
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(136.dp))
         }
     }
 }

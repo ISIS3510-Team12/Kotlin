@@ -55,7 +55,7 @@ fun TasksScreen(
     modifier: Modifier = Modifier,
     viewModel: TasksViewModel = viewModel(),
     onTaskClick: (Task) -> Unit = {},
-    onEditGroupClick: () -> Unit = {},
+    onEditGroupClick: (Int) -> Unit = {},
     onAllTasksClick: () -> Unit = {},
     onProfileClick: (NavigationDestination) -> Unit = {},
     onNavigateToCreateTask: (groupId: Int) -> Unit = {},
@@ -156,7 +156,7 @@ fun TasksScreen(
                     TextButton(
                         onClick = {
                             viewModel.onEditGroupClick()
-                            onEditGroupClick()
+                            uiState.selectedGroupId?.let(onEditGroupClick)
                         },
 
                     ) {

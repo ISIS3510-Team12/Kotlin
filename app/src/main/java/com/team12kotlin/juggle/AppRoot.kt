@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,14 +27,21 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.team12kotlin.juggle.ui.auth.SignInScreen
 import com.team12kotlin.juggle.ui.auth.SignUpScreen
+import com.team12kotlin.juggle.ui.calendar.CalendarScreen
 import com.team12kotlin.juggle.ui.groups.GroupsScreen
 import com.team12kotlin.juggle.ui.groups.create.CreateGroupScreen
+import com.team12kotlin.juggle.ui.groups.detail.GroupDetailScreen
+import com.team12kotlin.juggle.ui.groups.edit.EditGroupScreen
 import com.team12kotlin.juggle.ui.home.HomeScreen
 import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
+import com.team12kotlin.juggle.ui.profile.ProfileScreen
+import com.team12kotlin.juggle.ui.profile.information.ProfileInformationScreen
 import com.team12kotlin.juggle.ui.profile.notifications.NotificationsScreen
+import com.team12kotlin.juggle.ui.profile.settings.SettingsScreen
+import com.team12kotlin.juggle.ui.profile.settings.location.LocationRemindersScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
@@ -41,6 +49,16 @@ import com.team12kotlin.juggle.ui.tasks.edit.EditTaskScreen
 import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
+
+private const val GROUPS_NOTICE_KEY = "groupsNotice"
+
+private val PROFILE_ROUTES = setOf(
+    NavigationDestination.Profile.route,
+    NavigationDestination.ProfileInformation.route,
+    NavigationDestination.Notifications.route,
+    NavigationDestination.Settings.route,
+    NavigationDestination.LocationReminders.route
+)
 
 @Composable
 fun AppRoot(
@@ -167,7 +185,10 @@ fun AppRoot(
                                 restoreState = true
                             }
                         },
-                        onNavigateToCreateTask = { groupId ->
+                        onEditGroupClick = { groupId ->
+                            navController.navigate("groups/$groupId/edit")
+                        },
+                                                onNavigateToCreateTask = { groupId ->
                             navController.navigate("${NavigationDestination.CreateTask.route}?groupId=$groupId") {
                                 launchSingleTop = true
                             }
@@ -247,9 +268,14 @@ fun AppRoot(
                         onCancel = { navController.popBackStack() }
                     )
                 }
-                composable(NavigationDestination.Groups.route) {
+                composable(NavigationDestination.Groups.route) { backStackEntry ->
+                    val notice by backStackEntry.savedStateHandle
+                        .getStateFlow<String?>(GROUPS_NOTICE_KEY, null)
+                        .collectAsStateWithLifecycle()
                     GroupsScreen(
                         modifier = Modifier.fillMaxSize(),
+                        notice = notice,
+                        onNoticeShown = { backStackEntry.savedStateHandle[GROUPS_NOTICE_KEY] = null },
                         onProfileClick = { navController.navigate(it.route) },
                         onNavigateToCreateGroup = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
@@ -259,56 +285,122 @@ fun AppRoot(
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                        },
+                        onGroupClick = { group ->
+                            navController.navigate("groups/${group.id}")
                         }
                     )
                 }
                 composable(NavigationDestination.CreateGroup.route) {
                     CreateGroupScreen(
                         modifier = Modifier,
-                        goBack = {
-                            navController.navigate(NavigationDestination.Groups.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                        goBack = { navController.popBackStack() },
+                        onCreated = { notice ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set(GROUPS_NOTICE_KEY, notice)
+                            navController.popBackStack()
+                        }
+                    )
+                }
+                composable(
+                    route = NavigationDestination.GroupDetail.route,
+                    arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val groupId = backStackEntry.arguments?.getInt("groupId") ?: 0
+                    GroupDetailScreen(
+                        groupId = groupId,
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = NavigationDestination.EditGroup.route,
+                    arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val groupId = backStackEntry.arguments?.getInt("groupId") ?: 0
+                    EditGroupScreen(
+                        groupId = groupId,
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
+                    )
+                }
+                composable(NavigationDestination.Calendar.route) {
+                    CalendarScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onProfileClick = { navController.navigate(it.route) },
+                        onTaskClick = { task ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     )
                 }
-                composable(NavigationDestination.Calendar.route) {
-                    PlaceholderScreen(
-                        label = "Calendar",
-                        onProfileClick = { navController.navigate(it.route) }
+                composable(NavigationDestination.Profile.route) {
+                    ProfileScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() },
+                        onProfileInformationClick = {
+                            navController.navigate(NavigationDestination.ProfileInformation.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNotificationsClick = {
+                            navController.navigate(NavigationDestination.Notifications.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onSettingsClick = {
+                            navController.navigate(NavigationDestination.Settings.route) {
+                                launchSingleTop = true
+                            }
+                        }
                     )
                 }
-                composable(NavigationDestination.Profile.route) {
-                    PlaceholderScreen(
-                        label = "Profile",
-                        onProfileClick = { navController.navigate(it.route) }
+
+                composable(NavigationDestination.ProfileInformation.route) {
+                    ProfileInformationScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
                     )
                 }
 
                 composable(NavigationDestination.Notifications.route) {
                     NotificationsScreen(
-                        modifier = modifier,
-                        goBack = {
-                            navController.navigate(NavigationDestination.Profile.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable(NavigationDestination.Settings.route) {
+                    SettingsScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() },
+                        onLocationRemindersClick = {
+                            navController.navigate(NavigationDestination.LocationReminders.route) {
                                 launchSingleTop = true
-                                restoreState = true
+                            }
+                        },
+                        onSignedOut = {
+                            navController.navigate(NavigationDestination.Onboarding.route) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
                             }
                         }
                     )
                 }
 
+                composable(NavigationDestination.LocationReminders.route) {
+                    LocationRemindersScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
+                    )
+                }
+
             }
-            // Avoid the nav bar from appearing on the onboarding, sign in and sign up.
+            // Avoid the nav bar from appearing on the onboarding, sign in, sign up and profile screens.
             if (currentRoute != NavigationDestination.Onboarding.route &&
                 currentRoute != NavigationDestination.SignUp.route &&
-                currentRoute != NavigationDestination.SignIn.route
+                currentRoute != NavigationDestination.SignIn.route &&
+                currentRoute !in PROFILE_ROUTES
             ) {
                 AppNavigationBar(
                     viewModel = navbarViewModel,
