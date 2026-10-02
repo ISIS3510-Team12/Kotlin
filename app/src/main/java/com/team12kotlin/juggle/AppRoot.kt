@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,7 +28,6 @@ import androidx.navigation.navArgument
 import com.team12kotlin.juggle.ui.auth.SignInScreen
 import com.team12kotlin.juggle.ui.auth.SignUpScreen
 import com.team12kotlin.juggle.ui.calendar.CalendarScreen
-import com.team12kotlin.juggle.ui.groups.GroupsRepository
 import com.team12kotlin.juggle.ui.groups.GroupsScreen
 import com.team12kotlin.juggle.ui.groups.create.CreateGroupScreen
 import com.team12kotlin.juggle.ui.groups.detail.GroupDetailScreen
@@ -49,6 +49,8 @@ import com.team12kotlin.juggle.ui.tasks.edit.EditTaskScreen
 import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
+
+private const val GROUPS_NOTICE_KEY = "groupsNotice"
 
 private val PROFILE_ROUTES = setOf(
     NavigationDestination.Profile.route,
@@ -169,11 +171,8 @@ fun AppRoot(
                                 restoreState = true
                             }
                         },
-                        onEditGroupClick = {
-                            val currentGroupId = GroupsRepository.groups.value.firstOrNull()?.id
-                            if (currentGroupId != null) {
-                                navController.navigate("groups/$currentGroupId/edit")
-                            }
+                        onEditGroupClick = { groupId ->
+                            navController.navigate("groups/$groupId/edit")
                         },
                                                 onNavigateToCreateTask = { groupId ->
                             navController.navigate("${NavigationDestination.CreateTask.route}?groupId=$groupId") {
@@ -255,9 +254,14 @@ fun AppRoot(
                         onCancel = { navController.popBackStack() }
                     )
                 }
-                composable(NavigationDestination.Groups.route) {
+                composable(NavigationDestination.Groups.route) { backStackEntry ->
+                    val notice by backStackEntry.savedStateHandle
+                        .getStateFlow<String?>(GROUPS_NOTICE_KEY, null)
+                        .collectAsStateWithLifecycle()
                     GroupsScreen(
                         modifier = Modifier.fillMaxSize(),
+                        notice = notice,
+                        onNoticeShown = { backStackEntry.savedStateHandle[GROUPS_NOTICE_KEY] = null },
                         onProfileClick = { navController.navigate(it.route) },
                         onNavigateToCreateGroup = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
@@ -276,14 +280,10 @@ fun AppRoot(
                 composable(NavigationDestination.CreateGroup.route) {
                     CreateGroupScreen(
                         modifier = Modifier,
-                        goBack = {
-                            navController.navigate(NavigationDestination.Groups.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                        goBack = { navController.popBackStack() },
+                        onCreated = { notice ->
+                            navController.previousBackStackEntry?.savedStateHandle?.set(GROUPS_NOTICE_KEY, notice)
+                            navController.popBackStack()
                         }
                     )
                 }

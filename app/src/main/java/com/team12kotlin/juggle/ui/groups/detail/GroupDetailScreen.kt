@@ -24,29 +24,26 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Check
-import com.composables.icons.materialsymbols.outlined.Exclamation
 import com.composables.icons.materialsymbols.outlined.Settings
-import com.composables.icons.materialsymbols.outlined.Warning
 import com.team12kotlin.juggle.ui.components.IconMonogram
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.Group
-import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.utils.taskDue
@@ -59,13 +56,18 @@ fun GroupDetailScreen(
     viewModel: GroupDetailViewModel = viewModel(),
     onBackClick: () -> Unit = {}
 ) {
-    LaunchedEffect(groupId) { viewModel.load(groupId) }
+    LifecycleResumeEffect(groupId) {
+        viewModel.load(groupId)
+        onPauseOrDispose { }
+    }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     GroupDetailContent(
         modifier = modifier,
         group = uiState.group,
         relatedProjects = uiState.relatedProjects,
+        isLoading = uiState.isLoading,
+        errorMessage = uiState.errorMessage,
         onBackClick = onBackClick,
         onCreateProjectClick = { viewModel.onCreateProject() }
     )
@@ -75,8 +77,10 @@ fun GroupDetailScreen(
 @Composable
 private fun GroupDetailContent(
     group: Group?,
-    relatedProjects: List<Task>,
+    relatedProjects: List<Project>,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
+    errorMessage: String? = null,
     onBackClick: () -> Unit = {},
     onCreateProjectClick: () -> Unit = {}
 ) {
@@ -127,7 +131,7 @@ private fun GroupDetailContent(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = group?.name ?: "Group not found",
+                    text = group?.name ?: if (isLoading) "Loading..." else errorMessage ?: "Group not found",
                     style = MaterialTheme.typography.headlineLarge
                 )
                 Text(
@@ -153,6 +157,13 @@ private fun GroupDetailContent(
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(text = "Related projects", style = MaterialTheme.typography.headlineMedium)
+                if (relatedProjects.isEmpty() && !isLoading) {
+                    Text(
+                        text = "No projects yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 relatedProjects.forEach { project ->
                     RelatedProjectCard(project = project)
                 }
@@ -187,11 +198,9 @@ private fun GroupMember(
 
 @Composable
 private fun RelatedProjectCard(
-    project: Task,
+    project: Project,
     modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    importantIcon: ImageVector = MaterialSymbols.Outlined.Exclamation,
-    normalIcon: ImageVector = MaterialSymbols.Outlined.Check
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier
@@ -206,20 +215,15 @@ private fun RelatedProjectCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            val assigneeName = project.assignees.firstOrNull()?.firstName
-            if (assigneeName != null) {
-                TextMonogram(text = assigneeName.take(1).uppercase())
-            } else {
-                IconMonogram(
-                    icon = if (project.isPriority) importantIcon else normalIcon,
-                    contentDescription = "Project"
-                )
-            }
+            IconMonogram(
+                icon = MaterialSymbols.Outlined.Check,
+                contentDescription = "Project"
+            )
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(project.title, style = MaterialTheme.typography.titleMedium)
+                Text(project.name, style = MaterialTheme.typography.titleMedium)
                 Text(
                     text = taskDue(project.deadline)?.text ?: "No due date yet",
                     style = MaterialTheme.typography.bodyMedium,
@@ -235,13 +239,6 @@ private fun RelatedProjectCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (project.isPriority) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Warning,
-                            contentDescription = "Important",
-                            tint = MaterialTheme.colorScheme.tertiary
-                        )
-                    }
                     Icon(
                         imageVector = MaterialSymbols.Outlined.Settings,
                         contentDescription = "Project options",
@@ -269,8 +266,8 @@ private fun GroupDetailScreenPreview() {
                 )
             ),
             relatedProjects = listOf(
-                Task(id = 1, title = "Marketplace prototype", isPriority = true),
-                Task(id = 2, title = "Interview synthesis", assignees = listOf(User(userId = "u2", firstName = "Manuela")))
+                Project(id = 1, name = "Marketplace prototype"),
+                Project(id = 2, name = "Interview synthesis")
             )
         )
     }

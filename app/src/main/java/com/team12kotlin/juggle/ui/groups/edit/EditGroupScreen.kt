@@ -55,20 +55,23 @@ fun EditGroupScreen(
     LaunchedEffect(groupId) { viewModel.load(groupId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(uiState.saved) {
+        if (uiState.saved) goBack()
+    }
+
     EditGroupContent(
         modifier = modifier,
         name = uiState.name,
         description = uiState.description,
-        directory = uiState.filteredDirectory,
-        selectedMembers = uiState.selectedMembers,
+        directory = uiState.filteredCandidates,
+        selectedIds = uiState.selectedIds,
+        errorMessage = uiState.errorMessage,
+        canSave = uiState.canSave,
         onNameChange = viewModel::onNameChange,
         onDescriptionChange = viewModel::onDescriptionChange,
         onSearch = viewModel::onSearch,
         onMemberToggled = viewModel::onMemberToggled,
-        onSave = {
-            viewModel.onSaveGroup()
-            goBack()
-        },
+        onSave = viewModel::onSaveGroup,
         goBack = goBack
     )
 }
@@ -79,8 +82,10 @@ private fun EditGroupContent(
     name: String,
     description: String,
     directory: List<User>,
-    selectedMembers: Set<User>,
+    selectedIds: Set<String>,
     modifier: Modifier = Modifier,
+    errorMessage: String? = null,
+    canSave: Boolean = true,
     onNameChange: (String) -> Unit = {},
     onDescriptionChange: (String) -> Unit = {},
     onSearch: (String) -> Unit = {},
@@ -137,7 +142,7 @@ private fun EditGroupContent(
             }
 
             Text(
-                text = "Edit People",
+                text = "Add People",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineMedium
@@ -171,10 +176,18 @@ private fun EditGroupContent(
                 directory.forEach { member ->
                     MemberSelectorItem(
                         member = member,
-                        checkedState = member in selectedMembers,
+                        checkedState = member.userId in selectedIds,
                         onChecked = onMemberToggled
                     )
                 }
+            }
+
+            errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
             Row(
@@ -184,7 +197,7 @@ private fun EditGroupContent(
                 horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Button(onClick = onSave) {
+                Button(onClick = onSave, enabled = canSave) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
@@ -231,7 +244,7 @@ private fun EditGroupScreenPreview() {
             name = "An amazing group",
             description = "ISIS-3510",
             directory = members,
-            selectedMembers = members.toSet()
+            selectedIds = setOf("u1")
         )
     }
 }
