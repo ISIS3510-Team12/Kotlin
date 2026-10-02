@@ -63,7 +63,7 @@ fun EditGroupScreen(
         modifier = modifier,
         name = uiState.name,
         description = uiState.description,
-        directory = uiState.filteredCandidates,
+        directory = uiState.filteredDirectory,
         selectedIds = uiState.selectedIds,
         errorMessage = uiState.errorMessage,
         canSave = uiState.canSave,
@@ -142,7 +142,7 @@ private fun EditGroupContent(
             }
 
             Text(
-                text = "Add People",
+                text = "Members",
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.headlineMedium

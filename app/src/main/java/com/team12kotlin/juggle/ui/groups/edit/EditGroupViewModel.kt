@@ -24,8 +24,8 @@ data class EditGroupUiState(
     val errorMessage: String? = null,
     val saved: Boolean = false
 ) {
-    val filteredCandidates: List<User>
-        get() = candidates.filterFor(query)
+    val filteredDirectory: List<User>
+        get() = (members + candidates).filterFor(query)
 
     val canSave: Boolean
         get() = name.isNotBlank() && !isLoading
@@ -57,7 +57,6 @@ class EditGroupViewModel(
             _uiState.update { it.copy(groupId = groupId, isLoading = true, errorMessage = null) }
             runCatching { groupRepository.getGroup(groupId) to userRepository.getUsers() }
                 .onSuccess { (group, users) ->
-                    // The back only lets members be added (leaving is per-user), so only non-members are offered.
                     val memberIds = group.users.map { it.userId }.toSet()
                     _uiState.update {
                         it.copy(
@@ -65,6 +64,7 @@ class EditGroupViewModel(
                             description = group.description,
                             members = group.users,
                             candidates = users.filterNot { user -> user.userId in memberIds },
+                            selectedIds = memberIds,
                             isLoading = false
                         )
                     }
@@ -90,7 +90,11 @@ class EditGroupViewModel(
 
     fun onMemberToggled(member: User) {
         _uiState.update {
-            val ids = if (member.userId in it.selectedIds) it.selectedIds - member.userId else it.selectedIds + member.userId
+            val ids = if (member.userId in it.selectedIds) {
+                it.selectedIds - member.userId
+            } else {
+                it.selectedIds + member.userId
+            }
             it.copy(selectedIds = ids)
         }
     }
@@ -98,29 +102,27 @@ class EditGroupViewModel(
     fun onSaveGroup() {
         val state = _uiState.value
         if (!state.canSave) return
+
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
             runCatching {
                 groupRepository.updateGroup(state.groupId, state.name.trim(), state.description.trim())
             }.onFailure { error ->
                 _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
                 return@launch
             }
-            val failed = state.candidates
-                .filter { it.userId in state.selectedIds }
-                .filter { user -> runCatching { groupRepository.addMember(state.groupId, user.email) }.isFailure }
-            if (failed.isEmpty()) {
-                _uiState.update { it.copy(isLoading = false, saved = true) }
-            } else {
-                // Saved fields stay saved; keep the screen open so the user sees which members failed.
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        selectedIds = failed.map { u -> u.userId }.toSet(),
-                        errorMessage = "Couldn't add: ${failed.joinToString { u -> u.displayName }}"
-                    )
+
+            val selectedIds = state.selectedIds.toList()
+            runCatching { groupRepository.setMembers(state.groupId, selectedIds) }
+                .onSuccess {
+                    _uiState.update { it.copy(isLoading = false, saved = true) }
                 }
-            }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = error.message ?: "Couldn't update the members")
+                    }
+                }
         }
     }
 }

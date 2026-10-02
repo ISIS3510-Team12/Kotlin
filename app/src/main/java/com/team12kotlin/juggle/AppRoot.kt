@@ -39,6 +39,8 @@ import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
+import com.team12kotlin.juggle.ui.projects.create.CreateProjectScreen
+import com.team12kotlin.juggle.ui.projects.detail.ProjectDetailScreen
 import com.team12kotlin.juggle.ui.profile.ProfileScreen
 import com.team12kotlin.juggle.ui.profile.information.ProfileInformationScreen
 import com.team12kotlin.juggle.ui.profile.notifications.NotificationsScreen
@@ -315,7 +317,23 @@ fun AppRoot(
                     GroupDetailScreen(
                         groupId = groupId,
                         modifier = Modifier.fillMaxSize(),
-                        onBackClick = { navController.popBackStack() }
+                        onBackClick = { navController.popBackStack() },
+                        onEditClick = {
+                            navController.navigate("groups/$groupId/edit") {
+                                launchSingleTop = true
+                            }
+                        },
+                        onCreateProjectClick = {
+                            navController.navigate("${NavigationDestination.CreateProject.route}?groupId=$groupId") {
+                                launchSingleTop = true
+                            }
+                        },
+                        onProjectClick = { project ->
+                            navController.navigate("${NavigationDestination.ProjectDetail.route}"
+                                .replace("{projectId}", project.id.toString())) {
+                                launchSingleTop = true
+                            }
+                        }
                     )
                 }
                 composable(
@@ -327,6 +345,49 @@ fun AppRoot(
                         groupId = groupId,
                         modifier = Modifier.fillMaxSize(),
                         goBack = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = "${NavigationDestination.CreateProject.route}?groupId={groupId}",
+                    arguments = listOf(
+                        navArgument("groupId") {
+                            type = NavType.IntType
+                            defaultValue = -1
+                        }
+                    )
+                ) {
+                    CreateProjectScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onProjectCreated = { projectId ->
+                            navController.navigate("${NavigationDestination.ProjectDetail.route}"
+                                .replace("{projectId}", projectId.toString())) {
+                                popUpTo("${NavigationDestination.CreateProject.route}?groupId={groupId}") {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+                composable(
+                    route = NavigationDestination.ProjectDetail.route,
+                    arguments = listOf(navArgument("projectId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val projectId = backStackEntry.arguments?.getInt("projectId") ?: 0
+                    ProjectDetailScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onTaskClick = { taskId ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/$taskId") {
+                                launchSingleTop = true
+                            }
+                        },
+                        onAddTaskClick = {
+                            navController.navigate(NavigationDestination.CreateTask.route) {
+                                launchSingleTop = true
+                            }
+                        }
                     )
                 }
                 composable(NavigationDestination.Calendar.route) {

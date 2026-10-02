@@ -4,6 +4,7 @@ import com.team12kotlin.juggle.data.remote.JuggleApi
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.GroupCreateRequest
 import com.team12kotlin.juggle.ui.dto.GroupMemberAddRequest
+import com.team12kotlin.juggle.ui.dto.GroupMembersUpdateRequest
 import com.team12kotlin.juggle.ui.dto.GroupUpdateRequest
 
 class GroupRepository(
@@ -21,4 +22,7 @@ class GroupRepository(
 
     suspend fun addMember(groupId: Int, email: String): Group =
         api.addGroupMember(groupId, GroupMemberAddRequest(email = email))
+
+    suspend fun setMembers(groupId: Int, userIds: List<String>): Group =
+        api.setGroupMembers(groupId, GroupMembersUpdateRequest(userIds = userIds))
 }
