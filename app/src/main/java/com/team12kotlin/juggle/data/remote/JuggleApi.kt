@@ -10,12 +10,14 @@ import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
+import com.team12kotlin.juggle.ui.dto.TaskTodaySummary
 import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.dto.TimeBlock
 import com.team12kotlin.juggle.ui.dto.TimeBlockRequest
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.dto.UserCreateRequest
+import com.team12kotlin.juggle.ui.dto.UserLocation
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -52,6 +54,12 @@ interface JuggleApi {
         @Query("start_date") startDate: String? = null,
         @Query("end_date") endDate: String? = null
     ): List<Task>
+
+    @GET("/tasks/today/summary")
+    suspend fun getTodaySummary(
+        @Query("start") start: String,
+        @Query("end") end: String
+    ): TaskTodaySummary
 
     @GET("/tasks/{task_id}")
     suspend fun getTask(@Path("task_id") taskId: Int): Task
@@ -139,6 +147,15 @@ interface JuggleApi {
 
     @GET("/users/current_user")
     suspend fun getCurrentUser(): User
+
+    @GET("/users/me/location")
+    suspend fun getLocation(): UserLocation
+
+    @PUT("/users/me/location")
+    suspend fun saveLocation(@Body body: UserLocation): UserLocation
+
+    @DELETE("/users/me/location")
+    suspend fun deleteLocation()
 
     @POST("/users/create_user")
     suspend fun createUser(@Body body: UserCreateRequest): User

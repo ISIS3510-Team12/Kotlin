@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.team12kotlin.juggle.reminders.LocationReminderSync
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 class MainActivity : ComponentActivity() {
@@ -15,6 +16,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestLocalNetworkAccessIfNeeded()
+        LocationReminderSync.sync(this)
         setContent {
             JuggleTheme {
                 AppRoot()

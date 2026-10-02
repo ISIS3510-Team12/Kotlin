@@ -1,8 +1,15 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.google.services)
+}
+
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use { load(it) }
 }
 
 android {
@@ -19,6 +26,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Maps API key read from local.properties.
+        manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
 
         buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000\"")
         buildConfigField("boolean", "USE_FIREBASE_EMULATOR", "true")
@@ -65,6 +75,10 @@ dependencies {
     implementation("com.composables:icons-material-symbols-rounded-filled-cmp:2.2.1")
     implementation("com.composables:icons-material-symbols-sharp-filled-cmp:2.2.1")
     implementation(libs.androidx.material3)
+
+    implementation("com.google.maps.android:maps-compose:6.12.2")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
