@@ -1,5 +1,6 @@
 package com.team12kotlin.juggle.ui.profile.settings.location
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,9 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,7 +39,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.My_location
+import com.team12kotlin.juggle.reminders.GeofenceManager
+import com.team12kotlin.juggle.reminders.rememberReminderPermissionsFlow
 import com.team12kotlin.juggle.ui.components.PillButton
+import com.team12kotlin.juggle.ui.dto.UserLocation
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @Composable
@@ -50,8 +58,31 @@ fun LocationRemindersScreen(
         onError = viewModel::onLocationError
     )
 
+    val context = LocalContext.current
+    var permissionsComplete by remember { mutableStateOf(true) }
+    val saveAfterPermissions = rememberReminderPermissionsFlow { allGranted ->
+        permissionsComplete = allGranted
+        viewModel.onSaveLocation()
+    }
+
     LaunchedEffect(uiState.saved) {
-        if (uiState.saved) goBack()
+        if (uiState.saved) {
+            // Registered with what was just saved; without location permission it's skipped and retried later.
+            val latitude = uiState.latitude
+            val longitude = uiState.longitude
+            val radius = uiState.radiusMeters
+            if (latitude != null && longitude != null && radius != null) {
+                GeofenceManager.register(context, UserLocation(latitude, longitude, radius))
+            }
+            if (!permissionsComplete) {
+                Toast.makeText(
+                    context,
+                    "Saved. Reminders need notifications and “Allow all the time” location to work in the background.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            goBack()
+        }
     }
 
     LocationRemindersContent(
@@ -61,7 +92,7 @@ fun LocationRemindersScreen(
         onLocationPicked = viewModel::onLocationPicked,
         onUseCurrentLocation = { currentLocation.request() },
         onRadiusChange = viewModel::onRadiusChange,
-        onSaveLocation = viewModel::onSaveLocation
+        onSaveLocation = saveAfterPermissions
     )
 }
 

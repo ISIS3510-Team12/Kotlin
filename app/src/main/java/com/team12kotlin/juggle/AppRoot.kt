@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import com.team12kotlin.juggle.reminders.LocationReminderSync
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -138,6 +140,9 @@ fun AppRoot(
                     )
                 }
                 composable(NavigationDestination.Home.route) {
+                    // Reaching Home means signed in: make sure the saved place's geofence is registered.
+                    val context = LocalContext.current
+                    LaunchedEffect(Unit) { LocationReminderSync.sync(context) }
                     HomeScreen(
                         modifier = Modifier,
                         onProfileClick = { navController.navigate(it.route) },
