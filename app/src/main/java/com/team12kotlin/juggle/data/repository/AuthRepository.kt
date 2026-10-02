@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 
 class AuthRepository(
@@ -25,5 +26,14 @@ class AuthRepository(
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val result = firebaseAuth.signInWithCredential(credential).await()
         return result.user ?: error("Google sign in succeeded but returned no user")
+    }
+
+    suspend fun updateDisplayName(displayName: String): FirebaseUser? {
+        val user = firebaseAuth.currentUser ?: return null
+        val name = displayName.trim()
+        if (name.isEmpty()) return user
+        val request = UserProfileChangeRequest.Builder().setDisplayName(name).build()
+        user.updateProfile(request).await()
+        return firebaseAuth.currentUser
     }
 }

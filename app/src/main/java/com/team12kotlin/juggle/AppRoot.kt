@@ -123,6 +123,21 @@ fun AppRoot(
                     HomeScreen(
                         modifier = Modifier,
                         onProfileClick = { navController.navigate(it.route) },
+                        onTaskClick = { task ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNotificationClick = {
+                            navController.navigate(NavigationDestination.Notifications.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onCreateTaskClick = { groupId ->
+                            navController.navigate("${NavigationDestination.CreateTask.route}/$groupId") {
+                                launchSingleTop = true
+                            }
+                        },
                         onCreateGroupClick = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -132,7 +147,6 @@ fun AppRoot(
                                 restoreState = true
                             }
                         }
-                        // TODO: añadir las otras acciones para create task y ver el detail de una task
                     )
                 }
                 composable(NavigationDestination.Tasks.route) {
