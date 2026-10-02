@@ -67,6 +67,7 @@ fun AppRoot(
     modifier: Modifier = Modifier,
     navbarViewModel: NavbarViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -106,6 +107,7 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onSignUpClick = {
+                            LocationReminderSync.sync(context)
                             navController.navigate(NavigationDestination.Tasks.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true
@@ -125,6 +127,8 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onSignInClick = {
+                            // Signed in: make sure the saved place's geofence is registered on this device.
+                            LocationReminderSync.sync(context)
                             navController.navigate(NavigationDestination.Tasks.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true
@@ -140,9 +144,6 @@ fun AppRoot(
                     )
                 }
                 composable(NavigationDestination.Home.route) {
-                    // Reaching Home means signed in: make sure the saved place's geofence is registered.
-                    val context = LocalContext.current
-                    LaunchedEffect(Unit) { LocationReminderSync.sync(context) }
                     HomeScreen(
                         modifier = Modifier,
                         onProfileClick = { navController.navigate(it.route) },

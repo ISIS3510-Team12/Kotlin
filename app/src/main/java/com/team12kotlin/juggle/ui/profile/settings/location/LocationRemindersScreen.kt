@@ -77,7 +77,7 @@ fun LocationRemindersScreen(
             if (!permissionsComplete) {
                 Toast.makeText(
                     context,
-                    "Saved. Reminders need notifications and “Allow all the time” location to work in the background.",
+                    "Saved. Allow notifications and “all the time” location to get reminders.",
                     Toast.LENGTH_LONG
                 ).show()
             }
