@@ -15,12 +15,17 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSearchBarState
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -39,14 +44,32 @@ fun GroupsScreen (
     viewModel: GroupsViewModel = viewModel(),
     onNavigateToCreateGroup: () -> Unit = {},
     onProfileClick: (NavigationDestination) -> Unit = {},
-    onGroupClick: (Group) -> Unit = {}
+    onGroupClick: (Group) -> Unit = {},
+    notice: String? = null,
+    onNoticeShown: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState(uiState.query)
 
+    LifecycleResumeEffect(Unit) {
+        viewModel.loadGroups()
+        onPauseOrDispose { }
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(notice) {
+        if (notice != null) {
+            snackbarHostState.showSnackbar(notice)
+            onNoticeShown()
+        }
+    }
+
     Scaffold(
         modifier = modifier,
+        snackbarHost = {
+            SnackbarHost(snackbarHostState, modifier = Modifier.padding(bottom = 104.dp))
+        },
         topBar = {
             AppTopBar(onProfileClick = onProfileClick)
         },
@@ -100,8 +123,23 @@ fun GroupsScreen (
                 },
                 modifier = Modifier.padding(start=20.dp, top=5.dp, end=20.dp, bottom = 20.dp).fillMaxWidth()
             )
-            Column(
-            ) {
+            uiState.errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+            }
+            if (!uiState.isLoading && uiState.filteredGroups.isEmpty() && uiState.errorMessage == null) {
+                Text(
+                    text = "No groups yet",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                )
+            }
+            Column {
                 uiState.filteredGroups.forEach { group ->
                     GroupCard(
                         group = group,

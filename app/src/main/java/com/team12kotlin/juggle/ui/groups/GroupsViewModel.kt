@@ -1,15 +1,21 @@
 package com.team12kotlin.juggle.ui.groups
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.ui.dto.Group
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class GroupsUiState(
     val query: String = "",
-    val groups: List<Group> = emptyList()
+    val groups: List<Group> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 ) {
     val filteredGroups: List<Group>
         get() = groups.filterFor(query)
@@ -20,23 +26,43 @@ data class GroupsUiState(
         return filter { group ->
             group.name.lowercase().contains(q)
                     || group.description.lowercase().contains(q)
-                    || group.users.any { member -> member.firstName.contains(q)}
+                    || group.users.any { member -> member.firstName.contains(q, ignoreCase = true) }
         }
     }
 }
 
-class GroupsViewModel : ViewModel() {
+class GroupsViewModel(
+    private val groupRepository: GroupRepository = Dependencies.groupRepository
+) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(
-        GroupsUiState(
-            groups = listOf(
-                Group(name = "The best group", description = "we got this!"),
-                Group(name = "Academic Victims", description = "only one of us is going to survive the semester"),
-                Group(name = "Mobile divas", description = "Slaaaaaayyyyyy")
-            ),
-        )
-    )
+    private val _uiState = MutableStateFlow(GroupsUiState())
     val uiState: StateFlow<GroupsUiState> = _uiState.asStateFlow()
+
+    init {
+        loadGroups()
+    }
+
+    fun loadGroups() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            runCatching { groupRepository.getGroups() }
+                .onSuccess { groups ->
+                    _uiState.update {
+                        it.copy(
+                            groups = groups.filterNot { group ->
+                                group.isPersonal || group.name.equals("Personal", ignoreCase = true)
+                            },
+                            isLoading = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(isLoading = false, errorMessage = error.message)
+                    }
+                }
+        }
+    }
 
     fun onQueryChange(query: String) {
         _uiState.update { it.copy(query = query) }
@@ -44,14 +70,11 @@ class GroupsViewModel : ViewModel() {
 
     fun onSearch(query: String) {
         _uiState.update { it.copy(query = query) }
-        // TODO: trigger repository search / navigation when data layer exists
     }
 
     fun onGroupClick(group: Group) {
-        // TODO: navigate to group detail for group.id
     }
 
     fun onCreateGroup() {
-        // TODO: navigate to create-group
     }
 }

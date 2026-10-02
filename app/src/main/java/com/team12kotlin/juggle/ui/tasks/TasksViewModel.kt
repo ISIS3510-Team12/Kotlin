@@ -57,7 +57,8 @@ class TasksViewModel(
     }
 
     fun refreshCurrentGroup() {
-        _uiState.value.selectedGroupId?.let { loadTasksForGroup(it) }
+        // Reloads groups too, so renames/new members made elsewhere show up; the selection is preserved.
+        if (_uiState.value.selectedGroupId != null) loadGroups()
     }
 
     fun loadGroups() {
@@ -66,7 +67,8 @@ class TasksViewModel(
 
             val groupsResult = runCatching { groupRepository.getGroups() }
             val groups = groupsResult.getOrDefault(emptyList())
-            val selectedId = groups.firstOrNull()?.id
+            val selectedId = groups.firstOrNull { it.id == _uiState.value.selectedGroupId }?.id
+                ?: groups.firstOrNull()?.id
 
             val drawerItems = mutableListOf<DrawerItem>()
             for (group in groups) {
@@ -84,7 +86,7 @@ class TasksViewModel(
                 it.copy(
                     groups = drawerItems,
                     selectedGroupId = selectedId,
-                    currentGroup = drawerItems.firstOrNull()?.name ?: it.currentGroup,
+                    currentGroup = drawerItems.firstOrNull { item -> item.selected }?.name ?: it.currentGroup,
                     isLoading = false,
                     errorMessage = groupsResult.exceptionOrNull()?.message
                 )
