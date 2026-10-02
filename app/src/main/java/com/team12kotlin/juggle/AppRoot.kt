@@ -26,8 +26,12 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.team12kotlin.juggle.ui.auth.SignInScreen
 import com.team12kotlin.juggle.ui.auth.SignUpScreen
+import com.team12kotlin.juggle.ui.calendar.CalendarScreen
+import com.team12kotlin.juggle.ui.groups.GroupsRepository
 import com.team12kotlin.juggle.ui.groups.GroupsScreen
 import com.team12kotlin.juggle.ui.groups.create.CreateGroupScreen
+import com.team12kotlin.juggle.ui.groups.detail.GroupDetailScreen
+import com.team12kotlin.juggle.ui.groups.edit.EditGroupScreen
 import com.team12kotlin.juggle.ui.home.HomeScreen
 import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
@@ -165,7 +169,13 @@ fun AppRoot(
                                 restoreState = true
                             }
                         },
-                        onNavigateToCreateTask = { groupId ->
+                        onEditGroupClick = {
+                            val currentGroupId = GroupsRepository.groups.value.firstOrNull()?.id
+                            if (currentGroupId != null) {
+                                navController.navigate("groups/$currentGroupId/edit")
+                            }
+                        },
+                                                onNavigateToCreateTask = { groupId ->
                             navController.navigate("${NavigationDestination.CreateTask.route}?groupId=$groupId") {
                                 launchSingleTop = true
                             }
@@ -257,6 +267,9 @@ fun AppRoot(
                                 launchSingleTop = true
                                 restoreState = true
                             }
+                        },
+                        onGroupClick = { group ->
+                            navController.navigate("groups/${group.id}")
                         }
                     )
                 }
@@ -274,9 +287,31 @@ fun AppRoot(
                         }
                     )
                 }
+                composable(
+                    route = NavigationDestination.GroupDetail.route,
+                    arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val groupId = backStackEntry.arguments?.getInt("groupId") ?: 0
+                    GroupDetailScreen(
+                        groupId = groupId,
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+                composable(
+                    route = NavigationDestination.EditGroup.route,
+                    arguments = listOf(navArgument("groupId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val groupId = backStackEntry.arguments?.getInt("groupId") ?: 0
+                    EditGroupScreen(
+                        groupId = groupId,
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
+                    )
+                }
                 composable(NavigationDestination.Calendar.route) {
-                    PlaceholderScreen(
-                        label = "Calendar",
+                    CalendarScreen(
+                        modifier = Modifier.fillMaxSize(),
                         onProfileClick = { navController.navigate(it.route) }
                     )
                 }
