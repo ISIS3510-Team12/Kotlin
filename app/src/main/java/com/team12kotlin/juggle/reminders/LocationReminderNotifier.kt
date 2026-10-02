@@ -24,13 +24,10 @@ private const val PREFS_NAME = "location_reminders"
 private const val KEY_LAST_NOTIFIED = "last_notified_date"
 private const val FETCH_TIMEOUT_MS = 20_000L
 
-/** Tells the user, from the notification bar, how many tasks are pending today when they arrive at their saved place. */
+/** Shows the pending tasks reminder notification. */
 object LocationReminderNotifier {
 
-    /**
-     * Fetches today's summary once and notifies if there is something pending.
-     * At most one reminder per day, so re-entering the area doesn't spam.
-     */
+    /** Shows the reminder if there are pending tasks, at most once per day. */
     suspend fun remindIfNeeded(context: Context) {
         if (!canNotify(context)) {
             Log.d(TAG, "skipped: notification permission not granted")

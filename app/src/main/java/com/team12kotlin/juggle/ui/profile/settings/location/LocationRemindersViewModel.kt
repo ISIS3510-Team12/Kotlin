@@ -29,7 +29,7 @@ data class LocationRemindersUiState(
     val radiusMeters: Int?
         get() = radiusText.toIntOrNull()
 
-    /** Shown under the radius field; null when the typed radius is valid. */
+    /** Error message for the radius input, or null if valid. */
     val radiusError: String?
         get() = when {
             radiusText.isEmpty() -> "Enter a radius in meters"
@@ -87,7 +87,7 @@ class LocationRemindersViewModel(
     }
 
     fun onRadiusChange(text: String) {
-        // Digits only; an over-limit value is kept so the field can warn instead of silently changing it.
+        // Keep only digits.
         val digits = text.filter { it.isDigit() }.take(MAX_RADIUS_DIGITS)
         _uiState.update { it.copy(radiusText = digits) }
     }

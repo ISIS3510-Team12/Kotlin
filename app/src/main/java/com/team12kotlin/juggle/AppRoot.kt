@@ -127,7 +127,7 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onSignInClick = {
-                            // Signed in: make sure the saved place's geofence is registered on this device.
+                            // Register the geofence after signing in.
                             LocationReminderSync.sync(context)
                             navController.navigate(NavigationDestination.Tasks.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {

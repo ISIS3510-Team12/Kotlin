@@ -67,7 +67,7 @@ fun LocationRemindersScreen(
 
     LaunchedEffect(uiState.saved) {
         if (uiState.saved) {
-            // Registered with what was just saved; without location permission it's skipped and retried later.
+            // Register the geofence after saving.
             val latitude = uiState.latitude
             val longitude = uiState.longitude
             val radius = uiState.radiusMeters

@@ -16,7 +16,7 @@ import kotlinx.coroutines.tasks.await
 
 class CurrentLocationRequest(val request: () -> Unit)
 
-/** Asks for location permission when needed, then reports the phone's current position. */
+/** Requests the current location of the device. */
 @Composable
 fun rememberCurrentLocationRequest(
     onLocation: (latitude: Double, longitude: Double) -> Unit,
@@ -30,7 +30,7 @@ fun rememberCurrentLocationRequest(
     fun fetch() {
         scope.launch {
             val client = LocationServices.getFusedLocationProviderClient(context)
-            // A fresh fix can time out indoors; the last known one is good enough to place a pin.
+            // Fall back to the last known location.
             val location = runCatching {
                 client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null).await()
             }.getOrNull() ?: runCatching { client.lastLocation.await() }.getOrNull()

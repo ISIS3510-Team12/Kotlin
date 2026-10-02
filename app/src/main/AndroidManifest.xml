@@ -53,7 +53,7 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Google Maps API key, injected from MAPS_API_KEY in local.properties -->
+        <!-- Google Maps API key -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />

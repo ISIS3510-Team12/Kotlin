@@ -10,15 +10,12 @@ import kotlinx.coroutines.launch
 
 private const val TAG = "LocationReminder"
 
-/**
- * Keeps the on-device geofence consistent with the place saved in the back. Geofences are lost on reboot,
- * app updates and sign-out, so this runs on start-up, sign-in, boot and update.
- */
+/** Keeps the geofence in sync with the saved location. */
 object LocationReminderSync {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    /** Registers the geofence for the saved place, or clears it when the user has none. */
+    /** Registers or clears the geofence. */
     fun sync(context: Context) {
         val appContext = context.applicationContext
         scope.launch { syncNow(appContext) }
@@ -28,7 +25,7 @@ object LocationReminderSync {
         if (Dependencies.authRepository.currentUser == null) return
         val result = runCatching { Dependencies.locationRepository.getLocation() }
         if (result.isFailure) {
-            // A failed read says nothing about the saved place, so keep whatever is registered.
+            // Keep the current geofence if the request fails.
             Log.d(TAG, "sync skipped: couldn't read the saved location")
             return
         }
@@ -40,7 +37,7 @@ object LocationReminderSync {
         }
     }
 
-    /** Drops the geofence and the "already reminded today" mark so the next account starts clean. */
+    /** Clears the geofence and reminder data when the user signs out. */
     fun onSignedOut(context: Context) {
         val appContext = context.applicationContext
         scope.launch {

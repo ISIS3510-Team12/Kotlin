@@ -15,14 +15,19 @@ import kotlinx.coroutines.tasks.await
 
 private const val REQUEST_ID = "saved_location"
 
-/** Keeps a single geofence around the user's saved place; entering it triggers [GeofenceReceiver]. */
+/**
+ * Registers and removes the geofence for the saved location.
+ *
+ * Geofencing implementation based on:
+ * https://medium.com/@thammy202/implementing-geofencing-in-android-using-kotlin-399c560c2363
+ */
 object GeofenceManager {
 
     fun canRegister(context: Context): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
 
-    /** Adds (or replaces) the geofence. Returns false when it couldn't be registered. */
+    /** Registers the geofence. Returns true if it was added. */
     @SuppressLint("MissingPermission")
     suspend fun register(context: Context, location: UserLocation): Boolean {
         if (!canRegister(context)) return false
@@ -30,11 +35,10 @@ object GeofenceManager {
             .setRequestId(REQUEST_ID)
             .setCircularRegion(location.latitude, location.longitude, location.notifyWithin.toFloat())
             .setExpirationDuration(Geofence.NEVER_EXPIRE)
-            // EXIT is registered only so Play Services tracks leaving the area; without it a later re-entry is
-            // dropped as "already in state". The receiver reacts to ENTER alone.
+            // Listen for both transitions.
             .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
             .build()
-        // Being already inside when it's registered counts as entering.
+        // Trigger on enter if the device is already inside.
         val request = GeofencingRequest.Builder()
             .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .addGeofence(geofence)
@@ -50,7 +54,7 @@ object GeofenceManager {
         }
     }
 
-    // Geofence events carry extras, so the PendingIntent has to be mutable.
+    // The PendingIntent must be mutable to receive geofence events.
     private fun pendingIntent(context: Context): PendingIntent = PendingIntent.getBroadcast(
         context,
         0,

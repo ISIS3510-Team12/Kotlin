@@ -23,12 +23,7 @@ fun hasAllReminderPermissions(context: Context): Boolean = listOf(
     Manifest.permission.ACCESS_BACKGROUND_LOCATION
 ).all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
 
-/**
- * Walks through what location reminders need, one system prompt at a time: notifications, location, and
- * "allow all the time" (explained first, since the system sends the user to Settings for it).
- * Returns a function that starts the flow; [onDone] runs at the end whether or not everything was granted,
- * so the saved place is kept even if the user declines.
- */
+/** Requests the permissions needed for the reminders, one at a time. */
 @Composable
 fun rememberReminderPermissionsFlow(onDone: (allGranted: Boolean) -> Unit): () -> Unit {
     val context = LocalContext.current
@@ -45,7 +40,7 @@ fun rememberReminderPermissionsFlow(onDone: (allGranted: Boolean) -> Unit): () -
     }
 
     fun askBackground() {
-        // Background location can only be asked once foreground location is there.
+        // Background location is requested after foreground location.
         if (granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION) || !granted(Manifest.permission.ACCESS_FINE_LOCATION)) {
             finish()
         } else {

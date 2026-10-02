@@ -10,6 +10,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * Receives geofence transitions.
+ *
+ * Geofencing implementation based on:
+ * https://medium.com/@thammy202/implementing-geofencing-in-android-using-kotlin-399c560c2363
+ */
 class GeofenceReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {

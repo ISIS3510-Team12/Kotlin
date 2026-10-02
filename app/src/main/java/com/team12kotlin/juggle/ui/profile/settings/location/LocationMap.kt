@@ -21,12 +21,12 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.team12kotlin.juggle.ui.dto.MAX_NOTIFY_WITHIN_METERS
 
-// Uniandes campus, used until the user picks a place.
+// Default map center.
 private val DEFAULT_CENTER = LatLng(4.6014, -74.0661)
 private const val DEFAULT_ZOOM = 12f
 private const val PICKED_ZOOM = 16f
 
-/** Google Map where tapping sets the reminder place; the circle previews the notification radius. */
+/** Map used to pick the reminder location. */
 @Composable
 fun LocationMap(
     latitude: Double?,
@@ -40,7 +40,7 @@ fun LocationMap(
         position = CameraPosition.fromLatLngZoom(picked ?: DEFAULT_CENTER, if (picked != null) PICKED_ZOOM else DEFAULT_ZOOM)
     }
 
-    // Covers the saved place arriving after the map is drawn and "use my current location".
+    // Move the camera to the selected location.
     LaunchedEffect(picked) {
         picked?.let { cameraPositionState.animate(CameraUpdateFactory.newLatLng(it)) }
     }
@@ -58,7 +58,7 @@ fun LocationMap(
             Marker(state = remember(picked) { MarkerState(position = picked) })
             Circle(
                 center = picked,
-                // Drawn even while the typed value is invalid, capped to what the back accepts.
+                // Radius limited to the allowed range.
                 radius = (radiusMeters ?: 0).coerceIn(1, MAX_NOTIFY_WITHIN_METERS).toDouble(),
                 fillColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                 strokeColor = MaterialTheme.colorScheme.primary,

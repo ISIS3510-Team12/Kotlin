@@ -7,7 +7,7 @@ import retrofit2.HttpException
 class LocationRepository(
     private val api: JuggleApi
 ) {
-    /** The saved location, or null when the user hasn't saved one yet (the back answers 404). */
+    /** Returns the saved location, or null if there is none. */
     suspend fun getLocation(): UserLocation? = try {
         api.getLocation()
     } catch (error: HttpException) {
