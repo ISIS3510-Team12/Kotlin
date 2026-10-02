@@ -2,12 +2,15 @@ package com.team12kotlin.juggle.ui.navbar
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.composables.icons.materialsymbols.MaterialSymbols
+import com.composables.icons.materialsymbols.outlined.Account_circle
 import com.composables.icons.materialsymbols.outlined.Calendar_month
 import com.composables.icons.materialsymbols.outlined.Checklist
 import com.composables.icons.materialsymbols.outlined.Home
+import com.composables.icons.materialsymbols.outlined.Location_on
 import com.composables.icons.materialsymbols.outlined.Notifications
 import com.composables.icons.materialsymbols.outlined.Person
 import com.composables.icons.materialsymbols.outlined.Preview_off
+import com.composables.icons.materialsymbols.outlined.Settings
 import com.composables.icons.materialsymbols.outlinedfilled.Groups
 
 enum class NavigationDestination(
@@ -87,6 +90,20 @@ enum class NavigationDestination(
         contentDescription = "Create Groups",
         icon = MaterialSymbols.OutlinedFilled.Groups,
     ),
+
+    GroupDetail(
+        route = "groups/{groupId}",
+        label = "Group Detail",
+        contentDescription = "Group Detail",
+        icon = MaterialSymbols.OutlinedFilled.Groups,
+    ),
+
+    EditGroup(
+        route = "groups/{groupId}/edit",
+        label = "Edit Group",
+        contentDescription = "Edit Group",
+        icon = MaterialSymbols.OutlinedFilled.Groups,
+    ),
     Calendar(
         route = "calendar",
         label = "Calendar",
@@ -102,11 +119,32 @@ enum class NavigationDestination(
         icon = MaterialSymbols.Outlined.Preview_off
     ),
 
+    ProfileInformation(
+        route = "profile/information",
+        label = "Profile Information",
+        contentDescription = "Profile Information",
+        icon = MaterialSymbols.Outlined.Account_circle
+    ),
+
     Notifications(
         route = "notifications",
         label = "Notifications",
         contentDescription = "Notifications",
         icon = MaterialSymbols.Outlined.Notifications
+    ),
+
+    Settings(
+        route = "profile/settings",
+        label = "Settings",
+        contentDescription = "Settings",
+        icon = MaterialSymbols.Outlined.Settings
+    ),
+
+    LocationReminders(
+        route = "profile/settings/location",
+        label = "Location reminders",
+        contentDescription = "Location reminders",
+        icon = MaterialSymbols.Outlined.Location_on
     );
 
     companion object {

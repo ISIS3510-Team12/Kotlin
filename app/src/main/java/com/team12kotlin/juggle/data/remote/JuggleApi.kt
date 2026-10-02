@@ -44,7 +44,9 @@ interface JuggleApi {
     suspend fun getAllTasks(
         @Query("due_within_days") dueWithinDays: Int? = null,
         @Query("mine") mine: Boolean = false,
-        @Query("priority") priority: Boolean = false
+        @Query("priority") priority: Boolean = false,
+        @Query("start_date") startDate: String? = null,
+        @Query("end_date") endDate: String? = null
     ): List<Task>
 
     @GET("/tasks/{task_id}")

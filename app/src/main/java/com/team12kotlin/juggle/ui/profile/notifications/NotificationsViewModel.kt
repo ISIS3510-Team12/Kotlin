@@ -16,8 +16,9 @@ class NotificationsViewModel: ViewModel() {
     private  val _uiState = MutableStateFlow(
         NotificationsUiState(
             notifications = listOf(
-                Notification(id=1, title="Finished task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete"),
-                Notification(id=1, title="Edited task", date="Thursday, September 10 2026 8:00am", origin = "Group dev", type = "edit")
+                Notification(id = 1, title = "Diego finished task “Update Wiki MS6”", date = "Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete"),
+                Notification(id = 2, title = "Shaiel edited task “App Report”", date = "Wednesday, September 9 2026 7:00pm", origin = "Group dev", type = "edit"),
+                Notification(id = 3, title = "Manuela created task “Figma Prototype”", date = "Monday, September 7 2026 7:00pm", origin = "Group dev", type = "create")
             ),
         )
     )

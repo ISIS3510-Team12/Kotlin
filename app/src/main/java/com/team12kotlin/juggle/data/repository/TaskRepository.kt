@@ -28,8 +28,10 @@ class TaskRepository(
     suspend fun getAllTasks(
         dueWithinDays: Int? = null,
         mine: Boolean = false,
-        priority: Boolean = false
-    ): List<Task> = api.getAllTasks(dueWithinDays, mine, priority)
+        priority: Boolean = false,
+        startDate: String? = null,
+        endDate: String? = null
+    ): List<Task> = api.getAllTasks(dueWithinDays, mine, priority, startDate, endDate)
 
     suspend fun getTask(taskId: Int): Task = api.getTask(taskId)
 
