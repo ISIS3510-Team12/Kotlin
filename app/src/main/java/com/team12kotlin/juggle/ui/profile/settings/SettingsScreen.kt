@@ -24,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.team12kotlin.juggle.reminders.LocationReminderSync
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,6 +45,7 @@ fun SettingsScreen(
     onSignedOut: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     SettingsContent(
         modifier = modifier,
@@ -51,7 +54,10 @@ fun SettingsScreen(
         onThemeClick = viewModel::onThemeClick,
         onSoundAndVibrationChange = viewModel::onSoundAndVibrationChange,
         onLocationRemindersClick = onLocationRemindersClick,
-        onSignOutClick = { viewModel.onSignOut(onSignedOut) }
+        onSignOutClick = {
+            LocationReminderSync.onSignedOut(context)
+            viewModel.onSignOut(onSignedOut)
+        }
     )
 }
 

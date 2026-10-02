@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.data.remote.JuggleApi
 import com.team12kotlin.juggle.data.repository.AuthRepository
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.NotificationRepository
+import com.team12kotlin.juggle.data.repository.LocationRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
@@ -66,4 +67,5 @@ object Dependencies {
     val projectRepository: ProjectRepository by lazy { ProjectRepository(api) }
     val userRepository: UserRepository by lazy { UserRepository(api) }
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
+    val locationRepository: LocationRepository by lazy { LocationRepository(api) }
 }

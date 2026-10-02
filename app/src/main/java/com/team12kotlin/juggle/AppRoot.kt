@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import com.team12kotlin.juggle.reminders.LocationReminderSync
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +67,7 @@ fun AppRoot(
     modifier: Modifier = Modifier,
     navbarViewModel: NavbarViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -104,6 +107,7 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onSignUpClick = {
+                            LocationReminderSync.sync(context)
                             navController.navigate(NavigationDestination.Tasks.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true
@@ -123,6 +127,8 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onSignInClick = {
+                            // Signed in: make sure the saved place's geofence is registered on this device.
+                            LocationReminderSync.sync(context)
                             navController.navigate(NavigationDestination.Tasks.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true

@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
 import com.team12kotlin.juggle.ui.dto.TaskStatus
+import com.team12kotlin.juggle.ui.dto.TaskTodaySummary
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.dto.TimeBlock
 import com.team12kotlin.juggle.ui.dto.TimeBlockRequest
@@ -32,6 +33,9 @@ class TaskRepository(
         startDate: String? = null,
         endDate: String? = null
     ): List<Task> = api.getAllTasks(dueWithinDays, mine, priority, startDate, endDate)
+
+    suspend fun getTodaySummary(start: String, end: String): TaskTodaySummary =
+        api.getTodaySummary(start, end)
 
     suspend fun getTask(taskId: Int): Task = api.getTask(taskId)
 
