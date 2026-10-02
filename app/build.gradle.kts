@@ -76,6 +76,10 @@ dependencies {
     implementation("com.composables:icons-material-symbols-sharp-filled-cmp:2.2.1")
     implementation(libs.androidx.material3)
 
+    implementation("com.google.maps.android:maps-compose:6.12.2")
+    implementation("com.google.android.gms:play-services-maps:19.2.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
 

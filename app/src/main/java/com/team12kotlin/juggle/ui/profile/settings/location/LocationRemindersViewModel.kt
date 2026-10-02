@@ -26,7 +26,7 @@ data class LocationRemindersUiState(
     val hasLocation: Boolean
         get() = latitude != null && longitude != null
 
-    private val radiusMeters: Int?
+    val radiusMeters: Int?
         get() = radiusText.toIntOrNull()
 
     /** Shown under the radius field; null when the typed radius is valid. */
@@ -78,12 +78,12 @@ class LocationRemindersViewModel(
         }
     }
 
-    fun onChooseOnMapClick() {
-        // TODO: open the Google Maps picker (next step); it will call onLocationPicked
+    fun onLocationPicked(latitude: Double, longitude: Double) {
+        _uiState.update { it.copy(latitude = latitude, longitude = longitude, errorMessage = null) }
     }
 
-    fun onLocationPicked(latitude: Double, longitude: Double) {
-        _uiState.update { it.copy(latitude = latitude, longitude = longitude) }
+    fun onLocationError(message: String) {
+        _uiState.update { it.copy(errorMessage = message) }
     }
 
     fun onRadiusChange(text: String) {

@@ -14,6 +14,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -24,7 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -32,7 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
-import com.composables.icons.materialsymbols.outlinedfilled.Location_on
+import com.composables.icons.materialsymbols.outlined.My_location
 import com.team12kotlin.juggle.ui.components.PillButton
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
@@ -44,6 +45,11 @@ fun LocationRemindersScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val currentLocation = rememberCurrentLocationRequest(
+        onLocation = viewModel::onLocationPicked,
+        onError = viewModel::onLocationError
+    )
+
     LaunchedEffect(uiState.saved) {
         if (uiState.saved) goBack()
     }
@@ -52,7 +58,8 @@ fun LocationRemindersScreen(
         modifier = modifier,
         uiState = uiState,
         goBack = goBack,
-        onChooseOnMapClick = viewModel::onChooseOnMapClick,
+        onLocationPicked = viewModel::onLocationPicked,
+        onUseCurrentLocation = { currentLocation.request() },
         onRadiusChange = viewModel::onRadiusChange,
         onSaveLocation = viewModel::onSaveLocation
     )
@@ -64,7 +71,8 @@ private fun LocationRemindersContent(
     uiState: LocationRemindersUiState,
     modifier: Modifier = Modifier,
     goBack: () -> Unit = {},
-    onChooseOnMapClick: () -> Unit = {},
+    onLocationPicked: (Double, Double) -> Unit = { _, _ -> },
+    onUseCurrentLocation: () -> Unit = {},
     onRadiusChange: (String) -> Unit = {},
     onSaveLocation: () -> Unit = {}
 ) {
@@ -98,11 +106,35 @@ private fun LocationRemindersContent(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            MapPreview(
-                latitude = uiState.latitude,
-                longitude = uiState.longitude,
-                onClick = onChooseOnMapClick
+            if (LocalInspectionMode.current) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth().height(280.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    content = {}
+                )
+            } else {
+                LocationMap(
+                    latitude = uiState.latitude,
+                    longitude = uiState.longitude,
+                    radiusMeters = uiState.radiusMeters,
+                    onLocationPicked = onLocationPicked
+                )
+            }
+            Text(
+                text = if (uiState.hasLocation) "Tap the map to move the place." else "Tap the map to choose a place.",
+                modifier = Modifier.fillMaxWidth(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            OutlinedButton(onClick = onUseCurrentLocation, modifier = Modifier.fillMaxWidth()) {
+                Icon(
+                    imageVector = MaterialSymbols.Outlined.My_location,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Text(text = "Use my current location", modifier = Modifier.padding(start = 8.dp))
+            }
             OutlinedTextField(
                 value = uiState.radiusText,
                 onValueChange = onRadiusChange,
@@ -126,42 +158,6 @@ private fun LocationRemindersContent(
         }
     }
 
-}
-
-@Composable
-private fun MapPreview(
-    latitude: Double?,
-    longitude: Double?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(180.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        onClick = onClick
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.OutlinedFilled.Location_on,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = if (latitude != null && longitude != null) "%.5f, %.5f".format(latitude, longitude) else "Tap to choose on map",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
 }
 
 @Preview(showBackground = true)
