@@ -27,7 +27,7 @@ fun QuickActionItem(
     title: String,
     description: String,
     icon: ImageVector,
-    onClick: (NavigationDestination) -> Unit = {},
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -37,7 +37,7 @@ fun QuickActionItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TextButton(
-            onClick= { onClick }
+            onClick= onClick
         ) {
             Row(
                 modifier = modifier

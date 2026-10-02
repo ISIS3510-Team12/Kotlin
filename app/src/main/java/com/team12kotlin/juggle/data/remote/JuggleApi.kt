@@ -10,6 +10,7 @@ import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
+import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.dto.TimeBlock
 import com.team12kotlin.juggle.ui.dto.TimeBlockRequest
@@ -141,4 +142,7 @@ interface JuggleApi {
 
     @POST("/users/create_user")
     suspend fun createUser(@Body body: UserCreateRequest): User
+
+    @GET("/notifications")
+    suspend fun getNotifications(): List<TaskNotification>
 }
