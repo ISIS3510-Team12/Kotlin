@@ -13,9 +13,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+private const val FETCH_WINDOW_DAYS = 3L   // ±3 días alrededor del día seleccionado
+
 data class CalendarUiState(
     val selectedDate: LocalDate = LocalDate.now(),
-    val tasksByDate: Map<LocalDate, List<Task>> = emptyMap()
+    val tasksByDate: Map<LocalDate, List<Task>> = emptyMap(),
+    val isLoading: Boolean = false
 ) {
     val tasksForSelectedDate: List<Task>
         get() = tasksByDate[selectedDate].orEmpty()
@@ -28,45 +31,61 @@ class CalendarViewModel(
     private val today = LocalDate.now()
 
     private val _uiState = MutableStateFlow(
-        CalendarUiState(
-            selectedDate = today,
-            tasksByDate = emptyMap()
-        )
+        CalendarUiState(selectedDate = today)
     )
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
+    // Rango actualmente en caché (null = nada cargado aún)
+    private var loadedStart: LocalDate? = null
+    private var loadedEnd: LocalDate? = null
+
     init {
-        fetchTasks()
+        fetchTasksAround(today)
     }
 
-    private fun fetchTasks() {
+    fun onDateSelected(date: LocalDate) {
+        _uiState.update { it.copy(selectedDate = date) }
+        // Si el día cae fuera de la ventana cargada, refrescar
+        val start = loadedStart
+        val end = loadedEnd
+        if (start == null || end == null || date < start || date > end) {
+            fetchTasksAround(date)
+        }
+    }
+
+    private fun fetchTasksAround(center: LocalDate) {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             try {
-                // Buscamos tareas de un rango de 180 días atrás y adelante
-                val startDate = today.minusDays(180).atStartOfDay().toString()
-                val endDate = today.plusDays(180).atTime(23, 59, 59).toString()
+                val windowStart = center.minusDays(FETCH_WINDOW_DAYS)
+                val windowEnd   = center.plusDays(FETCH_WINDOW_DAYS)
 
                 val tasks = repository.getAllTasks(
                     mine = true,
-                    startDate = startDate,
-                    endDate = endDate
+                    startDate = windowStart.atStartOfDay().toString(),
+                    endDate   = windowEnd.atTime(23, 59, 59).toString()
                 )
 
                 val grouped = tasks.groupBy { task ->
                     task.deadline?.let { d ->
                         parseDeadline(d)?.toLocalDate()
-                    } ?: today
+                    } ?: center
                 }
 
-                _uiState.update { it.copy(tasksByDate = grouped) }
+                // Expandir el rango conocido y mergear con el mapa existente
+                loadedStart = minOf(loadedStart ?: windowStart, windowStart)
+                loadedEnd   = maxOf(loadedEnd   ?: windowEnd,   windowEnd)
+
+                _uiState.update { prev ->
+                    prev.copy(
+                        tasksByDate = prev.tasksByDate + grouped,
+                        isLoading   = false
+                    )
+                }
             } catch (e: Exception) {
-                // TODO: Manejar estado de error si es necesario
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
-    }
-
-    fun onDateSelected(date: LocalDate) {
-        _uiState.update { it.copy(selectedDate = date) }
     }
 
     fun onTaskClick(task: Task) {

@@ -68,6 +68,7 @@ fun CalendarScreen(
         modifier = modifier,
         selectedDate = uiState.selectedDate,
         tasks = uiState.tasksForSelectedDate,
+        isLoading = uiState.isLoading,
         onProfileClick = onProfileClick,
         onDateSelected = viewModel::onDateSelected,
         onTaskClick = {
@@ -82,6 +83,7 @@ private fun CalendarContent(
     selectedDate: LocalDate,
     tasks: List<Task>,
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     onProfileClick: (NavigationDestination) -> Unit = {},
     onDateSelected: (LocalDate) -> Unit = {},
     onTaskClick: (Task) -> Unit = {}
@@ -103,6 +105,12 @@ private fun CalendarContent(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                 style = MaterialTheme.typography.headlineMedium
             )
+
+            if (isLoading) {
+                androidx.compose.material3.LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             DateStrip(
                 selectedDate = selectedDate,
