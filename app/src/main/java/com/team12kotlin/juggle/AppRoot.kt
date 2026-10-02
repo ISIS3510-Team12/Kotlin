@@ -93,7 +93,7 @@ fun AppRoot(
                     OnboardingScreen(
                         modifier = Modifier.fillMaxSize(),
                         onGetStartedClick = {
-                            navController.navigate(NavigationDestination.SignUp.route) {
+                            navController.navigate(NavigationDestination.SignIn.route) {
                                 launchSingleTop = true
                             }
                         }
@@ -104,7 +104,7 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onSignUpClick = {
-                            navController.navigate(NavigationDestination.Tasks.route) {
+                            navController.navigate(NavigationDestination.Home.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true
                                 }
@@ -123,7 +123,7 @@ fun AppRoot(
                         modifier = Modifier.fillMaxSize(),
                         onBackClick = { navController.popBackStack() },
                         onSignInClick = {
-                            navController.navigate(NavigationDestination.Tasks.route) {
+                            navController.navigate(NavigationDestination.Home.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true
                                 }
