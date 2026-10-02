@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,14 +37,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Chevron_left
 import com.composables.icons.materialsymbols.outlined.Chevron_right
-import com.composables.icons.materialsymbols.outlined.Exclamation
-import com.team12kotlin.juggle.ui.components.IconMonogram
-import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
+import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
-import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -133,7 +129,7 @@ private fun CalendarContent(
                 )
             } else {
                 tasks.forEach { task ->
-                    ScheduleTaskCard(
+                    TaskCard(
                         task = task,
                         onClick = { onTaskClick(task) }
                     )
@@ -229,60 +225,6 @@ private fun DayCell(
                 text = date.dayOfMonth.toString(),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
-            )
-        }
-    }
-}
-
-@Composable
-private fun ScheduleTaskCard(
-    task: Task,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 10.dp),
-        onClick = onClick
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            if (task.needsHelp) {
-                Text(
-                    text = "Needs Help.",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Text(text = task.title, style = MaterialTheme.typography.titleMedium)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val assigneeName = task.assignees.firstOrNull()?.firstName
-                if (assigneeName != null) {
-                    TextMonogram(text = assigneeName.take(1).uppercase(), size = 28.dp)
-                    Text(text = assigneeName, style = MaterialTheme.typography.bodyMedium)
-                } else if (task.isPriority) {
-                    IconMonogram(
-                        icon = MaterialSymbols.Outlined.Exclamation,
-                        contentDescription = "Important task",
-                        size = 28.dp,
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    )
-                }
-            }
-            Text(
-                text = taskDue(task.deadline)?.text ?: "No due date",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
