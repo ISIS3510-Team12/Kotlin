@@ -2,13 +2,17 @@ package com.team12kotlin.juggle.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,16 +36,12 @@ fun NotificationCard(
     onClick: () -> Unit = {},
     showDismiss: Boolean = false,
     onDismiss: () -> Unit = {},
+    outlined: Boolean = false,
     createIcon: ImageVector = MaterialSymbols.Outlined.Add_circle,
     editIcon: ImageVector = MaterialSymbols.OutlinedFilled.Edit,
     completeIcon: ImageVector = MaterialSymbols.Outlined.Check_box,
 ) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 10.dp, vertical = 10.dp),
-        onClick = onClick,
-    ) {
+    val cardContent: @Composable ColumnScope.() -> Unit = {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,7 +72,7 @@ fun NotificationCard(
                 )
             }
             Column(
-                modifier = modifier,
+                modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
@@ -88,7 +88,7 @@ fun NotificationCard(
                 Text(
                     notification.date,
                     style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = if (outlined) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary
                 )
             }
             if (showDismiss) {
@@ -102,6 +102,27 @@ fun NotificationCard(
                 }
             }
         }
+    }
+
+    if (outlined) {
+        OutlinedCard(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(PaddingValues(horizontal = 12.dp, vertical = 3.dp)),
+            onClick = onClick,
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+            ),
+            content = cardContent
+        )
+    } else {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 10.dp),
+            onClick = onClick,
+            content = cardContent
+        )
     }
 }
 

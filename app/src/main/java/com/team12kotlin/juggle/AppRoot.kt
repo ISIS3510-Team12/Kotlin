@@ -33,7 +33,11 @@ import com.team12kotlin.juggle.ui.navbar.AppNavigationBar
 import com.team12kotlin.juggle.ui.navbar.NavbarViewModel
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
+import com.team12kotlin.juggle.ui.profile.ProfileScreen
+import com.team12kotlin.juggle.ui.profile.information.ProfileInformationScreen
 import com.team12kotlin.juggle.ui.profile.notifications.NotificationsScreen
+import com.team12kotlin.juggle.ui.profile.settings.SettingsScreen
+import com.team12kotlin.juggle.ui.profile.settings.location.LocationRemindersScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
@@ -41,6 +45,14 @@ import com.team12kotlin.juggle.ui.tasks.edit.EditTaskScreen
 import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
+
+private val PROFILE_ROUTES = setOf(
+    NavigationDestination.Profile.route,
+    NavigationDestination.ProfileInformation.route,
+    NavigationDestination.Notifications.route,
+    NavigationDestination.Settings.route,
+    NavigationDestination.LocationReminders.route
+)
 
 @Composable
 fun AppRoot(
@@ -269,32 +281,72 @@ fun AppRoot(
                     )
                 }
                 composable(NavigationDestination.Profile.route) {
-                    PlaceholderScreen(
-                        label = "Profile",
-                        onProfileClick = { navController.navigate(it.route) }
-                    )
-                }
-
-                composable(NavigationDestination.Notifications.route) {
-                    NotificationsScreen(
-                        modifier = modifier,
-                        goBack = {
-                            navController.navigate(NavigationDestination.Profile.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
+                    ProfileScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() },
+                        onProfileInformationClick = {
+                            navController.navigate(NavigationDestination.ProfileInformation.route) {
                                 launchSingleTop = true
-                                restoreState = true
+                            }
+                        },
+                        onNotificationsClick = {
+                            navController.navigate(NavigationDestination.Notifications.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onSettingsClick = {
+                            navController.navigate(NavigationDestination.Settings.route) {
+                                launchSingleTop = true
                             }
                         }
                     )
                 }
 
+                composable(NavigationDestination.ProfileInformation.route) {
+                    ProfileInformationScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable(NavigationDestination.Notifications.route) {
+                    NotificationsScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable(NavigationDestination.Settings.route) {
+                    SettingsScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() },
+                        onLocationRemindersClick = {
+                            navController.navigate(NavigationDestination.LocationReminders.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onSignedOut = {
+                            navController.navigate(NavigationDestination.Onboarding.route) {
+                                popUpTo(0) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+
+                composable(NavigationDestination.LocationReminders.route) {
+                    LocationRemindersScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        goBack = { navController.popBackStack() }
+                    )
+                }
+
             }
-            // Avoid the nav bar from appearing on the onboarding, sign in and sign up.
+            // Avoid the nav bar from appearing on the onboarding, sign in, sign up and profile screens.
             if (currentRoute != NavigationDestination.Onboarding.route &&
                 currentRoute != NavigationDestination.SignUp.route &&
-                currentRoute != NavigationDestination.SignIn.route
+                currentRoute != NavigationDestination.SignIn.route &&
+                currentRoute !in PROFILE_ROUTES
             ) {
                 AppNavigationBar(
                     viewModel = navbarViewModel,

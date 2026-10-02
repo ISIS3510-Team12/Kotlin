@@ -41,7 +41,7 @@ fun NotificationsScreen(
             TopAppBar(
                 title = { Text(text = "Notifications") },
                 navigationIcon = {
-                    IconButton(onClick = goBack, modifier.padding(start = 4.dp, top = 8.dp, end = 4.dp, bottom = 8.dp)) {
+                    IconButton(onClick = goBack) {
                         Icon(
                             imageVector = MaterialSymbols.Outlined.Arrow_back,
                             contentDescription = "Back"
@@ -58,7 +58,7 @@ fun NotificationsScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             Column(
-                modifier = modifier
+                modifier = Modifier
                     .padding(horizontal = 5.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
                 horizontalAlignment = Alignment.Start,
@@ -67,6 +67,7 @@ fun NotificationsScreen(
                     NotificationCard(
                         notification= notification,
                         showDismiss = true,
+                        outlined = true,
                         onDismiss = { viewModel.onNotificationDismissed(notification.id) }
                     )
                 }
