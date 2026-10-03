@@ -27,6 +27,7 @@ data class ProjectDetailUiState(
     val tasks: List<Task> = emptyList(),
     val prediction: ProjectDeadlinePrediction? = null,
     val selectedFilter: ProjectTaskFilter = ProjectTaskFilter.IN_PROGRESS,
+    val isLoading: Boolean = false,
     val errorMessage: String? = null,
 ) {
     val completedCount: Int get() = tasks.count { it.status == TaskStatus.COMPLETED }
@@ -61,6 +62,7 @@ class ProjectDetailViewModel(
 
     fun load() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             runCatching {
                 val project = projectRepository.getProject(projectId)
                 val tasks = taskRepository.getAllTasks().filter { it.projectId == projectId }
@@ -71,11 +73,11 @@ class ProjectDetailViewModel(
             }
                 .onSuccess { (project, tasks, prediction) ->
                     _uiState.update {
-                        it.copy(project = project, tasks = tasks, prediction = prediction)
+                        it.copy(project = project, tasks = tasks, prediction = prediction, isLoading = false)
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message) }
+                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
                 }
         }
     }

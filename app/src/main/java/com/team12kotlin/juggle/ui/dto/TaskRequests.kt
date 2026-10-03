@@ -17,7 +17,7 @@ data class TaskCreateRequest(
     @SerialName("project_id")
     val projectId: Int? = null,
     @SerialName("group_id")
-    val groupId: Int? = null,
+    val groupId: Int,
     @SerialName("assignee_ids")
     val assigneeIds: List<String> = emptyList(),
     @SerialName("related_task_ids")

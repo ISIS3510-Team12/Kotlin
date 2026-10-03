@@ -19,6 +19,7 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.team12kotlin.juggle.ui.telemetry.ScreenName
+import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
@@ -56,13 +59,15 @@ fun GroupDetailScreen(
     viewModel: GroupDetailViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onCreateProjectClick: () -> Unit = {},
-    onProjectClick: (Project) -> Unit = {}
+    onProjectClick: (Project) -> Unit = {},
+    onLeaveGroup: () -> Unit = {}
 ) {
     LifecycleResumeEffect(groupId) {
         viewModel.load(groupId)
         onPauseOrDispose { }
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TrackScreenLoad(ScreenName.GroupDetail, uiState.isLoading)
 
     GroupDetailContent(
         modifier = modifier,
@@ -72,7 +77,8 @@ fun GroupDetailScreen(
         errorMessage = uiState.errorMessage,
         onBackClick = onBackClick,
         onCreateProjectClick = onCreateProjectClick,
-        onProjectClick = onProjectClick
+        onProjectClick = onProjectClick,
+        onLeaveGroup = { viewModel.leaveGroup(onBackClick) }
     )
 }
 
@@ -86,7 +92,8 @@ private fun GroupDetailContent(
     errorMessage: String? = null,
     onBackClick: () -> Unit = {},
     onCreateProjectClick: () -> Unit = {},
-    onProjectClick: (Project) -> Unit = {}
+    onProjectClick: (Project) -> Unit = {},
+    onLeaveGroup: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
@@ -171,6 +178,13 @@ private fun GroupDetailContent(
                 relatedProjects.forEach { project ->
                     RelatedProjectCard(project = project, onClick = { onProjectClick(project) })
                 }
+            }
+
+            OutlinedButton(
+                onClick = onLeaveGroup,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Leave group")
             }
 
             Spacer(modifier = Modifier.height(136.dp))

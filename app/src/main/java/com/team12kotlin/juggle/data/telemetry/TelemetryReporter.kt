@@ -1,7 +1,7 @@
 package com.team12kotlin.juggle.data.telemetry
 
-import android.util.Log
-import com.team12kotlin.juggle.data.repository.TelemetryRepository
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.ui.dto.ScreenLoadRequest
 import com.team12kotlin.juggle.ui.dto.TaskDetailSessionRequest
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,13 +10,20 @@ import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 
-private const val TAG = "Telemetry"
+object TelemetryReporter {
 
-/** Sends analytics events without waiting for the caller, so they still go out after a screen is closed. */
-class TelemetryReporter(
-    private val repository: TelemetryRepository
-) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    fun reportScreenLoad(screen: String, loadTimeMs: Long) {
+        if (Dependencies.authRepository.currentUser == null) return
+        scope.launch {
+            runCatching {
+                Dependencies.telemetryRepository.registerScreenLoad(
+                    ScreenLoadRequest(screen = screen, loadTimeMs = loadTimeMs.toDouble())
+                )
+            }
+        }
+    }
 
     fun reportTaskDetailSession(
         taskId: Int,
@@ -24,9 +31,10 @@ class TelemetryReporter(
         closedAt: LocalDateTime,
         progressUpdated: Boolean
     ) {
+        if (Dependencies.authRepository.currentUser == null) return
         scope.launch {
             runCatching {
-                repository.registerTaskDetailSession(
+                Dependencies.telemetryRepository.registerTaskDetailSession(
                     TaskDetailSessionRequest(
                         taskId = taskId,
                         openedAt = openedAt.toApiDateTime(),
@@ -34,10 +42,9 @@ class TelemetryReporter(
                         progressUpdated = progressUpdated
                     )
                 )
-            }.onFailure { Log.d(TAG, "task detail session not sent: ${it.message}") }
+            }
         }
     }
 }
 
-/** Local date-time with millisecond precision, the format the back accepts. */
 fun LocalDateTime.toApiDateTime(): String = truncatedTo(ChronoUnit.MILLIS).toString()

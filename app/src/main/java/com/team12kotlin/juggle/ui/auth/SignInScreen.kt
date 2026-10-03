@@ -13,7 +13,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +25,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.team12kotlin.juggle.ui.telemetry.ScreenName
+import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
@@ -45,10 +46,10 @@ fun SignInScreen(
     viewModel: SignInViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onSignInClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TrackScreenLoad(ScreenName.SignIn)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -128,18 +129,6 @@ fun SignInScreen(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            TextButton(
-                onClick = {
-                    viewModel.onForgotPassword()
-                    onForgotPasswordClick()
-                }
-            ) {
-                Text(
-                    text = "Forgot your password?",
-                    style = MaterialTheme.typography.labelLarge
                 )
             }
 

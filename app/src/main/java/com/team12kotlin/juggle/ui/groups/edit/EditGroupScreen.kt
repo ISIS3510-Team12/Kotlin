@@ -15,6 +15,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.team12kotlin.juggle.ui.telemetry.ScreenName
+import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
@@ -40,6 +43,7 @@ import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
+import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import kotlinx.coroutines.FlowPreview
@@ -54,6 +58,7 @@ fun EditGroupScreen(
 ) {
     LaunchedEffect(groupId) { viewModel.load(groupId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TrackScreenLoad(ScreenName.EditGroup, uiState.isLoading)
 
     LaunchedEffect(uiState.saved) {
         if (uiState.saved) goBack()
@@ -63,6 +68,7 @@ fun EditGroupScreen(
         modifier = modifier,
         name = uiState.name,
         description = uiState.description,
+        members = uiState.members,
         directory = uiState.filteredCandidates,
         selectedIds = uiState.selectedIds,
         errorMessage = uiState.errorMessage,
@@ -71,6 +77,7 @@ fun EditGroupScreen(
         onDescriptionChange = viewModel::onDescriptionChange,
         onSearch = viewModel::onSearch,
         onMemberToggled = viewModel::onMemberToggled,
+        onRemoveMember = viewModel::onRemoveMember,
         onSave = viewModel::onSaveGroup,
         goBack = goBack
     )
@@ -81,6 +88,7 @@ fun EditGroupScreen(
 private fun EditGroupContent(
     name: String,
     description: String,
+    members: List<User> = emptyList(),
     directory: List<User>,
     selectedIds: Set<String>,
     modifier: Modifier = Modifier,
@@ -90,6 +98,7 @@ private fun EditGroupContent(
     onDescriptionChange: (String) -> Unit = {},
     onSearch: (String) -> Unit = {},
     onMemberToggled: (User) -> Unit = {},
+    onRemoveMember: (User) -> Unit = {},
     onSave: () -> Unit = {},
     goBack: () -> Unit = {}
 ) {
@@ -139,6 +148,22 @@ private fun EditGroupContent(
                     onValueChange = onDescriptionChange,
                     label = { Text("Class") },
                 )
+            }
+
+            Text(
+                text = "Members",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.headlineMedium
+            )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
+                horizontalAlignment = Alignment.Start,
+            ) {
+                members.forEach { member ->
+                    MemberRow(member = member, onRemove = { onRemoveMember(member) })
+                }
             }
 
             Text(
@@ -229,6 +254,30 @@ private fun EditGroupContent(
     }
 }
 
+@Composable
+private fun MemberRow(
+    member: User,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    ListItem(
+        headlineContent = { Text(member.displayName) },
+        supportingContent = { Text(member.email) },
+        leadingContent = {
+            TextMonogram(text = member.displayName.take(1).uppercase())
+        },
+        trailingContent = {
+            IconButton(onClick = onRemove) {
+                Icon(
+                    imageVector = MaterialSymbols.Outlined.Delete,
+                    contentDescription = "Remove ${member.displayName}"
+                )
+            }
+        },
+        modifier = modifier.padding(4.dp)
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun EditGroupScreenPreview() {
@@ -243,6 +292,7 @@ private fun EditGroupScreenPreview() {
         EditGroupContent(
             name = "An amazing group",
             description = "ISIS-3510",
+            members = members.take(2),
             directory = members,
             selectedIds = setOf("u1")
         )

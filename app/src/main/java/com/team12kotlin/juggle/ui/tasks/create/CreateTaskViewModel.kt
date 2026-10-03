@@ -60,6 +60,7 @@ data class CreateTaskUiState(
         get() = title.isNotBlank() &&
                 taskType != null &&
                 deadline.isNotBlank() &&
+                selectedGroupId != null &&
                 selectedProjectId != null &&
                 !isLoading
 
@@ -259,6 +260,8 @@ class CreateTaskViewModel(
         val state = _uiState.value
         if (!state.canCreate) return
 
+        val groupId = state.selectedGroupId ?: return
+
         val isoDeadline = toIsoDateTime(state.deadline, state.time)
         if (isoDeadline == null) {
             _uiState.update { it.copy(errorMessage = "Pick a valid deadline") }
@@ -291,7 +294,7 @@ class CreateTaskViewModel(
                         needsHelp = state.needsHelp,
                         deadline = isoDeadline,
                         projectId = state.selectedProjectId,
-                        groupId = state.selectedGroupId,
+                        groupId = groupId,
                         assigneeIds = assigneeIds,
                         relatedTaskIds = relatedTaskIds
                     )

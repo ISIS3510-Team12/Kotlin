@@ -10,6 +10,7 @@ import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
+import com.team12kotlin.juggle.ui.dto.ScreenLoadRequest
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
 import com.team12kotlin.juggle.ui.dto.TaskDetailSessionRequest
@@ -142,6 +143,15 @@ interface JuggleApi {
         @Body body: GroupMemberAddRequest
     ): Group
 
+    @DELETE("/groups/{group_id}/members/{member_user_id}")
+    suspend fun removeGroupMember(
+        @Path("group_id") groupId: Int,
+        @Path("member_user_id") memberUserId: String
+    )
+
+    @DELETE("/groups/{group_id}/members/me")
+    suspend fun leaveGroup(@Path("group_id") groupId: Int)
+
     @GET("/projects/group/{group_id}")
     suspend fun getProjects(@Path("group_id") groupId: Int): List<Project>
 
@@ -179,4 +189,7 @@ interface JuggleApi {
 
     @GET("/notifications")
     suspend fun getNotifications(): List<TaskNotification>
+
+    @POST("/telemetry/screen-load")
+    suspend fun registerScreenLoad(@Body body: ScreenLoadRequest)
 }

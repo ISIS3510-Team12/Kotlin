@@ -100,10 +100,6 @@ class SignInViewModel(
         }
     }
 
-    fun onForgotPassword() {
-        // TODO: navigate to password recovery when that screen exists.
-    }
-
     /** Clears the one-shot navigation flag after the screen has consumed it. */
     fun onNavigatedToSuccess() {
         _uiState.update { it.copy(navigateToSuccess = false) }

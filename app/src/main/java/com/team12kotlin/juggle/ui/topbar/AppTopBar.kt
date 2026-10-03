@@ -32,7 +32,7 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 fun AppTopBar(
     modifier: Modifier = Modifier,
     viewModel: TopBarViewModel = viewModel(),
-    showGroupIcon: Boolean? = null,
+    showGroupIcon: Boolean? = false,
     onMenuClick: () -> Unit = {},
     onProfileClick: (NavigationDestination) -> Unit = {}
 ) {

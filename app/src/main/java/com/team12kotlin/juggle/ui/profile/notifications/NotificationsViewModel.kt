@@ -1,36 +1,55 @@
 package com.team12kotlin.juggle.ui.profile.notifications
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.repository.NotificationRepository
 import com.team12kotlin.juggle.ui.dto.Notification
+import com.team12kotlin.juggle.ui.dto.toNotification
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class NotificationsUiState(
-    val notifications: List<Notification> = emptyList()
+    val notifications: List<Notification> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )
 
-class NotificationsViewModel: ViewModel() {
+class NotificationsViewModel(
+    private val notificationRepository: NotificationRepository = Dependencies.notificationRepository
+) : ViewModel() {
 
-    private  val _uiState = MutableStateFlow(
-        NotificationsUiState(
-            notifications = listOf(
-                Notification(id = 1, title = "Diego finished task “Update Wiki MS6”", date = "Thursday, September 10 2026 8:00am", origin = "Group dev", type = "complete"),
-                Notification(id = 2, title = "Shaiel edited task “App Report”", date = "Wednesday, September 9 2026 7:00pm", origin = "Group dev", type = "edit"),
-                Notification(id = 3, title = "Manuela created task “Figma Prototype”", date = "Monday, September 7 2026 7:00pm", origin = "Group dev", type = "create")
-            ),
-        )
-    )
+    private val _uiState = MutableStateFlow(NotificationsUiState())
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
 
-    fun onNotificationDismissed(id: Int) {
-        // TODO: change it so it actually deletes the notification from the model
-        _uiState.update { state ->
-            state.copy(
-                notifications = state.notifications.filter { it.id != id }
-            )
+    init {
+        loadNotifications()
+    }
+
+    fun loadNotifications() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            runCatching { notificationRepository.getNotifications() }
+                .onSuccess { items ->
+                    _uiState.update {
+                        it.copy(
+                            notifications = items.map { item -> item.toNotification() },
+                            isLoading = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
         }
     }
 
+    fun onNotificationDismissed(id: Int) {
+        _uiState.update { state ->
+            state.copy(notifications = state.notifications.filter { it.id != id })
+        }
+    }
 }

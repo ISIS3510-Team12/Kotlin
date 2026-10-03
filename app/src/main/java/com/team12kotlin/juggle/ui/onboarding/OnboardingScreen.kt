@@ -30,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team12kotlin.juggle.R
 import com.team12kotlin.juggle.ui.components.PillButton
+import com.team12kotlin.juggle.ui.telemetry.ScreenName
+import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @Composable
@@ -37,6 +39,8 @@ fun OnboardingScreen(
     modifier: Modifier = Modifier,
     onGetStartedClick: () -> Unit = {}
 ) {
+    TrackScreenLoad(ScreenName.Onboarding)
+
     Box(
         modifier = modifier
             .fillMaxSize()
