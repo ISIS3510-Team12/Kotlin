@@ -12,6 +12,7 @@ import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
+import com.team12kotlin.juggle.ui.dto.TaskDetailSessionRequest
 import com.team12kotlin.juggle.ui.dto.TaskTodaySummary
 import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
@@ -160,6 +161,9 @@ interface JuggleApi {
 
     @GET("/users/current_user")
     suspend fun getCurrentUser(): User
+
+    @POST("/telemetry/task-detail-session")
+    suspend fun registerTaskDetailSession(@Body body: TaskDetailSessionRequest)
 
     @GET("/users/me/location")
     suspend fun getLocation(): UserLocation
