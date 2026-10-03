@@ -13,7 +13,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +44,6 @@ fun SignInScreen(
     viewModel: SignInViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onSignInClick: () -> Unit = {},
-    onForgotPasswordClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -128,18 +126,6 @@ fun SignInScreen(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            TextButton(
-                onClick = {
-                    viewModel.onForgotPassword()
-                    onForgotPasswordClick()
-                }
-            ) {
-                Text(
-                    text = "Forgot your password?",
-                    style = MaterialTheme.typography.labelLarge
                 )
             }
 

@@ -28,7 +28,10 @@ class GroupDetailViewModel(
     private val _uiState = MutableStateFlow(GroupDetailUiState())
     val uiState: StateFlow<GroupDetailUiState> = _uiState.asStateFlow()
 
+    private var loadedGroupId: Int? = null
+
     fun load(groupId: Int) {
+        loadedGroupId = groupId
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
@@ -41,6 +44,17 @@ class GroupDetailViewModel(
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
+    }
+
+    fun leaveGroup(onLeft: () -> Unit) {
+        val groupId = loadedGroupId ?: return
+        viewModelScope.launch {
+            runCatching { groupRepository.leaveGroup(groupId) }
+                .onSuccess { onLeft() }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message) }
                 }
         }
     }

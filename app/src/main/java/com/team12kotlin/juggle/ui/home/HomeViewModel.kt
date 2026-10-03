@@ -12,13 +12,12 @@ import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.User
+import com.team12kotlin.juggle.ui.dto.toNotification
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 data class HomeUiState(
     val user: User = User(userId = "", firstName = ""),
@@ -100,39 +99,5 @@ class HomeViewModel : ViewModel() {
 
     private companion object {
         const val UPCOMING_DAYS = 7
-    }
-}
-
-private val NOTIFICATION_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm a")
-
-private fun TaskNotification.toNotification(): Notification {
-    val action = when (eventType) {
-        "created" -> "Created"
-        "updated" -> "Edited"
-        "completed" -> "Completed"
-        "deleted" -> "Deleted"
-        else -> "Updated"
-    }
-    val type = when (eventType) {
-        "created" -> "create"
-        "updated" -> "edit"
-        "completed" -> "complete"
-        "deleted" -> "delete"
-        else -> "edit"
-    }
-    return Notification(
-        id = id,
-        title = "$action: $taskTitle",
-        date = formatNotificationDate(occurredAt),
-        origin = groupName.orEmpty(),
-        type = type
-    )
-}
-
-private fun formatNotificationDate(value: String): String {
-    return try {
-        LocalDateTime.parse(value).format(NOTIFICATION_DATE)
-    } catch (_: Exception) {
-        value
     }
 }

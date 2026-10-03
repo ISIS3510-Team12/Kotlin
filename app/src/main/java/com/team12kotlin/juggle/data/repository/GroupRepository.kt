@@ -21,4 +21,12 @@ class GroupRepository(
 
     suspend fun addMember(groupId: Int, email: String): Group =
         api.addGroupMember(groupId, GroupMemberAddRequest(email = email))
+
+    suspend fun removeMember(groupId: Int, memberUserId: String) {
+        api.removeGroupMember(groupId, memberUserId)
+    }
+
+    suspend fun leaveGroup(groupId: Int) {
+        api.leaveGroup(groupId)
+    }
 }

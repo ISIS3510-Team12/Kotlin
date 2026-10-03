@@ -160,7 +160,7 @@ fun AppRoot(
                             }
                         },
                         onCreateTaskClick = { groupId ->
-                            navController.navigate("${NavigationDestination.CreateTask.route}?groupId={groupId}") {
+                            navController.navigate("${NavigationDestination.CreateTask.route}?groupId=$groupId") {
                                 launchSingleTop = true
                             }
                         },

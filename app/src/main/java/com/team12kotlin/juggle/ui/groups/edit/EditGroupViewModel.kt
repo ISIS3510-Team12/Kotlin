@@ -95,6 +95,26 @@ class EditGroupViewModel(
         }
     }
 
+    fun onRemoveMember(member: User) {
+        val groupId = _uiState.value.groupId
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            runCatching { groupRepository.removeMember(groupId, member.userId) }
+                .onSuccess {
+                    _uiState.update { state ->
+                        state.copy(
+                            members = state.members.filterNot { it.userId == member.userId },
+                            candidates = state.candidates + member,
+                            isLoading = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                }
+        }
+    }
+
     fun onSaveGroup() {
         val state = _uiState.value
         if (!state.canSave) return

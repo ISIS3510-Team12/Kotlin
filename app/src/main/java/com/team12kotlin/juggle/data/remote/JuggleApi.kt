@@ -141,6 +141,15 @@ interface JuggleApi {
         @Body body: GroupMemberAddRequest
     ): Group
 
+    @DELETE("/groups/{group_id}/members/{member_user_id}")
+    suspend fun removeGroupMember(
+        @Path("group_id") groupId: Int,
+        @Path("member_user_id") memberUserId: String
+    )
+
+    @DELETE("/groups/{group_id}/members/me")
+    suspend fun leaveGroup(@Path("group_id") groupId: Int)
+
     @GET("/projects/group/{group_id}")
     suspend fun getProjects(@Path("group_id") groupId: Int): List<Project>
 
