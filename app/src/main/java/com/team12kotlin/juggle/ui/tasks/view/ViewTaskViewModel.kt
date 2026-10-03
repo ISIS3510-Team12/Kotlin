@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
+import java.time.LocalDateTime
 
 enum class TaskAction(val label: String) {
     MARK_AS_COMPLETE("Mark as complete"),
@@ -36,6 +37,13 @@ class ViewTaskViewModel(
 ) : ViewModel() {
 
     private val repository: TaskRepository = Dependencies.taskRepository
+    private val telemetryReporter = Dependencies.telemetryReporter
+
+    // Analytics: one visit to this screen, from when it opens until it is closed.
+    private val openedAt = LocalDateTime.now()
+    private var taskLoaded = false
+    private var progressUpdated = false
+    private var taskDeleted = false
 
     private val taskId: Int? = savedStateHandle.get<String>("taskId")?.toIntOrNull()
 
@@ -54,6 +62,7 @@ class ViewTaskViewModel(
                 task to photo
             }
                 .onSuccess { (task, photo) ->
+                    taskLoaded = true
                     _uiState.update { it.copy(task = task, evidenceBytes = photo) }
                 }
                 .onFailure { error ->
@@ -112,22 +121,25 @@ class ViewTaskViewModel(
 
 
     /** Runs a repository action for the current task, then refreshes it. */
-    private fun runAction(action: suspend (taskId: Int) -> Unit) {
+    private fun runAction(updatesProgress: Boolean = false, action: suspend (taskId: Int) -> Unit) {
         val id = taskId ?: return
         viewModelScope.launch {
             runCatching { action(id) }
-                .onSuccess { loadTask() }
+                .onSuccess {
+                    if (updatesProgress) progressUpdated = true
+                    loadTask()
+                }
                 .onFailure { error ->
                     _uiState.update { it.copy(errorMessage = error.message) }
                 }
         }
     }
 
-    private fun onMarkAsComplete() = runAction { id ->
+    private fun onMarkAsComplete() = runAction(updatesProgress = true) { id ->
         repository.changeStatus(id, TaskStatus.COMPLETED)
     }
 
-    private fun onMarkAsStarted() = runAction { id ->
+    private fun onMarkAsStarted() = runAction(updatesProgress = true) { id ->
         repository.changeStatus(id, TaskStatus.IN_PROGRESS)
     }
 
@@ -139,10 +151,22 @@ class ViewTaskViewModel(
         val id = taskId ?: return
         viewModelScope.launch {
             runCatching { repository.deleteTask(id) }
+                .onSuccess { taskDeleted = true }
                 .onFailure { error ->
                     _uiState.update { it.copy(errorMessage = error.message) }
                 }
         }
+    }
+
+    override fun onCleared() {
+        reportTaskDetailSession()
+        super.onCleared()
+    }
+
+    private fun reportTaskDetailSession() {
+        val id = taskId ?: return
+        if (!taskLoaded || taskDeleted) return
+        telemetryReporter.reportTaskDetailSession(id, openedAt, LocalDateTime.now(), progressUpdated)
     }
 
     private fun onAssignTimeSlot() {
