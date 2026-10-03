@@ -10,6 +10,7 @@ import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
+import com.team12kotlin.juggle.ui.dto.ScreenLoadRequest
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
 import com.team12kotlin.juggle.ui.dto.TaskTodaySummary
@@ -184,4 +185,7 @@ interface JuggleApi {
 
     @GET("/notifications")
     suspend fun getNotifications(): List<TaskNotification>
+
+    @POST("/telemetry/screen-load")
+    suspend fun registerScreenLoad(@Body body: ScreenLoadRequest)
 }

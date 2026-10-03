@@ -28,6 +28,7 @@ data class ViewTaskUiState(
     val task: Task,
     val evidenceBytes: ByteArray? = null,
     val isFabMenuExpanded: Boolean = false,
+    val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -48,16 +49,17 @@ class ViewTaskViewModel(
             return
         }
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             runCatching {
                 val task = repository.getTask(id)
                 val photo = if (task.hasPhoto) repository.getTaskPhoto(id) else null
                 task to photo
             }
                 .onSuccess { (task, photo) ->
-                    _uiState.update { it.copy(task = task, evidenceBytes = photo) }
+                    _uiState.update { it.copy(task = task, evidenceBytes = photo, isLoading = false) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message) }
+                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
                 }
         }
     }

@@ -13,6 +13,7 @@ data class ProfileUiState(
     val displayName: String = "",
     val subtitle: String = "",
     val initial: String = "",
+    val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -29,6 +30,7 @@ class ProfileViewModel : ViewModel() {
 
     fun loadUser() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
             runCatching { userRepository.getCurrentUser() }
                 .onSuccess { user ->
                     _uiState.update {
@@ -36,12 +38,13 @@ class ProfileViewModel : ViewModel() {
                             displayName = user.displayName,
                             subtitle = user.major,
                             initial = user.firstName.take(1).uppercase(),
+                            isLoading = false,
                             errorMessage = null
                         )
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message) }
+                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
                 }
         }
     }

@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.team12kotlin.juggle.ui.telemetry.ScreenName
+import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
@@ -56,6 +58,7 @@ fun EditGroupScreen(
 ) {
     LaunchedEffect(groupId) { viewModel.load(groupId) }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TrackScreenLoad(ScreenName.EditGroup, uiState.isLoading)
 
     LaunchedEffect(uiState.saved) {
         if (uiState.saved) goBack()
