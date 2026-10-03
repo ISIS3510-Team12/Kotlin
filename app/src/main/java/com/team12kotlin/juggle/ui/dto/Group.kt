@@ -12,7 +12,5 @@ data class Group(
     @SerialName("users")
     val users: MutableList<User> = mutableListOf(),
     @SerialName("pending_task_count")
-    val pendingTaskCount: Int = 0,
-    @SerialName("is_personal")
-    val isPersonal: Boolean = false
+    val pendingTaskCount: Int = 0
 )

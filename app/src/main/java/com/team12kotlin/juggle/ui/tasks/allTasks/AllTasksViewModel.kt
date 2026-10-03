@@ -19,8 +19,7 @@ enum class AllTasksFilter(val label: String) {
 
 data class AllTasksUiState(
     val selectedFilterIndex: Int = 0,
-    val personalTasks: List<Task> = emptyList(),
-    val groupTasks: List<Task> = emptyList(),
+    val tasks: List<Task> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
@@ -51,8 +50,7 @@ class AllTasksViewModel(
                 .onSuccess { tasks ->
                     _uiState.update {
                         it.copy(
-                            personalTasks = tasks.filter { task -> task.projectId == null },
-                            groupTasks = tasks.filter { task -> task.projectId != null },
+                            tasks = tasks,
                             isLoading = false
                         )
                     }

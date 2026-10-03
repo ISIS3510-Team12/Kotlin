@@ -31,9 +31,6 @@ fun GroupsDrawer(
     onAllTasksClick: () -> Unit = {},
     onNewGroupClick: () -> Unit = {}
 ) {
-    // The first group is the personal one.
-    val personalGroup = groups.firstOrNull()
-
     ModalDrawerSheet(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -41,22 +38,9 @@ fun GroupsDrawer(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            DrawerSectionTitle("Personal")
-
-            if (personalGroup != null) {
-                NavigationDrawerItem(
-                    label = { Text("Personal") },
-                    selected = personalGroup.selected,
-                    onClick = { onGroupClick(personalGroup) },
-                    colors = drawerItemColors()
-                )
-            }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
             DrawerSectionTitle("Your groups")
 
-            groups.drop(1).forEach { group ->
+            groups.forEach { group ->
                 NavigationDrawerItem(
                     label = { Text(group.name) },
                     selected = group.selected,

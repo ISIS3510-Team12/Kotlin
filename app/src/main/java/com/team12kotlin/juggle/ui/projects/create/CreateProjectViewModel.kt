@@ -50,7 +50,7 @@ class CreateProjectViewModel(
         viewModelScope.launch {
             runCatching {
                 val groups = groupRepository.getGroups()
-                groups.firstOrNull { !it.isPersonal }?.id ?: groups.firstOrNull()?.id
+                groups.firstOrNull()?.id
             }
                 .onSuccess { id -> _uiState.update { it.copy(groupId = id) } }
         }

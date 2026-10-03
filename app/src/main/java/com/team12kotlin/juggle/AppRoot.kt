@@ -98,7 +98,7 @@ fun AppRoot(
                     OnboardingScreen(
                         modifier = Modifier.fillMaxSize(),
                         onGetStartedClick = {
-                            navController.navigate(NavigationDestination.SignUp.route) {
+                            navController.navigate(NavigationDestination.SignIn.route) {
                                 launchSingleTop = true
                             }
                         }
@@ -110,7 +110,7 @@ fun AppRoot(
                         onBackClick = { navController.popBackStack() },
                         onSignUpClick = {
                             LocationReminderSync.sync(context)
-                            navController.navigate(NavigationDestination.Tasks.route) {
+                            navController.navigate(NavigationDestination.Home.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true
                                 }
@@ -131,7 +131,7 @@ fun AppRoot(
                         onSignInClick = {
                             // Register the geofence after signing in.
                             LocationReminderSync.sync(context)
-                            navController.navigate(NavigationDestination.Tasks.route) {
+                            navController.navigate(NavigationDestination.Home.route) {
                                 popUpTo(NavigationDestination.Onboarding.route) {
                                     inclusive = true
                                 }

@@ -49,9 +49,7 @@ class GroupsViewModel(
                 .onSuccess { groups ->
                     _uiState.update {
                         it.copy(
-                            groups = groups.filterNot { group ->
-                                group.isPersonal || group.name.equals("Personal", ignoreCase = true)
-                            },
+                            groups = groups,
                             isLoading = false
                         )
                     }

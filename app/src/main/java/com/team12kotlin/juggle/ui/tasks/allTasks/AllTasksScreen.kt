@@ -75,7 +75,7 @@ fun AllTasksScreen(
                 onFilterSelected = { viewModel.onFilterSelected(it) },
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
             )
-            (uiState.personalTasks + uiState.groupTasks).forEach { task ->
+            uiState.tasks.forEach { task ->
                 TaskCard(
                     task = task,
                     onClick = {
