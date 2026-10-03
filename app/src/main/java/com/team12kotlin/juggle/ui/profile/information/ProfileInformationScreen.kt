@@ -27,7 +27,6 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
-import com.composables.icons.materialsymbols.outlined.Cancel
 import com.composables.icons.materialsymbols.outlined.Mail
 import com.composables.icons.materialsymbols.outlined.Person
 import com.team12kotlin.juggle.ui.components.TextMonogram
@@ -45,9 +44,7 @@ fun ProfileInformationScreen(
     ProfileInformationContent(
         modifier = modifier,
         uiState = uiState,
-        goBack = goBack,
-        onFirstNameChange = viewModel::onFirstNameChange,
-        onLastNameChange = viewModel::onLastNameChange
+        goBack = goBack
     )
 }
 
@@ -56,9 +53,7 @@ fun ProfileInformationScreen(
 private fun ProfileInformationContent(
     uiState: ProfileInformationUiState,
     modifier: Modifier = Modifier,
-    goBack: () -> Unit = {},
-    onFirstNameChange: (String) -> Unit = {},
-    onLastNameChange: (String) -> Unit = {}
+    goBack: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
@@ -91,14 +86,12 @@ private fun ProfileInformationContent(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
-            ClearableField(
+            ReadOnlyField(
                 value = uiState.firstName,
-                onValueChange = onFirstNameChange,
                 label = "First Name"
             )
-            ClearableField(
+            ReadOnlyField(
                 value = uiState.lastName,
-                onValueChange = onLastNameChange,
                 label = "Last Name"
             )
             OutlinedTextField(
@@ -122,15 +115,14 @@ private fun ProfileInformationContent(
 }
 
 @Composable
-private fun ClearableField(
+private fun ReadOnlyField(
     value: String,
-    onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = {},
         modifier = modifier.fillMaxWidth(),
         label = { Text(label) },
         leadingIcon = {
@@ -139,15 +131,8 @@ private fun ClearableField(
                 contentDescription = null
             )
         },
-        trailingIcon = {
-            IconButton(onClick = { onValueChange("") }) {
-                Icon(
-                    imageVector = MaterialSymbols.Outlined.Cancel,
-                    contentDescription = "Clear $label"
-                )
-            }
-        },
-        singleLine = true
+        singleLine = true,
+        readOnly = true
     )
 }
 

@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.telemetry.TelemetryReporter
 import java.time.LocalDateTime
 
 enum class TaskAction(val label: String) {
@@ -38,7 +39,6 @@ class ViewTaskViewModel(
 ) : ViewModel() {
 
     private val repository: TaskRepository = Dependencies.taskRepository
-    private val telemetryReporter = Dependencies.telemetryReporter
 
     // Analytics: one visit to this screen, from when it opens until it is closed.
     private val openedAt = LocalDateTime.now()
@@ -64,9 +64,8 @@ class ViewTaskViewModel(
                 task to photo
             }
                 .onSuccess { (task, photo) ->
-                    _uiState.update { it.copy(task = task, evidenceBytes = photo, isLoading = false) }
                     taskLoaded = true
-                    _uiState.update { it.copy(task = task, evidenceBytes = photo) }
+                    _uiState.update { it.copy(task = task, evidenceBytes = photo, isLoading = false) }
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
@@ -169,7 +168,7 @@ class ViewTaskViewModel(
     private fun reportTaskDetailSession() {
         val id = taskId ?: return
         if (!taskLoaded || taskDeleted) return
-        telemetryReporter.reportTaskDetailSession(id, openedAt, LocalDateTime.now(), progressUpdated)
+        TelemetryReporter.reportTaskDetailSession(id, openedAt, LocalDateTime.now(), progressUpdated)
     }
 
     private fun onAssignTimeSlot() {

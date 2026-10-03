@@ -48,13 +48,4 @@ class ProfileInformationViewModel : ViewModel() {
                 }
         }
     }
-
-    // TODO: persist the edited names once the backend exposes a user update endpoint
-    fun onFirstNameChange(value: String) {
-        _uiState.update { it.copy(firstName = value) }
-    }
-
-    fun onLastNameChange(value: String) {
-        _uiState.update { it.copy(lastName = value) }
-    }
 }

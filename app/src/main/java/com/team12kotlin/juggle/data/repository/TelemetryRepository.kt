@@ -7,8 +7,10 @@ import com.team12kotlin.juggle.ui.dto.TaskDetailSessionRequest
 class TelemetryRepository(
     private val api: JuggleApi
 ) {
-    suspend fun registerScreenLoad(screen: String, loadTimeMs: Double) {
-        api.registerScreenLoad(ScreenLoadRequest(screen = screen, loadTimeMs = loadTimeMs))
+    suspend fun registerScreenLoad(request: ScreenLoadRequest) {
+        api.registerScreenLoad(request)
+    }
+
     suspend fun registerTaskDetailSession(request: TaskDetailSessionRequest) {
         api.registerTaskDetailSession(request)
     }

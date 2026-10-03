@@ -7,7 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.team12kotlin.juggle.data.telemetry.ScreenLoadReporter
+import com.team12kotlin.juggle.data.telemetry.TelemetryReporter
 
 @Composable
 fun TrackScreenLoad(screen: ScreenName, isLoading: Boolean) {
@@ -20,7 +20,7 @@ fun TrackScreenLoad(screen: ScreenName, isLoading: Boolean) {
                 startedAt = SystemClock.elapsedRealtime()
             }
         } else if (!reported && startedAt != null) {
-            ScreenLoadReporter.report(screen.value, SystemClock.elapsedRealtime() - startedAt!!)
+            TelemetryReporter.reportScreenLoad(screen.value, SystemClock.elapsedRealtime() - startedAt!!)
             reported = true
         }
     }
@@ -30,6 +30,6 @@ fun TrackScreenLoad(screen: ScreenName, isLoading: Boolean) {
 fun TrackScreenLoad(screen: ScreenName) {
     val startedAt = remember(screen) { SystemClock.elapsedRealtime() }
     LaunchedEffect(screen) {
-        ScreenLoadReporter.report(screen.value, SystemClock.elapsedRealtime() - startedAt)
+        TelemetryReporter.reportScreenLoad(screen.value, SystemClock.elapsedRealtime() - startedAt)
     }
 }
