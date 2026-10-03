@@ -75,11 +75,27 @@
       },
       "oauth_client": [
         {
+          "client_id": "932315820701-897qoa0288qupsplojb6pmm3p8njss5l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.team12kotlin.juggle",
+            "certificate_hash": "ff2087727e7782ccaca817eb24be31fff281a00d"
+          }
+        },
+        {
           "client_id": "932315820701-jj56u3dq4g0c57gq37en81hdgf5uuapu.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.team12kotlin.juggle",
             "certificate_hash": "1b93c37d8720d3ef876b2ce60f85fe77565ab370"
+          }
+        },
+        {
+          "client_id": "932315820701-sjsp2k3si1u2378mb6bn67absq0q10qe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.team12kotlin.juggle",
+            "certificate_hash": "56fffe17be96b696cfc511be412287700bc162d1"
           }
         },
         {
