@@ -11,6 +11,7 @@ import com.team12kotlin.juggle.data.repository.NotificationRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
+import com.team12kotlin.juggle.data.telemetry.TelemetryReporter
 import com.team12kotlin.juggle.data.repository.UserRepository
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -70,4 +71,5 @@ object Dependencies {
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
     val telemetryRepository: TelemetryRepository by lazy { TelemetryRepository(api) }
+    val telemetryReporter: TelemetryReporter by lazy { TelemetryReporter(telemetryRepository) }
 }
