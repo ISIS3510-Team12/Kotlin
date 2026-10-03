@@ -5,6 +5,8 @@ import com.team12kotlin.juggle.ui.dto.GroupCreateRequest
 import com.team12kotlin.juggle.ui.dto.GroupMemberAddRequest
 import com.team12kotlin.juggle.ui.dto.GroupUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Project
+import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
+import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
@@ -144,6 +146,17 @@ interface JuggleApi {
 
     @GET("/users/")
     suspend fun getUsers(): List<User>
+
+    @GET("/projects/{project_id}")
+    suspend fun getProject(@Path("project_id") projectId: Int): Project
+
+    @POST("/projects")
+    suspend fun createProject(@Body body: ProjectCreateRequest): Project
+
+    @GET("/projects/{project_id}/deadline-prediction")
+    suspend fun getDeadlinePrediction(
+        @Path("project_id") projectId: Int
+    ): ProjectDeadlinePrediction
 
     @GET("/users/current_user")
     suspend fun getCurrentUser(): User

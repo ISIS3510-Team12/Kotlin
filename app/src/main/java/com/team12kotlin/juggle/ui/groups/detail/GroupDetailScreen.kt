@@ -54,7 +54,9 @@ fun GroupDetailScreen(
     groupId: Int,
     modifier: Modifier = Modifier,
     viewModel: GroupDetailViewModel = viewModel(),
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onCreateProjectClick: () -> Unit = {},
+    onProjectClick: (Project) -> Unit = {}
 ) {
     LifecycleResumeEffect(groupId) {
         viewModel.load(groupId)
@@ -69,7 +71,8 @@ fun GroupDetailScreen(
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
         onBackClick = onBackClick,
-        onCreateProjectClick = { viewModel.onCreateProject() }
+        onCreateProjectClick = onCreateProjectClick,
+        onProjectClick = onProjectClick
     )
 }
 
@@ -82,7 +85,8 @@ private fun GroupDetailContent(
     isLoading: Boolean = false,
     errorMessage: String? = null,
     onBackClick: () -> Unit = {},
-    onCreateProjectClick: () -> Unit = {}
+    onCreateProjectClick: () -> Unit = {},
+    onProjectClick: (Project) -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
@@ -165,7 +169,7 @@ private fun GroupDetailContent(
                     )
                 }
                 relatedProjects.forEach { project ->
-                    RelatedProjectCard(project = project)
+                    RelatedProjectCard(project = project, onClick = { onProjectClick(project) })
                 }
             }
 
