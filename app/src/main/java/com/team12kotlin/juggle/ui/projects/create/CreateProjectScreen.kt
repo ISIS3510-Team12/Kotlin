@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.projects.ProjectTopBar
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -126,11 +127,7 @@ internal fun CreateProjectContent(
 
             uiState.errorMessage?.let { message ->
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                ErrorCard(message = message)
             }
         }
     }

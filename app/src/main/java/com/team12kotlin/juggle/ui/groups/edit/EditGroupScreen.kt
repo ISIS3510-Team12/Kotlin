@@ -42,6 +42,7 @@ import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.User
@@ -208,11 +209,7 @@ private fun EditGroupContent(
             }
 
             errorMessage?.let { message ->
-                Text(
-                    text = message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                ErrorCard(message = message)
             }
 
             Row(

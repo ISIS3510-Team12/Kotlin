@@ -40,6 +40,7 @@ import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -162,12 +163,7 @@ fun CreateGroupScreen(
         }
 
         uiState.errorMessage?.let { message ->
-            Text(
-                text = message,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(horizontal = 20.dp)
-            )
+            ErrorCard(message = message)
         }
 
         Row(

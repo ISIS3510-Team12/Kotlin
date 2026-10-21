@@ -33,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Arrow_back
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,12 +184,7 @@ fun CreateTaskScreen(
             }
 
             uiState.errorMessage?.let { message ->
-                Text(
-                    text = message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = contentPadding
-                )
+                ErrorCard(message = message)
             }
 
             Button(

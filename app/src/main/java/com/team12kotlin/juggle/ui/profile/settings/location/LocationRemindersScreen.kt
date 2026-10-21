@@ -43,6 +43,7 @@ import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.My_location
 import com.team12kotlin.juggle.reminders.GeofenceManager
 import com.team12kotlin.juggle.reminders.rememberReminderPermissionsFlow
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.PillButton
 import com.team12kotlin.juggle.ui.dto.UserLocation
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -181,12 +182,7 @@ private fun LocationRemindersContent(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             uiState.errorMessage?.let { message ->
-                Text(
-                    text = message,
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error
-                )
+                ErrorCard(message = message)
             }
             PillButton(text = "Save location", onClick = onSaveLocation, enabled = uiState.canSave)
         }

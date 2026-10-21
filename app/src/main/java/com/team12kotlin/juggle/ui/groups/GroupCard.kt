@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -40,31 +41,36 @@ fun GroupCard(
             .padding(horizontal = 18.dp, vertical = 10.dp),
         onClick = onClick,
     ) {
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, top = 12.dp, end = 4.dp, bottom = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(
+                    start = 16.dp,
+                    top = 12.dp,
+                    end = 12.dp,
+                    bottom = 12.dp
+                ),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row (
-                modifier = Modifier
-                    .width(292.dp)
-                    .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.Start),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconMonogram(
-                    icon = groupIcon,
-                    contentDescription = "Group",
-                    containerColor = containerColor,
-                    contentColor = contentColor
-                )
-                Text(group.name, style = MaterialTheme.typography.titleMedium)
-            }
+            IconMonogram(
+                icon = groupIcon,
+                contentDescription = "Group",
+                containerColor = containerColor,
+                contentColor = contentColor
+            )
+
+            Text(
+                text = group.name,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
             Icon(
                 imageVector = arrowIcon,
-                contentDescription = "Arrow"
+                contentDescription = "Open group"
             )
         }
     }
