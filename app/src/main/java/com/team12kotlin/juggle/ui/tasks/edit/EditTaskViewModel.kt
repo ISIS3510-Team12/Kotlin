@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 
 data class EditTaskUiState(
     val title: String = "",
@@ -209,7 +210,7 @@ class EditTaskViewModel(
     }
 
     fun onTitleChange(title: String) {
-        _uiState.update { it.copy(title = title) }
+        _uiState.update { it.copy(title = title.take(TaskFieldLimits.TITLE_MAX_LENGTH)) }
     }
 
     fun onTaskTypeSelected(taskType: String) {

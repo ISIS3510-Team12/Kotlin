@@ -143,12 +143,16 @@ private fun GroupDetailContent(
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = group?.name ?: if (isLoading) "Loading..." else errorMessage ?: "Group not found",
-                    style = MaterialTheme.typography.headlineLarge
+                    style = MaterialTheme.typography.headlineLarge,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = group?.description.orEmpty(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 

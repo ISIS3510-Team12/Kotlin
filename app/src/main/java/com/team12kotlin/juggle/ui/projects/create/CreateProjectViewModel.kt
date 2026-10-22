@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
+import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
 import com.team12kotlin.juggle.utils.toIsoDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,11 +58,13 @@ class CreateProjectViewModel(
     }
 
     fun onNameChange(value: String) {
-        _uiState.update { it.copy(name = value) }
+        _uiState.update { it.copy(name = value.take(ProjectFieldLimits.NAME_MAX_LENGTH)) }
     }
 
     fun onDescriptionChange(value: String) {
-        _uiState.update { it.copy(description = value) }
+        _uiState.update {
+            it.copy(description = value.take(ProjectFieldLimits.DESCRIPTION_MAX_LENGTH))
+        }
     }
 
     fun onDeadlineChange(value: String) {

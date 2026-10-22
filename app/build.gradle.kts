@@ -30,8 +30,8 @@ android {
         // Maps API key read from local.properties.
         manifestPlaceholders["MAPS_API_KEY"] = localProperties.getProperty("MAPS_API_KEY", "")
 
-        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000\"")
-        buildConfigField("boolean", "USE_FIREBASE_EMULATOR", "true")
+        buildConfigField("String", "BASE_URL", "\"https://backend-three-gamma-81.vercel.app\"")
+        buildConfigField("boolean", "USE_FIREBASE_EMULATOR", "false")
         buildConfigField("String", "FIREBASE_EMULATOR_HOST", "\"10.0.2.2\"")
         buildConfigField("int", "FIREBASE_AUTH_EMULATOR_PORT", "9099")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"932315820701-t6sefi9e45vec6r72j7j1bgfjds0c6ai.apps.googleusercontent.com\"")

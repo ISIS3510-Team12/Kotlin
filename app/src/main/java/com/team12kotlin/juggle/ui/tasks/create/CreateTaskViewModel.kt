@@ -11,6 +11,7 @@ import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
+import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.toIsoDateTime
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -181,7 +182,7 @@ class CreateTaskViewModel(
     }
 
     fun onTitleChange(title: String) {
-        _uiState.update { it.copy(title = title) }
+        _uiState.update { it.copy(title = title.take(TaskFieldLimits.TITLE_MAX_LENGTH)) }
     }
 
     fun onTaskTypeSelected(taskType: String) {
@@ -224,7 +225,7 @@ class CreateTaskViewModel(
     }
 
     fun onNotesChange(notes: String) {
-        _uiState.update { it.copy(notes = notes) }
+        _uiState.update { it.copy(notes = notes.take(TaskFieldLimits.NOTES_MAX_LENGTH)) }
     }
 
     fun onEvidenceTaken(bytes: ByteArray, mimeType: String) {
