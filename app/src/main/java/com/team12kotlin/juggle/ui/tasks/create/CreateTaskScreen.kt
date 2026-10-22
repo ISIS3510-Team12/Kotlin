@@ -34,9 +34,11 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
+import com.team12kotlin.juggle.ui.dto.Group
+import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTaskScreen(
     modifier: Modifier = Modifier,
@@ -51,6 +53,46 @@ fun CreateTaskScreen(
         uiState.createdTaskId?.let(onTaskCreated)
     }
 
+    CreateTaskContent(
+        modifier = modifier,
+        uiState = uiState,
+        onBackClick = onBackClick,
+        onGroupSelected = viewModel::onGroupSelected,
+        onTitleChange = viewModel::onTitleChange,
+        onTaskTypeSelected = viewModel::onTaskTypeSelected,
+        onProjectSelected = viewModel::onProjectSelected,
+        onMemberToggled = viewModel::onMemberToggled,
+        onDeadlineChange = viewModel::onDeadlineChange,
+        onTimeChange = viewModel::onTimeChange,
+        onPriorityChange = viewModel::onPriorityChange,
+        onNeedsHelpChange = viewModel::onNeedsHelpChange,
+        onEvidenceTaken = viewModel::onEvidenceTaken,
+        onRelatedQueryChange = viewModel::onRelatedQueryChange,
+        onRelatedTaskToggled = viewModel::onRelatedTaskToggled,
+        onCreateClick = viewModel::onCreateTask,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun CreateTaskContent(
+    uiState: CreateTaskUiState,
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit = {},
+    onGroupSelected: (String) -> Unit = {},
+    onTitleChange: (String) -> Unit = {},
+    onTaskTypeSelected: (String) -> Unit = {},
+    onProjectSelected: (String) -> Unit = {},
+    onMemberToggled: (AssignableMember) -> Unit = {},
+    onDeadlineChange: (String) -> Unit = {},
+    onTimeChange: (String) -> Unit = {},
+    onPriorityChange: (Boolean) -> Unit = {},
+    onNeedsHelpChange: (Boolean) -> Unit = {},
+    onEvidenceTaken: (ByteArray, String) -> Unit = { _, _ -> },
+    onRelatedQueryChange: (String) -> Unit = {},
+    onRelatedTaskToggled: (RelatedTask) -> Unit = {},
+    onCreateClick: () -> Unit = {},
+) {
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -85,23 +127,30 @@ fun CreateTaskScreen(
                 value = uiState.selectedGroupName,
                 label = "Group",
                 options = uiState.groups.map { it.name },
-                onOptionSelected = viewModel::onGroupSelected,
+                onOptionSelected = onGroupSelected,
                 modifier = contentPadding
             )
 
             OutlinedTextField(
                 value = uiState.title,
-                onValueChange = viewModel::onTitleChange,
+                onValueChange = onTitleChange,
                 modifier = contentPadding,
                 singleLine = true,
-                label = { Text("Task title") }
+                label = { Text("Task title") },
+                supportingText = {
+                    SupportingTextWithCounter(
+                        text = "",
+                        length = uiState.title.length,
+                        maxLength = TaskFieldLimits.TITLE_MAX_LENGTH
+                    )
+                }
             )
 
             DropdownField(
                 value = uiState.taskType,
                 label = "Task type",
                 options = uiState.taskTypeOptions,
-                onOptionSelected = viewModel::onTaskTypeSelected,
+                onOptionSelected = onTaskTypeSelected,
                 modifier = contentPadding
             )
 
@@ -109,7 +158,7 @@ fun CreateTaskScreen(
                 value = uiState.selectedProjectName,
                 label = "Associated project",
                 options = uiState.projects.map { it.name },
-                onOptionSelected = viewModel::onProjectSelected,
+                onOptionSelected = onProjectSelected,
                 modifier = contentPadding
             )
 
@@ -128,7 +177,7 @@ fun CreateTaskScreen(
                 uiState.assignedMembers.forEach { member ->
                     AssignedMemberChip(
                         member = member,
-                        onClick = { viewModel.onMemberToggled(member) }
+                        onClick = { onMemberToggled(member) }
                     )
                 }
             }
@@ -140,31 +189,31 @@ fun CreateTaskScreen(
             )
             DatePickerField(
                 value = uiState.deadline,
-                onDateSelected = viewModel::onDeadlineChange,
+                onDateSelected = onDeadlineChange,
                 modifier = contentPadding
             )
             TimePickerField(
                 value = uiState.time,
-                onTimeSelected = viewModel::onTimeChange,
+                onTimeSelected = onTimeChange,
                 modifier = contentPadding
             )
 
             ToggleRow(
                 label = "Is priority",
                 checked = uiState.isPriority,
-                onCheckedChange = viewModel::onPriorityChange,
+                onCheckedChange = onPriorityChange,
                 modifier = contentPadding
             )
             ToggleRow(
                 label = "Needs help",
                 checked = uiState.needsHelp,
-                onCheckedChange = viewModel::onNeedsHelpChange,
+                onCheckedChange = onNeedsHelpChange,
                 modifier = contentPadding
             )
 
             EvidencesField(
                 imageBytes = uiState.evidenceBytes,
-                onPhotoTaken = viewModel::onEvidenceTaken,
+                onPhotoTaken = onEvidenceTaken,
                 modifier = contentPadding
             )
 
@@ -176,9 +225,9 @@ fun CreateTaskScreen(
                 )
                 RelatedTasksPicker(
                     query = uiState.relatedQuery,
-                    onQueryChange = viewModel::onRelatedQueryChange,
+                    onQueryChange = onRelatedQueryChange,
                     tasks = uiState.filteredRelatedTasks,
-                    onToggle = viewModel::onRelatedTaskToggled,
+                    onToggle = onRelatedTaskToggled,
                     modifier = contentPadding
                 )
             }
@@ -188,7 +237,7 @@ fun CreateTaskScreen(
             }
 
             Button(
-                onClick = viewModel::onCreateTask,
+                onClick = onCreateClick,
                 enabled = uiState.canCreate,
                 modifier = contentPadding
             ) {
@@ -202,10 +251,52 @@ fun CreateTaskScreen(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 414, heightDp = 892)
 @Composable
-private fun CreateTaskScreenPreview() {
+private fun CreateTaskContentEmptyPreview() {
     JuggleTheme {
-        CreateTaskScreen()
+        CreateTaskContent(
+            uiState = CreateTaskUiState(
+                taskTypeOptions = listOf("Coding", "Design", "Research", "Writing", "Meeting")
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 414, heightDp = 892)
+@Composable
+private fun CreateTaskContentFilledPreview() {
+    JuggleTheme {
+        CreateTaskContent(
+            uiState = CreateTaskUiState(
+                title = "Design the onboarding screens",
+                taskType = "Design",
+                taskTypeOptions = listOf("Coding", "Design", "Research", "Writing", "Meeting"),
+                deadline = "09/18/2026",
+                time = "10:00",
+                isPriority = true,
+                assignedMembers = listOf(
+                    AssignableMember(name = "Diego", userId = "u1", selected = true),
+                    AssignableMember(name = "Manuela", userId = "u2"),
+                    AssignableMember(name = "Shaiel", userId = "u3"),
+                ),
+                groups = listOf(
+                    Group(name = "The best group", description = "un grupo")
+                )
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 414, heightDp = 892)
+@Composable
+private fun CreateTaskContentErrorPreview() {
+    JuggleTheme {
+        CreateTaskContent(
+            uiState = CreateTaskUiState(
+                title = "A".repeat(TaskFieldLimits.TITLE_MAX_LENGTH),
+                errorMessage = "Pick a valid deadline",
+            )
+        )
     }
 }

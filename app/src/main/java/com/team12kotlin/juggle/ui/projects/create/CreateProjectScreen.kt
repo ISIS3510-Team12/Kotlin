@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -26,9 +25,11 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.projects.ProjectTopBar
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
 
 @Composable
 fun CreateProjectScreen(
@@ -55,7 +56,6 @@ fun CreateProjectScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CreateProjectContent(
     uiState: CreateProjectUiState,
@@ -98,7 +98,14 @@ internal fun CreateProjectContent(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     label = { Text("Project name") },
-                    placeholder = { Text("Enter project name") }
+                    placeholder = { Text("Enter project name") },
+                    supportingText = {
+                        SupportingTextWithCounter(
+                            text = "",
+                            length = uiState.name.length,
+                            maxLength = ProjectFieldLimits.NAME_MAX_LENGTH
+                        )
+                    }
                 )
                 OutlinedTextField(
                     value = uiState.description,
@@ -106,7 +113,13 @@ internal fun CreateProjectContent(
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Description") },
                     placeholder = { Text("Describe the project") },
-                    supportingText = { Text("Optional") }
+                    supportingText = {
+                        SupportingTextWithCounter(
+                            text = "Optional",
+                            length = uiState.description.length,
+                            maxLength = ProjectFieldLimits.DESCRIPTION_MAX_LENGTH
+                        )
+                    }
                 )
                 DatePickerField(
                     value = uiState.deadline,

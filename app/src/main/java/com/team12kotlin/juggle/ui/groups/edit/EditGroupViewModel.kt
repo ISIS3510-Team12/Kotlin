@@ -6,6 +6,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.ui.dto.User
+import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -77,11 +78,13 @@ class EditGroupViewModel(
     }
 
     fun onNameChange(name: String) {
-        _uiState.update { it.copy(name = name) }
+        _uiState.update { it.copy(name = name.take(GroupFieldLimits.NAME_MAX_LENGTH)) }
     }
 
     fun onDescriptionChange(description: String) {
-        _uiState.update { it.copy(description = description) }
+        _uiState.update {
+            it.copy(description = description.take(GroupFieldLimits.DESCRIPTION_MAX_LENGTH))
+        }
     }
 
     fun onSearch(query: String) {

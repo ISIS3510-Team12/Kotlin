@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,12 +40,12 @@ import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.ErrorCard
-import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
+import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
+import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
-import kotlinx.coroutines.FlowPreview
+import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
 
-@OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun CreateGroupScreen(
     modifier: Modifier = Modifier,
@@ -60,6 +59,30 @@ fun CreateGroupScreen(
     LaunchedEffect(uiState.created) {
         if (uiState.created) onCreated(uiState.notice)
     }
+
+    CreateGroupContent(
+        uiState = uiState,
+        modifier = modifier,
+        goBack = goBack,
+        onNameChange = viewModel::onNameChange,
+        onDescriptionChange = viewModel::onDescriptionChange,
+        onSearch = viewModel::onSearch,
+        onToggleMember = viewModel::onToggleMember,
+        onCreateGroup = viewModel::onCreateGroup,
+    )
+}
+
+@Composable
+fun CreateGroupContent(
+    uiState: CreateGroupUiState,
+    modifier: Modifier = Modifier,
+    goBack: () -> Unit = {},
+    onNameChange: (String) -> Unit = {},
+    onDescriptionChange: (String) -> Unit = {},
+    onSearch: (String) -> Unit = {},
+    onToggleMember: (User) -> Unit = {},
+    onCreateGroup: () -> Unit = {},
+) {
     val searchBarState = rememberSearchBarState()
     val searchTextFieldState = rememberTextFieldState(uiState.query)
 
@@ -79,136 +102,148 @@ fun CreateGroupScreen(
             )
         }
     ) { innerPadding ->
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.Top),
-        horizontalAlignment = Alignment.Start,
-    ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            OutlinedTextField(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 0.dp),
-                value = uiState.name,
-                supportingText = { Text("This will be the main name of the group") },
-                onValueChange = viewModel::onNameChange,
-                label = { Text("Group Name") },
-            )
-            OutlinedTextField(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 0.dp),
-                value = uiState.description,
-                supportingText = { Text("This will be the description of the group") },
-                onValueChange = viewModel::onDescriptionChange,
-                label = { Text("Group Description") },
-            )
-        }
-
-        Column(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(start = 0.dp, top = 5.dp, end = 0.dp, bottom = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Bottom),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ){
-            Text(
-                text = "Add people",
-                modifier = modifier
-                    .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
-                style = MaterialTheme.typography.headlineMedium
-            )
-        }
-
-        SearchBar(
-            state = searchBarState,
-            inputField = {
-                SearchBarDefaults.InputField(
-                    searchBarState = searchBarState,
-                    textFieldState = searchTextFieldState,
-                    onSearch = { viewModel.onSearch(it) },
-                    placeholder = {
-                        Text("Search for a user...")
-                    },
-                    trailingIcon = {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Search,
-                            contentDescription = "Search"
-                        )
-                    }
-                )
-            },
-            modifier = Modifier.padding(start=20.dp, top=5.dp, end=20.dp, bottom = 10.dp).fillMaxWidth()
-        )
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.Top),
             horizontalAlignment = Alignment.Start,
         ) {
-            uiState.filteredAvailableMembers.forEach { member ->
-                MemberSelectorItem(
-                    member = member,
-                    checkedState = member.userId in uiState.selectedIds,
-                    onChecked = viewModel::onToggleMember
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                OutlinedTextField(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 0.dp),
+                    value = uiState.name,
+                    supportingText = {
+                        SupportingTextWithCounter(
+                            text = "This will be the main name of the group",
+                            length = uiState.name.length,
+                            maxLength = GroupFieldLimits.NAME_MAX_LENGTH
+                        )
+                    },
+                    onValueChange = onNameChange,
+                    label = { Text("Group Name") },
+                )
+                OutlinedTextField(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(start = 10.dp, top = 0.dp, end = 10.dp, bottom = 0.dp),
+                    value = uiState.description,
+                    supportingText = {
+                        SupportingTextWithCounter(
+                            text = "This will be the description of the group",
+                            length = uiState.description.length,
+                            maxLength = GroupFieldLimits.DESCRIPTION_MAX_LENGTH
+                        )
+                    },
+                    onValueChange = onDescriptionChange,
+                    label = { Text("Group Description") },
                 )
             }
-        }
 
-        uiState.errorMessage?.let { message ->
-            ErrorCard(message = message)
-        }
-
-        Row(
-            modifier =modifier
-                .fillMaxWidth()
-                .padding(start = 10.dp, top = 20.dp, end = 0.dp, bottom = 0.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Button(
-                onClick = viewModel::onCreateGroup,
-                enabled = uiState.canCreate
-            ) {
-                Row(
+            Column(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .padding(start = 0.dp, top = 5.dp, end = 0.dp, bottom = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Bottom),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ){
+                Text(
+                    text = "Add people",
                     modifier = modifier
-                        .padding(0.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Outlined.Check,
-                        contentDescription = "Check"
+                        .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
+
+            SearchBar(
+                state = searchBarState,
+                inputField = {
+                    SearchBarDefaults.InputField(
+                        searchBarState = searchBarState,
+                        textFieldState = searchTextFieldState,
+                        onSearch = { onSearch(it) },
+                        placeholder = {
+                            Text("Search for a user...")
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Search,
+                                contentDescription = "Search"
+                            )
+                        }
                     )
-                    Text(text = "Create Group")
+                },
+                modifier = Modifier.padding(start=20.dp, top=5.dp, end=20.dp, bottom = 10.dp).fillMaxWidth()
+            )
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
+                horizontalAlignment = Alignment.Start,
+            ) {
+                uiState.filteredAvailableMembers.forEach { member ->
+                    MemberSelectorItem(
+                        member = member,
+                        checkedState = member.userId in uiState.selectedIds,
+                        onChecked = onToggleMember
+                    )
                 }
             }
-            OutlinedButton(
-                onClick = goBack
+
+            uiState.errorMessage?.let { message ->
+                ErrorCard(message = message)
+            }
+
+            Row(
+                modifier =modifier
+                    .fillMaxWidth()
+                    .padding(start = 10.dp, top = 20.dp, end = 0.dp, bottom = 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = modifier
-                        .padding(start = 12.dp, top = 0.dp, end = 12.dp, bottom = 0.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
+                Button(
+                    onClick = onCreateGroup,
+                    enabled = uiState.canCreate
                 ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Outlined.Delete,
-                        contentDescription = "Cancel"
-                    )
-                    Text(text = "Cancel")
+                    Row(
+                        modifier = modifier
+                            .padding(0.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = MaterialSymbols.Outlined.Check,
+                            contentDescription = "Check"
+                        )
+                        Text(text = "Create Group")
+                    }
+                }
+                OutlinedButton(
+                    onClick = goBack
+                ) {
+                    Row(
+                        modifier = modifier
+                            .padding(start = 12.dp, top = 0.dp, end = 12.dp, bottom = 0.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = MaterialSymbols.Outlined.Delete,
+                            contentDescription = "Cancel"
+                        )
+                        Text(text = "Cancel")
+                    }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(136.dp))
+            Spacer(modifier = Modifier.height(136.dp))
         }
     }
 }
@@ -216,7 +251,15 @@ fun CreateGroupScreen(
 @Preview(showBackground = true)
 @Composable
 private fun CreateGroupsScreensPreview() {
-    JuggleTheme() {
-        CreateGroupScreen()
+    JuggleTheme {
+        CreateGroupContent(
+            uiState = CreateGroupUiState().copy(
+                availableMembers = mutableListOf(
+                    User(userId = "u1", firstName = "Diego", email = "d.munevar@uniandes.edu.co", major = "Comp Sci"),
+                    User(userId = "u2", firstName = "Manuela", email = "m.loveral@uniandes.edu.co", major = "Comp Sci"),
+                    User(userId = "u3", firstName = "Shaiel", email = "sm.jimenez@uniandes.edu.co", major = "Comp Sci")
+                )
+            )
+        )
     }
 }

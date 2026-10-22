@@ -35,6 +35,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Cancel
 import com.composables.icons.materialsymbols.outlined.Check
+import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.tasks.create.AssignedMemberChip
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.tasks.create.DropdownField
@@ -43,6 +44,7 @@ import com.team12kotlin.juggle.ui.tasks.create.RelatedTasksPicker
 import com.team12kotlin.juggle.ui.tasks.create.TimePickerField
 import com.team12kotlin.juggle.ui.tasks.create.ToggleRow
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +106,14 @@ fun EditTaskScreen(
                 onValueChange = viewModel::onTitleChange,
                 modifier = contentPadding,
                 label = { Text("Task title") },
-                isError = uiState.title.isBlank()
+                isError = uiState.title.isBlank(),
+                supportingText = {
+                    SupportingTextWithCounter(
+                        text = "",
+                        length = uiState.title.length,
+                        maxLength = TaskFieldLimits.TITLE_MAX_LENGTH
+                    )
+                }
             )
 
             DropdownField(

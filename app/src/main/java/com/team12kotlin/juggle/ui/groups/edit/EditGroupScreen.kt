@@ -44,9 +44,11 @@ import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
+import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
 import kotlinx.coroutines.FlowPreview
 
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
@@ -138,14 +140,26 @@ private fun EditGroupContent(
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = name,
-                    supportingText = { Text("This is the current name of the group") },
+                    supportingText = {
+                        SupportingTextWithCounter(
+                            text = "This is the current name of the group",
+                            length = name.length,
+                            maxLength = GroupFieldLimits.NAME_MAX_LENGTH
+                        )
+                    },
                     onValueChange = onNameChange,
                     label = { Text("Name") },
                 )
                 OutlinedTextField(
                     modifier = Modifier.fillMaxWidth(),
                     value = description,
-                    supportingText = { Text("This is the current class of the group") },
+                    supportingText = {
+                        SupportingTextWithCounter(
+                            text = "This is the current class of the group",
+                            length = description.length,
+                            maxLength = GroupFieldLimits.DESCRIPTION_MAX_LENGTH
+                        )
+                    },
                     onValueChange = onDescriptionChange,
                     label = { Text("Class") },
                 )
