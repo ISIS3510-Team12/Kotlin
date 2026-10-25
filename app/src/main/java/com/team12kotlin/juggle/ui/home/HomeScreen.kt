@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -21,13 +23,13 @@ import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -66,15 +68,12 @@ fun HomeScreen (
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Home, uiState.isLoading)
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     LifecycleResumeEffect(Unit) {
         viewModel.load()
         onPauseOrDispose { }
     }
-
-    val startCorner = 20.dp
-    val endCorner = 20.dp
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -85,6 +84,7 @@ fun HomeScreen (
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
         ) {
             Column(
                 modifier = modifier
@@ -93,7 +93,7 @@ fun HomeScreen (
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
-                    modifier = modifier.padding(
+                    modifier = Modifier.padding(
                         start = 0.dp,
                         top = 0.dp,
                         end = 0.dp,
@@ -102,13 +102,15 @@ fun HomeScreen (
                     verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
                     horizontalAlignment = Alignment.Start,
                 ) {
-                    Column(modifier = modifier) {
+                    Column(modifier = Modifier) {
                         Text(
                             text = "Hi " + uiState.user.firstName + "!",
-                            style = MaterialTheme.typography.displayMedium
+                            style = MaterialTheme.typography.displayMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Row(
-                            modifier = modifier
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -116,28 +118,28 @@ fun HomeScreen (
                         ) {
                             Text(
                                 text = LocalDate.now().format(HOME_DATE),
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
                             )
                             OutlinedButton(
                                 onClick = { viewModel.onQuickActionPress() },
-                                modifier = modifier
-                                    .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
-                                shape = RoundedCornerShape(
-                                    topStart = startCorner,
-                                    bottomStart = startCorner,
-                                    topEnd = endCorner,
-                                    bottomEnd = endCorner
-                                ),
+                                modifier = Modifier
+                                    .padding(start = 8.dp),
+                                shape = RoundedCornerShape(20.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Color.Transparent,
                                     contentColor = MaterialTheme.colorScheme.onBackground
                                 ),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                             ) {
                                 Text(
                                     text = "Quick Actions",
                                     style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -147,7 +149,7 @@ fun HomeScreen (
                         style = MaterialTheme.typography.titleLarge
                     )
                     Row(
-                        modifier = modifier
+                        modifier = Modifier
                             .fillMaxWidth()
                             .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
                         horizontalArrangement = Arrangement.spacedBy(
@@ -159,12 +161,14 @@ fun HomeScreen (
                         OverviewCard(
                             icon = MaterialSymbols.RoundedFilled.List_alt,
                             title = "Tasks",
-                            count = uiState.taskCount
+                            count = uiState.taskCount,
+                            modifier = Modifier.weight(1f),
                         )
                         OverviewCard(
                             icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
                             title = "Notifications",
-                            count = uiState.notificationCount
+                            count = uiState.notificationCount,
+                            modifier = Modifier.weight(1f),
                         )
                     }
                     val selectedTab = uiState.selectedTab
@@ -203,7 +207,7 @@ fun HomeScreen (
                 }
             }
             Column(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
                 verticalArrangement = Arrangement.Center
@@ -220,8 +224,9 @@ fun HomeScreen (
                         Text(
                             text = "There are no upcoming tasks for today!",
                             style = MaterialTheme.typography.headlineSmall,
-                            modifier = modifier
-                                .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp)
+                            modifier = Modifier
+                                .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp),
+                            textAlign = TextAlign.Center
                         )
                     }
                 } else {
@@ -236,8 +241,9 @@ fun HomeScreen (
                         Text(
                             text = "There are no notifications today!",
                             style = MaterialTheme.typography.headlineSmall,
-                            modifier = modifier
-                                .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp)
+                            modifier = Modifier
+                                .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp),
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
@@ -250,13 +256,13 @@ fun HomeScreen (
                         sheetState = sheetState
                     ) {
                         Column(
-                            modifier = modifier
+                            modifier = Modifier
                                 .padding(start = 30.dp, top = 10.dp, end = 30.dp, bottom = 30.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.Top),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Row(
-                                modifier = modifier
+                                modifier = Modifier
                                     .fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(
                                     10.dp,
@@ -301,7 +307,7 @@ private val HOME_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE, MM
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
-    JuggleTheme() {
+    JuggleTheme {
         HomeScreen()
     }
 }
