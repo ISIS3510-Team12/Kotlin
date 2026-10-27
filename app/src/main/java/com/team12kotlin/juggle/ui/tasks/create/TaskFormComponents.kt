@@ -43,6 +43,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -378,13 +379,10 @@ internal fun EvidencesField(
         cameraLauncher.launch(uri)
     }
 
-    val preview = remember(imageBytes) {
-        imageBytes?.let { bytes ->
-            runCatching {
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-            }.getOrNull()
-        }
+    val previewState = produceState<ImageBitmap?>(initialValue = null, key1 = imageBytes) {
+        value = imageBytes?.let { decodeEvidencePreview(it) }
     }
+    val preview = previewState.value
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -449,13 +447,10 @@ internal fun EvidenceView(
     // Read-only evidence: shown as a preview and tappable to expand it.
     var expanded by remember { mutableStateOf(false) }
 
-    val preview = remember(imageBytes) {
-        imageBytes?.let { bytes ->
-            runCatching {
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-            }.getOrNull()
-        }
+    val previewState = produceState<ImageBitmap?>(initialValue = null, key1 = imageBytes) {
+        value = imageBytes?.let { decodeEvidencePreview(it) }
     }
+    val preview = previewState.value
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -522,6 +517,33 @@ internal fun EvidenceView(
         }
     }
 }
+
+/**
+ * Decodes a compressed version of the photo, so the preview does not need the whole full-sized image.
+ */
+private suspend fun decodeEvidencePreview(bytes: ByteArray): ImageBitmap? =
+    withContext(Dispatchers.Default) {
+        runCatching {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            val options = BitmapFactory.Options().apply {
+                inSampleSize = previewSampleSize(bounds.outWidth, bounds.outHeight)
+            }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)?.asImageBitmap()
+        }.getOrNull()
+    }
+
+/** How much to shrink the photo so it is not decoded at full resolution. */
+private fun previewSampleSize(width: Int, height: Int): Int {
+    val longestSide = maxOf(width, height)
+    var sample = 1
+    while (longestSide / sample > PREVIEW_MAX_PX) {
+        sample *= 2
+    }
+    return sample
+}
+
+private const val PREVIEW_MAX_PX = 1080
 
 private fun createEvidenceUri(context: Context): Uri {
     val directory = File(context.filesDir, "evidences").apply { mkdirs() }
