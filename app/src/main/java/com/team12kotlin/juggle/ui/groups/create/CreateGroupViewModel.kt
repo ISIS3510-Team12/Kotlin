@@ -7,6 +7,8 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,8 +57,12 @@ class CreateGroupViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
-                val currentId = userRepository.getCurrentUser().userId
-                userRepository.getUsers().filterNot { it.userId == currentId }
+                coroutineScope {
+                    val currentUser = async { userRepository.getCurrentUser() }
+                    val users = async { userRepository.getUsers() }
+                    val currentId = currentUser.await().userId
+                    users.await().filterNot { it.userId == currentId }
+                }
             }
                 .onSuccess { users ->
                     _uiState.update { it.copy(availableMembers = users, isLoading = false) }

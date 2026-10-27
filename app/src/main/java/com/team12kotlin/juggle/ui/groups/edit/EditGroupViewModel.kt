@@ -7,6 +7,9 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -56,8 +59,14 @@ class EditGroupViewModel(
         loadedGroupId = groupId
 
         viewModelScope.launch {
-            _uiState.update { it.copy(groupId = groupId, isLoading = !hasLoaded, errorMessage = null) }
-            runCatching { groupRepository.getGroup(groupId) to userRepository.getUsers() }
+            _uiState.update { it.copy(groupId = groupId, isLoading = true, errorMessage = null) }
+            runCatching {
+                coroutineScope {
+                    val group = async { groupRepository.getGroup(groupId) }
+                    val users = async { userRepository.getUsers() }
+                    group.await() to users.await()
+                }
+            }
                 .onSuccess { (group, users) ->
                     hasLoaded = true
                     // The back only lets members be added (leaving is per-user), so only non-members are offered.
@@ -73,6 +82,7 @@ class EditGroupViewModel(
                     }
                 }
                 .onFailure { error ->
+                    if (error is CancellationException) throw error
                     loadedGroupId = null
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
                 }

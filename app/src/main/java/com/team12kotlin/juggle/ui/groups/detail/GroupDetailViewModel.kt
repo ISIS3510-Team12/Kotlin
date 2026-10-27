@@ -7,6 +7,9 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,7 +39,11 @@ class GroupDetailViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
             runCatching {
-                groupRepository.getGroup(groupId) to projectRepository.getProjects(groupId)
+                coroutineScope {
+                    val group = async { groupRepository.getGroup(groupId) }
+                    val projects = async { projectRepository.getProjects(groupId) }
+                    group.await() to projects.await()
+                }
             }
                 .onSuccess { (group, projects) ->
                     hasLoaded = true
@@ -45,6 +52,7 @@ class GroupDetailViewModel(
                     }
                 }
                 .onFailure { error ->
+                    if (error is CancellationException) throw error
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
                 }
         }
