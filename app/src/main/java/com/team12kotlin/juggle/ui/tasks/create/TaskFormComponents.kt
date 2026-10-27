@@ -1,7 +1,7 @@
 package com.team12kotlin.juggle.ui.tasks.create
 
 import android.content.Context
-import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -72,6 +72,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.io.File
+import java.nio.ByteBuffer
 
 // Reusable building blocks for task forms (Create Task and, later, Edit Task).
 
@@ -520,16 +521,17 @@ internal fun EvidenceView(
 
 /**
  * Decodes a compressed version of the photo, so the preview does not need the whole full-sized image.
+ * ImageDecoder applies the EXIF orientation, so portrait photos are not shown sideways.
  */
 private suspend fun decodeEvidencePreview(bytes: ByteArray): ImageBitmap? =
     withContext(Dispatchers.Default) {
         runCatching {
-            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-            val options = BitmapFactory.Options().apply {
-                inSampleSize = previewSampleSize(bounds.outWidth, bounds.outHeight)
-            }
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)?.asImageBitmap()
+            val source = ImageDecoder.createSource(ByteBuffer.wrap(bytes))
+            ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                decoder.setTargetSampleSize(
+                    previewSampleSize(info.size.width, info.size.height)
+                )
+            }.asImageBitmap()
         }.getOrNull()
     }
 
