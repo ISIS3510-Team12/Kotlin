@@ -17,13 +17,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,11 +38,11 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
-import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Settings
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.IconMonogram
-import com.team12kotlin.juggle.ui.components.LoadingOverlay
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
@@ -99,17 +97,7 @@ private fun GroupDetailContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Group detail") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Group detail", onBack = onBackClick)
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -133,9 +121,7 @@ private fun GroupDetailContent(
             )
         }
     ) { innerPadding ->
-        if (isLoading) {
-            LoadingOverlay(isLoading = true)
-        } else {
+        LoadingContent(isLoading = isLoading) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

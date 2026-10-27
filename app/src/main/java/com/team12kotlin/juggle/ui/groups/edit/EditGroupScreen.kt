@@ -23,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,12 +37,12 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
-import com.team12kotlin.juggle.ui.components.LoadingOverlay
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.TextMonogram
@@ -114,22 +113,10 @@ private fun EditGroupContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Edit Group") },
-                navigationIcon = {
-                    IconButton(onClick = goBack) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Edit Group", onBack = goBack)
         }
     ) { innerPadding ->
-        if (isLoading) {
-            LoadingOverlay(isLoading = true)
-        } else {
+        LoadingContent(isLoading = isLoading) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()

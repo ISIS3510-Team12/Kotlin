@@ -39,7 +39,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.ErrorCard
-import com.team12kotlin.juggle.ui.components.LoadingOverlay
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -108,9 +108,7 @@ fun GroupsScreen (
             )
         }
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            LoadingOverlay(isLoading = true)
-        } else {
+        LoadingContent(isLoading = uiState.isLoading) {
             Column(
                 modifier = Modifier
                     .padding(innerPadding)

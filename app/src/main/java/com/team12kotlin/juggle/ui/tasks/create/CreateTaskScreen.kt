@@ -15,12 +15,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,9 +31,9 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
-import com.composables.icons.materialsymbols.outlined.Arrow_back
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
-import com.team12kotlin.juggle.ui.components.LoadingOverlay
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
@@ -98,17 +96,7 @@ internal fun CreateTaskContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text("Create Task") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Create Task", onBack = onBackClick)
         }
     ) { innerPadding ->
         // Horizontal padding is applied per-item rather than on the
@@ -117,9 +105,7 @@ internal fun CreateTaskContent(
         val contentPadding = Modifier
             .fillMaxWidth()
             .padding(horizontal = horizontalPadding)
-        if (uiState.isLoading) {
-            LoadingOverlay(isLoading = true)
-        } else {
+        LoadingContent(isLoading = uiState.isLoading) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

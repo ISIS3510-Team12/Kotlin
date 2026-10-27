@@ -29,7 +29,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.team12kotlin.juggle.ui.components.LoadingOverlay
+import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Task
@@ -37,7 +38,6 @@ import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.projects.PaceWarningBanner
 import com.team12kotlin.juggle.ui.projects.ProjectProgressBar
-import com.team12kotlin.juggle.ui.projects.ProjectTopBar
 import com.team12kotlin.juggle.ui.projects.StatSummary
 import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -74,11 +74,9 @@ internal fun ProjectDetailContent(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { ProjectTopBar(title = "Project detail", onBackClick = onBackClick) }
+        topBar = { BackTopBar(title = "Project detail", onBack = onBackClick) }
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            LoadingOverlay(isLoading = true)
-        } else {
+        LoadingContent(isLoading = uiState.isLoading) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()

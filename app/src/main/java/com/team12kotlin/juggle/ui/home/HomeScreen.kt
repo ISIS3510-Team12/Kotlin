@@ -42,7 +42,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Circle_notifications
 import com.composables.icons.materialsymbols.roundedfilled.Groups
 import com.composables.icons.materialsymbols.roundedfilled.List_alt
-import com.team12kotlin.juggle.ui.components.LoadingOverlay
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.components.OverviewCard
 import com.team12kotlin.juggle.ui.components.QuickActionItem
@@ -81,9 +81,7 @@ fun HomeScreen (
             AppTopBar(onProfileClick = onProfileClick)
         },
     ) { innerPadding ->
-        if (uiState.isLoading) {
-            LoadingOverlay(isLoading = true)
-        } else {
+        LoadingContent(isLoading = uiState.isLoading) {
             Column(
                 modifier = modifier
                     .fillMaxSize()
