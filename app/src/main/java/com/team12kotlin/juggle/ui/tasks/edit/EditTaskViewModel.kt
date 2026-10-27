@@ -15,6 +15,9 @@ import com.team12kotlin.juggle.ui.tasks.create.RelatedTask
 import com.team12kotlin.juggle.utils.splitDeadline
 import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.toIsoDateTime
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -95,19 +98,36 @@ class EditTaskViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
-                val task = repository.getTask(id)
-                val groups = runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
-                val groupId = navGroupId ?: task.groupId
-                val projects = loadProjects(groupId)
-                val relatedIds = task.relatedTasks.map { it.id }.toSet()
-                val related = loadRelated(groupId, relatedIds)
-                val photo = if (task.hasPhoto) repository.getTaskPhoto(id) else null
-                TaskEditData(task, groups, groupId, projects, related, photo)
+                coroutineScope {
+                    // The task carries the group id and the photo flag, so we fetch it first.
+                    val task = repository.getTask(id)
+                    val groupId = navGroupId ?: task.groupId
+                    val relatedIds = task.relatedTasks.map { it.id }.toSet()
+
+                    val groups = async {
+                        runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
+                    }
+                    val projects = async { loadProjects(groupId) }
+                    val related = async { loadRelated(groupId, relatedIds) }
+                    val photo = async {
+                        if (task.hasPhoto) repository.getTaskPhoto(id) else null
+                    }
+
+                    TaskEditData(
+                        task,
+                        groups.await(),
+                        groupId,
+                        projects.await(),
+                        related.await(),
+                        photo.await()
+                    )
+                }
             }
                 .onSuccess { data ->
                     _uiState.value = stateForTask(data)
                 }
                 .onFailure { error ->
+                    if (error is CancellationException) throw error
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
                 }
         }
@@ -125,9 +145,13 @@ class EditTaskViewModel(
         }
 
         viewModelScope.launch {
-            val projects = loadProjects(group?.id)
-            val related = loadRelated(group?.id, keepSelected)
-            _uiState.update { it.copy(projects = projects, relatedTasks = related) }
+            coroutineScope {
+                val projects = async { loadProjects(group?.id) }
+                val related = async { loadRelated(group?.id, keepSelected) }
+                _uiState.update {
+                    it.copy(projects = projects.await(), relatedTasks = related.await())
+                }
+            }
         }
     }
 

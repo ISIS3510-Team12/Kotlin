@@ -1,7 +1,7 @@
 package com.team12kotlin.juggle.ui.tasks.create
 
 import android.content.Context
-import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,6 +43,7 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -71,6 +72,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.io.File
+import java.nio.ByteBuffer
 
 // Reusable building blocks for task forms (Create Task and, later, Edit Task).
 
@@ -378,13 +380,10 @@ internal fun EvidencesField(
         cameraLauncher.launch(uri)
     }
 
-    val preview = remember(imageBytes) {
-        imageBytes?.let { bytes ->
-            runCatching {
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-            }.getOrNull()
-        }
+    val previewState = produceState<ImageBitmap?>(initialValue = null, key1 = imageBytes) {
+        value = imageBytes?.let { decodeEvidencePreview(it) }
     }
+    val preview = previewState.value
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -449,13 +448,10 @@ internal fun EvidenceView(
     // Read-only evidence: shown as a preview and tappable to expand it.
     var expanded by remember { mutableStateOf(false) }
 
-    val preview = remember(imageBytes) {
-        imageBytes?.let { bytes ->
-            runCatching {
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)?.asImageBitmap()
-            }.getOrNull()
-        }
+    val previewState = produceState<ImageBitmap?>(initialValue = null, key1 = imageBytes) {
+        value = imageBytes?.let { decodeEvidencePreview(it) }
     }
+    val preview = previewState.value
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -522,6 +518,34 @@ internal fun EvidenceView(
         }
     }
 }
+
+/**
+ * Decodes a compressed version of the photo, so the preview does not need the whole full-sized image.
+ * ImageDecoder applies the EXIF orientation, so portrait photos are not shown sideways.
+ */
+private suspend fun decodeEvidencePreview(bytes: ByteArray): ImageBitmap? =
+    withContext(Dispatchers.Default) {
+        runCatching {
+            val source = ImageDecoder.createSource(ByteBuffer.wrap(bytes))
+            ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                decoder.setTargetSampleSize(
+                    previewSampleSize(info.size.width, info.size.height)
+                )
+            }.asImageBitmap()
+        }.getOrNull()
+    }
+
+/** How much to shrink the photo so it is not decoded at full resolution. */
+private fun previewSampleSize(width: Int, height: Int): Int {
+    val longestSide = maxOf(width, height)
+    var sample = 1
+    while (longestSide / sample > PREVIEW_MAX_PX) {
+        sample *= 2
+    }
+    return sample
+}
+
+private const val PREVIEW_MAX_PX = 1080
 
 private fun createEvidenceUri(context: Context): Uri {
     val directory = File(context.filesDir, "evidences").apply { mkdirs() }

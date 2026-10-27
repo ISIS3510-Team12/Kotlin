@@ -14,6 +14,8 @@ import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
 import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.toIsoDateTime
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -144,10 +146,12 @@ class CreateTaskViewModel(
 
         viewModelScope.launch {
             runCatching {
-                val group = groupRepository.getGroup(groupId)
-                val projects = projectRepository.getProjects(groupId)
-                val allTasks = taskRepository.getAllTasks()
-                Triple(group, projects, allTasks)
+                coroutineScope {
+                    val group = async { groupRepository.getGroup(groupId) }
+                    val projects = async { projectRepository.getProjects(groupId) }
+                    val allTasks = async { taskRepository.getAllTasks() }
+                    Triple(group.await(), projects.await(), allTasks.await())
+                }
             }
                 .onSuccess { (group, projects, allTasks) ->
                     val members: MutableList<AssignableMember> = mutableListOf()

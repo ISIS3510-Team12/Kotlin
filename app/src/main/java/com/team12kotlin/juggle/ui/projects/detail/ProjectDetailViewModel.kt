@@ -10,6 +10,9 @@ import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -64,12 +67,18 @@ class ProjectDetailViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             runCatching {
-                val project = projectRepository.getProject(projectId)
-                val tasks = taskRepository.getAllTasks().filter { it.projectId == projectId }
-                val prediction = runCatching {
-                    projectRepository.getDeadlinePrediction(projectId)
-                }.getOrNull()
-                Triple(project, tasks, prediction)
+                coroutineScope {
+                    val project = async { projectRepository.getProject(projectId) }
+                    val tasks = async { taskRepository.getAllTasks() }
+                    val prediction = async {
+                        runCatching { projectRepository.getDeadlinePrediction(projectId) }.getOrNull()
+                    }
+                    Triple(
+                        project.await(),
+                        tasks.await().filter { it.projectId == projectId },
+                        prediction.await()
+                    )
+                }
             }
                 .onSuccess { (project, tasks, prediction) ->
                     _uiState.update {
@@ -77,6 +86,7 @@ class ProjectDetailViewModel(
                     }
                 }
                 .onFailure { error ->
+                    if (error is CancellationException) throw error
                     _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
                 }
         }
