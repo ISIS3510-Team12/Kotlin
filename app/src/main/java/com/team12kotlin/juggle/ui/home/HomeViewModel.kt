@@ -13,6 +13,9 @@ import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.dto.toNotification
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,11 +64,21 @@ class HomeViewModel : ViewModel() {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             runCatching {
-                val user = userRepository.getCurrentUser()
-                val tasks = taskRepository.getAllTasks(dueWithinDays = UPCOMING_DAYS, mine = true)
-                val notifications = notificationRepository.getNotifications()
-                val groups = groupRepository.getGroups()
-                Loaded(user, tasks, notifications, groups.firstOrNull()?.id)
+                // The four calls are independent
+                coroutineScope {
+                    val user = async { userRepository.getCurrentUser() }
+                    val tasks = async {
+                        taskRepository.getAllTasks(dueWithinDays = UPCOMING_DAYS, mine = true)
+                    }
+                    val notifications = async { notificationRepository.getNotifications() }
+                    val groups = async { groupRepository.getGroups() }
+                    Loaded(
+                        user = user.await(),
+                        tasks = tasks.await(),
+                        notifications = notifications.await(),
+                        firstGroupId = groups.await().firstOrNull()?.id
+                    )
+                }
             }
                 .onSuccess { loaded ->
                     _uiState.update {
@@ -79,6 +92,7 @@ class HomeViewModel : ViewModel() {
                     }
                 }
                 .onFailure { error ->
+                    if (error is CancellationException) throw error
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
                 }
         }
