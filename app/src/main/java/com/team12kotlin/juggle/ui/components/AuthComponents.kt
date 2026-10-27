@@ -12,10 +12,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -45,7 +47,8 @@ fun PillButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
-    textStyle: TextStyle? = null
+    textStyle: TextStyle? = null,
+    isLoading: Boolean = false
 ) {
     /**
      * Filled, fully-rounded ("pill") primary action button used across the auth and
@@ -54,11 +57,17 @@ fun PillButton(
     Button(
         onClick = onClick,
         modifier = modifier,
-        enabled = enabled,
+        enabled = enabled && !isLoading,
         shape = RoundedCornerShape(percent = 50),
         contentPadding = contentPadding
     ) {
-        if (textStyle != null) {
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(18.dp),
+                strokeWidth = 2.dp,
+                color = LocalContentColor.current
+            )
+        } else if (textStyle != null) {
             Text(text = text, style = textStyle)
         } else {
             Text(text = text)

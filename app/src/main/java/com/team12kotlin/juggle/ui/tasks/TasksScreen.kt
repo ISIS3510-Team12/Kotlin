@@ -1,10 +1,10 @@
 package com.team12kotlin.juggle.ui.tasks
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,6 +45,7 @@ import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Keyboard_arrow_down
 import com.composables.icons.materialsymbols.outlined.Search
 import com.composables.icons.materialsymbols.outlinedfilled.Edit
+import com.team12kotlin.juggle.ui.components.LoadingOverlay
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -136,78 +137,82 @@ fun TasksScreen(
                 )
             }
         ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Row(
+            if (uiState.isLoading) {
+                LoadingOverlay(isLoading = true)
+            } else {
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Column {
-                        Text(
-                            style = MaterialTheme.typography.headlineMedium, text = "Current Group"
-                        )
-                        Text(
-                            style = MaterialTheme.typography.headlineSmall, text = uiState.currentGroup
-                        )
-                    }
-                    TextButton(
-                        onClick = {
-                            viewModel.onEditGroupClick()
-                            uiState.selectedGroupId?.let(onEditGroupClick)
-                        },
-
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            imageVector = MaterialSymbols.OutlinedFilled.Edit,
-                            contentDescription = "Edit group"
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Edit group")
-                    }
-                }
-                SearchBar(
-                    state = searchBarState,
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            searchBarState = searchBarState,
-                            textFieldState = textFieldState,
-                            onSearch = { viewModel.onSearch(it) },
-                            placeholder = {
-                                Text("Search for a task...")
+                        Column {
+                            Text(
+                                style = MaterialTheme.typography.headlineMedium, text = "Current Group"
+                            )
+                            Text(
+                                style = MaterialTheme.typography.headlineSmall, text = uiState.currentGroup
+                            )
+                        }
+                        TextButton(
+                            onClick = {
+                                viewModel.onEditGroupClick()
+                                uiState.selectedGroupId?.let(onEditGroupClick)
                             },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = MaterialSymbols.Outlined.Search,
-                                    contentDescription = "Search"
-                                )
-                            }
-                        )
-                    },
-                    modifier = Modifier.padding(20.dp).fillMaxWidth()
-                )
-                TasksSection(
-                    title = "Your pending tasks",
-                    tasks = uiState.filteredOwnTasks,
-                    onTaskClick = {
-                        viewModel.onTaskClick(it)
-                        onTaskClick(it)
+
+                        ) {
+                            Icon(
+                                imageVector = MaterialSymbols.OutlinedFilled.Edit,
+                                contentDescription = "Edit group"
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Edit group")
+                        }
                     }
-                )
-                TasksSection(
-                    title = "Pending group tasks",
-                    tasks = uiState.filteredGroupTasks,
-                    onTaskClick = {
-                        viewModel.onTaskClick(it)
-                        onTaskClick(it)
-                    }
-                )
-                Spacer(modifier = Modifier.height(136.dp))
+                    SearchBar(
+                        state = searchBarState,
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                searchBarState = searchBarState,
+                                textFieldState = textFieldState,
+                                onSearch = { viewModel.onSearch(it) },
+                                placeholder = {
+                                    Text("Search for a task...")
+                                },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = MaterialSymbols.Outlined.Search,
+                                        contentDescription = "Search"
+                                    )
+                                }
+                            )
+                        },
+                        modifier = Modifier.padding(20.dp).fillMaxWidth()
+                    )
+                    TasksSection(
+                        title = "Your pending tasks",
+                        tasks = uiState.filteredOwnTasks,
+                        onTaskClick = {
+                            viewModel.onTaskClick(it)
+                            onTaskClick(it)
+                        }
+                    )
+                    TasksSection(
+                        title = "Pending group tasks",
+                        tasks = uiState.filteredGroupTasks,
+                        onTaskClick = {
+                            viewModel.onTaskClick(it)
+                            onTaskClick(it)
+                        }
+                    )
+                    Spacer(modifier = Modifier.height(136.dp))
+                }
             }
         }
     }

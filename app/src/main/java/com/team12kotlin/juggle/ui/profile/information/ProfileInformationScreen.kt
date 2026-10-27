@@ -29,6 +29,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Mail
 import com.composables.icons.materialsymbols.outlined.Person
+import com.team12kotlin.juggle.ui.components.LoadingOverlay
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
@@ -71,45 +72,49 @@ private fun ProfileInformationContent(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(start = 16.dp, top = 12.dp, end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TextMonogram(
-                text = uiState.firstName.take(1).uppercase(),
-                size = 56.dp,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-            ReadOnlyField(
-                value = uiState.firstName,
-                label = "First Name"
-            )
-            ReadOnlyField(
-                value = uiState.lastName,
-                label = "Last Name"
-            )
-            OutlinedTextField(
-                value = uiState.email,
-                onValueChange = {},
+        if (uiState.isLoading) {
+            LoadingOverlay(isLoading = true)
+        } else {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
-                label = { Text("Email") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = MaterialSymbols.Outlined.Mail,
-                        contentDescription = null
-                    )
-                },
-                singleLine = true,
-                readOnly = true
-            )
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, top = 12.dp, end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                TextMonogram(
+                    text = uiState.firstName.take(1).uppercase(),
+                    size = 56.dp,
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+                ReadOnlyField(
+                    value = uiState.firstName,
+                    label = "First Name"
+                )
+                ReadOnlyField(
+                    value = uiState.lastName,
+                    label = "Last Name"
+                )
+                OutlinedTextField(
+                    value = uiState.email,
+                    onValueChange = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                    label = { Text("Email") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = MaterialSymbols.Outlined.Mail,
+                            contentDescription = null
+                        )
+                    },
+                    singleLine = true,
+                    readOnly = true
+                )
+            }
         }
     }
 }

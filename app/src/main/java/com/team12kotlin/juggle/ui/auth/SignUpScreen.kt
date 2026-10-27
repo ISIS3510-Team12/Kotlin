@@ -155,7 +155,8 @@ fun SignUpScreen(
             PillButton(
                 text = "Sign Up",
                 onClick = viewModel::onSignUpSubmit,
-                enabled = uiState.canSubmit
+                enabled = uiState.canSubmit,
+                isLoading = uiState.isSubmitting
             )
 
             uiState.authError?.let { message ->

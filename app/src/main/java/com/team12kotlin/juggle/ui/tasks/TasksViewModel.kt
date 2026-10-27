@@ -49,8 +49,10 @@ class TasksViewModel(
     private val groupRepository: GroupRepository = Dependencies.groupRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(TasksUiState())
+    private val _uiState = MutableStateFlow(TasksUiState(isLoading = true))
     val uiState: StateFlow<TasksUiState> = _uiState.asStateFlow()
+
+    private var hasLoaded = false
 
     init {
         loadGroups()
@@ -63,7 +65,7 @@ class TasksViewModel(
 
     fun loadGroups() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
 
             val groupsResult = runCatching { groupRepository.getGroups() }
             val groups = groupsResult.getOrDefault(emptyList())
@@ -87,26 +89,30 @@ class TasksViewModel(
                     groups = drawerItems,
                     selectedGroupId = selectedId,
                     currentGroup = drawerItems.firstOrNull { item -> item.selected }?.name ?: it.currentGroup,
-                    isLoading = false,
                     errorMessage = groupsResult.exceptionOrNull()?.message
                 )
             }
 
             if (selectedId != null) {
-                loadTasksForGroup(selectedId)
+                // Keep isLoading true: loading the tasks for the selected group is part of the same load.
+                loadTasksForGroup(selectedId, showLoading = !hasLoaded)
+            } else {
+                hasLoaded = true
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
-    fun loadTasksForGroup(groupId: Int) {
+    fun loadTasksForGroup(groupId: Int, showLoading: Boolean = true) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = showLoading, errorMessage = null) }
 
             val ownResult = runCatching { repository.getOwnTasks(groupId) }
             val groupResult = runCatching { repository.getGroupTasks(groupId) }
 
             val error = ownResult.exceptionOrNull() ?: groupResult.exceptionOrNull()
 
+            hasLoaded = true
             _uiState.update {
                 it.copy(
                     ownTasks = ownResult.getOrDefault(it.ownTasks),

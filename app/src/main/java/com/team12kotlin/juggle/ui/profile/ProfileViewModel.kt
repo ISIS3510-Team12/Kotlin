@@ -21,7 +21,7 @@ class ProfileViewModel : ViewModel() {
 
     private val userRepository = Dependencies.userRepository
 
-    private val _uiState = MutableStateFlow(ProfileUiState())
+    private val _uiState = MutableStateFlow(ProfileUiState(isLoading = true))
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {

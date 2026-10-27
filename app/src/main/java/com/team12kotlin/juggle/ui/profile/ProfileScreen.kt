@@ -35,6 +35,7 @@ import com.composables.icons.materialsymbols.outlined.Account_circle
 import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Notifications
 import com.composables.icons.materialsymbols.outlined.Settings
+import com.team12kotlin.juggle.ui.components.LoadingOverlay
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
@@ -86,57 +87,61 @@ private fun ProfileContent(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(start = 26.dp, top = 16.dp, end = 26.dp),
-            verticalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+        if (uiState.isLoading) {
+            LoadingOverlay(isLoading = true)
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(start = 26.dp, top = 16.dp, end = 26.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                TextMonogram(
-                    text = uiState.initial,
-                    size = 56.dp,
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
-                Column {
-                    Text(
-                        text = uiState.displayName,
-                        style = MaterialTheme.typography.displaySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    TextMonogram(
+                        text = uiState.initial,
+                        size = 56.dp,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     )
-                    if (uiState.subtitle.isNotBlank()) {
+                    Column {
                         Text(
-                            text = uiState.subtitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = uiState.displayName,
+                            style = MaterialTheme.typography.displaySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
+                        if (uiState.subtitle.isNotBlank()) {
+                            Text(
+                                text = uiState.subtitle,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     }
                 }
+                ProfileMenuItem(
+                    icon = MaterialSymbols.Outlined.Account_circle,
+                    label = "Profile Information",
+                    onClick = onProfileInformationClick
+                )
+                ProfileMenuItem(
+                    icon = MaterialSymbols.Outlined.Notifications,
+                    label = "Notifications",
+                    onClick = onNotificationsClick
+                )
+                ProfileMenuItem(
+                    icon = MaterialSymbols.Outlined.Settings,
+                    label = "Settings",
+                    onClick = onSettingsClick
+                )
             }
-            ProfileMenuItem(
-                icon = MaterialSymbols.Outlined.Account_circle,
-                label = "Profile Information",
-                onClick = onProfileInformationClick
-            )
-            ProfileMenuItem(
-                icon = MaterialSymbols.Outlined.Notifications,
-                label = "Notifications",
-                onClick = onNotificationsClick
-            )
-            ProfileMenuItem(
-                icon = MaterialSymbols.Outlined.Settings,
-                label = "Settings",
-                onClick = onSettingsClick
-            )
         }
     }
 }

@@ -93,7 +93,7 @@ class CreateTaskViewModel(
     private val taskTypeOptions: List<String> =
         listOf("Coding", "Design", "Research", "Writing", "Meeting")
 
-    private val _uiState = MutableStateFlow(CreateTaskUiState(taskTypeOptions = taskTypeOptions))
+    private val _uiState = MutableStateFlow(CreateTaskUiState(taskTypeOptions = taskTypeOptions, isLoading = true))
     val uiState: StateFlow<CreateTaskUiState> = _uiState.asStateFlow()
 
     init {

@@ -29,6 +29,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.team12kotlin.juggle.ui.components.LoadingOverlay
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Task
@@ -75,96 +76,100 @@ internal fun ProjectDetailContent(
         modifier = modifier,
         topBar = { ProjectTopBar(title = "Project detail", onBackClick = onBackClick) }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Column {
-                    Text(
-                        text = uiState.project?.name.orEmpty(),
-                        style = MaterialTheme.typography.headlineLarge,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = uiState.project?.description.orEmpty(),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatSummary(
-                        label = "Progress",
-                        value = "${uiState.completedCount} of ${uiState.totalCount} tasks complete"
-                    )
-                    ProjectProgressBar(
-                        completed = uiState.completedCount,
-                        total = uiState.totalCount,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-
-            item {
-                StatSummary(
-                    label = "Deadline",
-                    value = uiState.project?.deadline?.let { splitDeadline(it).first }.orEmpty()
-                )
-            }
-
-            item {
-                StatSummary(
-                    label = "Current pace",
-                    value = uiState.prediction
-                        ?.let { "${it.paceTasksPerDay} completed tasks per day" }
-                        .orEmpty()
-                )
-            }
-
-            if (uiState.showPaceWarning) {
+        if (uiState.isLoading) {
+            LoadingOverlay(isLoading = true)
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 item {
-                    PaceWarningBanner(
-                        title = "Pace too slow",
-                        message = "Your current pace won't complete all planned tasks before the deadline."
-                    )
-                }
-            }
-
-            item {
-                Text(
-                    text = "Tasks",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    ProjectTaskFilter.entries.forEach { filter ->
-                        FilterChip(
-                            selected = uiState.selectedFilter == filter,
-                            onClick = { onFilterSelected(filter) },
-                            label = { Text(filter.label) },
-                            colors = FilterChipDefaults.filterChipColors()
+                    Column {
+                        Text(
+                            text = uiState.project?.name.orEmpty(),
+                            style = MaterialTheme.typography.headlineLarge,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = uiState.project?.description.orEmpty(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
-            }
 
-            items(uiState.filteredTasks, key = { it.id }) { task ->
-                TaskCard(task = task, onClick = { onTaskClick(task.id) })
-            }
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatSummary(
+                            label = "Progress",
+                            value = "${uiState.completedCount} of ${uiState.totalCount} tasks complete"
+                        )
+                        ProjectProgressBar(
+                            completed = uiState.completedCount,
+                            total = uiState.totalCount,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
 
-            item { Spacer(modifier = Modifier.height(120.dp)) }
+                item {
+                    StatSummary(
+                        label = "Deadline",
+                        value = uiState.project?.deadline?.let { splitDeadline(it).first }.orEmpty()
+                    )
+                }
+
+                item {
+                    StatSummary(
+                        label = "Current pace",
+                        value = uiState.prediction
+                            ?.let { "${it.paceTasksPerDay} completed tasks per day" }
+                            .orEmpty()
+                    )
+                }
+
+                if (uiState.showPaceWarning) {
+                    item {
+                        PaceWarningBanner(
+                            title = "Pace too slow",
+                            message = "Your current pace won't complete all planned tasks before the deadline."
+                        )
+                    }
+                }
+
+                item {
+                    Text(
+                        text = "Tasks",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ProjectTaskFilter.entries.forEach { filter ->
+                            FilterChip(
+                                selected = uiState.selectedFilter == filter,
+                                onClick = { onFilterSelected(filter) },
+                                label = { Text(filter.label) },
+                                colors = FilterChipDefaults.filterChipColors()
+                            )
+                        }
+                    }
+                }
+
+                items(uiState.filteredTasks, key = { it.id }) { task ->
+                    TaskCard(task = task, onClick = { onTaskClick(task.id) })
+                }
+
+                item { Spacer(modifier = Modifier.height(120.dp)) }
+            }
         }
     }
 }

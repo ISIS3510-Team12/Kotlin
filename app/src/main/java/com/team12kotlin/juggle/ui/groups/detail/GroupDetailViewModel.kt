@@ -25,19 +25,21 @@ class GroupDetailViewModel(
     private val projectRepository: ProjectRepository = Dependencies.projectRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GroupDetailUiState())
+    private val _uiState = MutableStateFlow(GroupDetailUiState(isLoading = true))
     val uiState: StateFlow<GroupDetailUiState> = _uiState.asStateFlow()
 
     private var loadedGroupId: Int? = null
+    private var hasLoaded = false
 
     fun load(groupId: Int) {
         loadedGroupId = groupId
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
             runCatching {
                 groupRepository.getGroup(groupId) to projectRepository.getProjects(groupId)
             }
                 .onSuccess { (group, projects) ->
+                    hasLoaded = true
                     _uiState.update {
                         it.copy(group = group, relatedProjects = projects, isLoading = false)
                     }

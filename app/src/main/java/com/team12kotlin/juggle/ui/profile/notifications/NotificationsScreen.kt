@@ -27,6 +27,7 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
+import com.team12kotlin.juggle.ui.components.LoadingOverlay
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -74,36 +75,40 @@ fun NotificationsContent(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
-        ) {
+        if (uiState.isLoading) {
+            LoadingOverlay(isLoading = true)
+        } else {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 5.dp, vertical = 10.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
-                horizontalAlignment = Alignment.Start,
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                if (uiState.notifications.isNotEmpty()) {
-                    uiState.notifications.forEach { notification ->
-                        NotificationCard(
-                            notification= notification,
-                            showDismiss = true,
-                            outlined = true,
-                            onDismiss = { onNotificationDismissed(notification.id) }
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp, vertical = 10.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
+                    horizontalAlignment = Alignment.Start,
+                ) {
+                    if (uiState.notifications.isNotEmpty()) {
+                        uiState.notifications.forEach { notification ->
+                            NotificationCard(
+                                notification= notification,
+                                showDismiss = true,
+                                outlined = true,
+                                onDismiss = { onNotificationDismissed(notification.id) }
+                            )
+                        }
+                    } else if (!uiState.isLoading) {
+                        Text(
+                            text = "No pending notifications",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                            textAlign = TextAlign.Center,
                         )
                     }
-                } else {
-                    Text(
-                        text = "No pending notifications",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                        textAlign = TextAlign.Center,
-                    )
                 }
             }
         }

@@ -53,7 +53,7 @@ class ProjectDetailViewModel(
 
     private val projectId: Int = savedStateHandle.get<Int>("projectId") ?: 0
 
-    private val _uiState = MutableStateFlow(ProjectDetailUiState())
+    private val _uiState = MutableStateFlow(ProjectDetailUiState(isLoading = true))
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
 
     init {

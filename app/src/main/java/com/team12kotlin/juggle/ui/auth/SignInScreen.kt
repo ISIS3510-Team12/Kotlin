@@ -120,7 +120,8 @@ fun SignInScreen(
             PillButton(
                 text = "Sign In",
                 onClick = viewModel::onSignInSubmit,
-                enabled = uiState.canSubmit
+                enabled = uiState.canSubmit,
+                isLoading = uiState.isSubmitting
             )
 
             uiState.authError?.let { message ->

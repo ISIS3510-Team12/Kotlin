@@ -34,6 +34,7 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Arrow_back
+import com.team12kotlin.juggle.ui.components.LoadingOverlay
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -65,29 +66,33 @@ fun AllTasksScreen(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ButtonGroupFilter(
-                filters = AllTasksFilter.entries.map { it.label },
-                selectedIndex = uiState.selectedFilterIndex,
-                onFilterSelected = { viewModel.onFilterSelected(it) },
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
-            )
-            uiState.tasks.forEach { task ->
-                TaskCard(
-                    task = task,
-                    onClick = {
-                        viewModel.onTaskClick(task)
-                        onTaskClick(task)
-                    }
+        if (uiState.isLoading) {
+            LoadingOverlay(isLoading = true)
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                ButtonGroupFilter(
+                    filters = AllTasksFilter.entries.map { it.label },
+                    selectedIndex = uiState.selectedFilterIndex,
+                    onFilterSelected = { viewModel.onFilterSelected(it) },
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                 )
+                uiState.tasks.forEach { task ->
+                    TaskCard(
+                        task = task,
+                        onClick = {
+                            viewModel.onTaskClick(task)
+                            onTaskClick(task)
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.height(136.dp))
             }
-            Spacer(modifier = Modifier.height(136.dp))
         }
     }
 }
