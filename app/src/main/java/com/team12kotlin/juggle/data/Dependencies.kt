@@ -9,6 +9,7 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.LocationRepository
 import com.team12kotlin.juggle.data.repository.NotificationRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
+import com.team12kotlin.juggle.data.repository.SmartRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
@@ -70,4 +71,5 @@ object Dependencies {
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
     val telemetryRepository: TelemetryRepository by lazy { TelemetryRepository(api) }
+    val smartRepository: SmartRepository by lazy { SmartRepository(api) }
 }
