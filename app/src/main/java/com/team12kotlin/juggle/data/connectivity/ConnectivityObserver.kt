@@ -12,8 +12,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * Emits whether the device currently has a validated internet connection.
- * Registration is tied to collection, so callers should collect it with a
- * lifecycle-aware collector.
  */
 class ConnectivityObserver(context: Context) {
 
