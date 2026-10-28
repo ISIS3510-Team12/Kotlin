@@ -11,9 +11,9 @@ import com.team12kotlin.juggle.data.local.entity.CachedProjectEntity
 interface CachedProjectDao {
     @Query("""
         SELECT * FROM cached_projects
-        WHERE userId = :userId
+        WHERE userId = :userId AND projectId = :projectId
     """)
-    suspend fun getProjects(userId: String): List<CachedProjectEntity>
+    suspend fun getProject(userId: String, projectId: Int): CachedProjectEntity
 
     @Query("""
         SELECT * FROM cached_projects
@@ -23,6 +23,9 @@ interface CachedProjectDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(projects: List<CachedProjectEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOne(projects: CachedProjectEntity)
 
     @Query("""
         DELETE FROM cached_projects
@@ -34,7 +37,7 @@ interface CachedProjectDao {
         DELETE FROM cached_projects
         WHERE userId = :userId
     """)
-    suspend fun deletaAllForUser(userId: String)
+    suspend fun deleteAllForUser(userId: String)
 
     @Transaction
     suspend fun replaceForGroup(

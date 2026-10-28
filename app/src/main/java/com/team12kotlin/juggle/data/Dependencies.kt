@@ -9,6 +9,7 @@ import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.mappers.GroupCacheMapper
+import com.team12kotlin.juggle.data.local.mappers.ProjectCacheMapper
 import com.team12kotlin.juggle.data.local.mappers.TaskCacheMapper
 import com.team12kotlin.juggle.data.remote.AuthInterceptor
 import com.team12kotlin.juggle.data.remote.JuggleApi
@@ -29,11 +30,7 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 object Dependencies {
 
-    private lateinit var appContext: Context
-
-    fun init(context: Context) {
-        appContext = context.applicationContext
-    }
+    lateinit var appContext: Context
 
     private val firebaseAuth: FirebaseAuth by lazy {
         FirebaseAuth.getInstance().apply {
@@ -95,6 +92,7 @@ object Dependencies {
     private val userSession: UsserSession by lazy { UsserSession(firebaseAuth) }
 
     private val groupCacheMapper by lazy { GroupCacheMapper(cacheConverter) }
+    private val projectCacheMapper by lazy { ProjectCacheMapper() }
     private val taskCacheMapper by lazy { TaskCacheMapper(cacheConverter) }
 
     val authRepository: AuthRepository by lazy { AuthRepository(firebaseAuth) }
@@ -110,7 +108,15 @@ object Dependencies {
             userSession
             )
     }
-    val projectRepository: ProjectRepository by lazy { ProjectRepository(api) }
+    val projectRepository: ProjectRepository by lazy {
+        ProjectRepository(
+            api,
+            database.cachedProjectDao(),
+            projectCacheMapper,
+            networkFirstCache,
+            userSession
+        )
+    }
     val userRepository: UserRepository by lazy { UserRepository(api) }
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
