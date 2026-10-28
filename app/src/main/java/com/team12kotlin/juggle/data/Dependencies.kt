@@ -1,8 +1,15 @@
 package com.team12kotlin.juggle.data
 
+import android.content.Context
+import androidx.room.Room
 import com.google.firebase.auth.FirebaseAuth
 import com.team12kotlin.juggle.BuildConfig
+import com.team12kotlin.juggle.data.auth.UsserSession
+import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
+import com.team12kotlin.juggle.data.local.NetworkFirstCache
+import com.team12kotlin.juggle.data.local.mappers.GroupCacheMapper
+import com.team12kotlin.juggle.data.local.mappers.TaskCacheMapper
 import com.team12kotlin.juggle.data.remote.AuthInterceptor
 import com.team12kotlin.juggle.data.remote.JuggleApi
 import com.team12kotlin.juggle.data.repository.AuthRepository
@@ -21,6 +28,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 object Dependencies {
+
+    private lateinit var appContext: Context
+
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
 
     private val firebaseAuth: FirebaseAuth by lazy {
         FirebaseAuth.getInstance().apply {
@@ -70,9 +83,33 @@ object Dependencies {
         }
     }
 
+    private val database: AppDatabase by lazy {
+        Room.databaseBuilder(appContext, AppDatabase::class.java, "juggle.db")
+            .build()
+    }
+
+    private val networkFirstCache: NetworkFirstCache by lazy {
+        NetworkFirstCache(database, database.cachedMetadataDao())
+    }
+
+    private val userSession: UsserSession by lazy { UsserSession(firebaseAuth) }
+
+    private val groupCacheMapper by lazy { GroupCacheMapper(cacheConverter) }
+    private val taskCacheMapper by lazy { TaskCacheMapper(cacheConverter) }
+
     val authRepository: AuthRepository by lazy { AuthRepository(firebaseAuth) }
     val taskRepository: TaskRepository by lazy { TaskRepository(api) }
-    val groupRepository: GroupRepository by lazy { GroupRepository(api) }
+    val groupRepository: GroupRepository by lazy {
+        GroupRepository(
+            api,
+            database.cachedGroupDao(),
+            database.cachedProjectDao(),
+            database.cachedTaskDao(),
+            groupCacheMapper,
+            networkFirstCache,
+            userSession
+            )
+    }
     val projectRepository: ProjectRepository by lazy { ProjectRepository(api) }
     val userRepository: UserRepository by lazy { UserRepository(api) }
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }

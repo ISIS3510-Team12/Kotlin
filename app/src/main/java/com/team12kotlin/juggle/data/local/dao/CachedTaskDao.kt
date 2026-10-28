@@ -27,9 +27,6 @@ interface CachedTaskDao {
     @Query("DELETE FROM cached_tasks WHERE userId = :userId AND groupId = :groupId")
     suspend fun deleteForGroup(userId: String, groupId: Int)
 
-    @Query("DELETE FROM cached_tasks WHERE userId = :userId")
-    suspend fun deleteAllForUser(userId: String)
-
     @Transaction
     suspend fun replaceForGroup(
         userId: String,

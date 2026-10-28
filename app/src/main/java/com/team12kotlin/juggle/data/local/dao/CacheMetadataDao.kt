@@ -20,5 +20,5 @@ interface CacheMetadataDao {
     suspend fun insertOne(metadata: CacheMetadataEntity)
 
     @Query("DELETE FROM cache_metadata WHERE userId = :userId")
-    suspend fun deleteAllForUser(userId: String, resource: String)
+    suspend fun deleteAllForUser(userId: String)
 }

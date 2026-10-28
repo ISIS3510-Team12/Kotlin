@@ -19,7 +19,7 @@ import com.team12kotlin.juggle.data.local.entity.CachedTaskEntity
         CachedTaskEntity::class
     ],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
 abstract class AppDatabase: RoomDatabase() {
     abstract fun cachedMetadataDao(): CacheMetadataDao
