@@ -56,3 +56,6 @@ data class NextTaskFlag(
 
 fun NextTask.toFlag(): NextTaskFlag? =
     if (reasonText.isBlank()) null else NextTaskFlag(reason = reason, text = reasonText)
+
+fun NextTask.accessibilityLabel(): String =
+    if (reasonText.isBlank()) "Next task: $title" else "Next task: $title. $reasonText"
