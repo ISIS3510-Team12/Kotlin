@@ -15,19 +15,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.team12kotlin.juggle.data.auth.requestGoogleIdToken
 import com.team12kotlin.juggle.ui.components.AuthTextField
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.GoogleSignInButton
@@ -38,9 +32,6 @@ import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,28 +44,12 @@ fun SignInScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.SignIn)
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val isOffline = rememberIsOnline() == false
-    var googleLoading by remember { mutableStateOf(false) }
-
-    fun handleGoogleSignIn() {
-        if (isOffline || googleLoading) return
-        googleLoading = true
-        scope.launch {
-            try {
-                viewModel.onGoogleSignIn(requestGoogleIdToken(context))
-            } catch (error: TimeoutCancellationException) {
-                viewModel.onGoogleSignInError(error)
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Throwable) {
-                viewModel.onGoogleSignInError(error)
-            } finally {
-                googleLoading = false
-            }
-        }
-    }
+    val googleSignIn = rememberGoogleSignInHandler(
+        isOffline = isOffline,
+        onIdToken = viewModel::onGoogleSignIn,
+        onError = viewModel::onGoogleSignInError
+    )
 
     LaunchedEffect(uiState.navigateToSuccess) {
         if (uiState.navigateToSuccess) {
@@ -132,9 +107,9 @@ fun SignInScreen(
             PillButton(
                 text = "Sign In",
                 onClick = {
-                    if (!isOffline && !googleLoading) viewModel.onSignInSubmit()
+                    if (!isOffline && !googleSignIn.isLoading) viewModel.onSignInSubmit()
                 },
-                enabled = uiState.canSubmit && !isOffline && !googleLoading,
+                enabled = uiState.canSubmit && !isOffline && !googleSignIn.isLoading,
                 isLoading = uiState.isSubmitting
             )
 
@@ -154,9 +129,9 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             GoogleSignInButton(
-                onClick = { handleGoogleSignIn() },
-                enabled = !isOffline && !uiState.isSubmitting && !googleLoading,
-                isLoading = googleLoading
+                onClick = googleSignIn.onClick,
+                enabled = !isOffline && !uiState.isSubmitting && !googleSignIn.isLoading,
+                isLoading = googleSignIn.isLoading
             )
 
             Spacer(modifier = Modifier.height(24.dp))
