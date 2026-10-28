@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -103,7 +106,9 @@ fun OrDivider(
 fun GoogleSignInButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    text: String = "Sign in with Google"
+    text: String = "Sign in with Google",
+    enabled: Boolean = true,
+    isLoading: Boolean = false
 ) {
     /**
      * "Sign in with Google" button with the Google logo.
@@ -113,18 +118,26 @@ fun GoogleSignInButton(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
+        enabled = enabled && !isLoading,
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_google_logo),
-            contentDescription = null,
-            modifier = Modifier.size(20.dp)
-        )
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(20.dp),
+                strokeWidth = 2.dp
+            )
+        } else {
+            Image(
+                painter = painterResource(id = R.drawable.ic_google_logo),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+        }
         Spacer(modifier = Modifier.size(12.dp))
-        Text(text = text)
+        Text(text = if (isLoading) "Signing in..." else text)
     }
 }
 
@@ -139,15 +152,38 @@ fun AuthTextField(
     leadingIcon: (@Composable () -> Unit)? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     isError: Boolean = false,
-    supportingText: String? = null
+    supportingText: String? = null,
+    maxLength: Int? = null
 ) {
     /**
      * Outlined single line text field used by the auth forms, with an optional
      * leading icon and optional error state / supporting text.
      */
+    var textValue by remember {
+        mutableStateOf(TextFieldValue(value, TextRange(value.length)))
+    }
+
+    LaunchedEffect(value) {
+        if (textValue.text != value) {
+            textValue = TextFieldValue(value, TextRange(value.length))
+        }
+    }
+
     OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = textValue,
+        onValueChange = { newValue ->
+            val text = maxLength?.let { newValue.text.take(it) } ?: newValue.text
+            val truncated = text.length != newValue.text.length
+            textValue = newValue.copy(
+                text = text,
+                selection = TextRange(
+                    newValue.selection.start.coerceAtMost(text.length),
+                    newValue.selection.end.coerceAtMost(text.length)
+                ),
+                composition = if (truncated) null else newValue.composition
+            )
+            if (text != value) onValueChange(text)
+        },
         modifier = modifier.fillMaxWidth(),
         label = { Text(label) },
         leadingIcon = leadingIcon,

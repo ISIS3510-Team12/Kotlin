@@ -4,7 +4,10 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.google.firebase.auth.FirebaseAuthException
+import kotlinx.coroutines.TimeoutCancellationException
 import retrofit2.HttpException
+import java.io.IOException
+import java.net.UnknownHostException
 
 
 internal fun Throwable.toAuthErrorMessage(): String = when (this) {
@@ -25,6 +28,13 @@ internal fun Throwable.toAuthErrorMessage(): String = when (this) {
     is GetCredentialCancellationException -> "Google sign in was cancelled."
     is NoCredentialException -> "No Google account found on this device."
     is GetCredentialException -> "Google sign in failed. Please try again."
+
+    is TimeoutCancellationException ->
+        "Sign in took too long. Check your connection and try again."
+    is UnknownHostException ->
+        "No internet connection. Check your connection and try again."
+    is IOException ->
+        "No internet connection. Check your connection and try again."
 
     is HttpException -> when (code()) {
         400 -> "A profile for this account already exists."

@@ -15,7 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,18 +26,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.team12kotlin.juggle.ui.telemetry.ScreenName
-import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.composables.icons.materialsymbols.MaterialSymbols
-import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.data.auth.requestGoogleIdToken
 import com.team12kotlin.juggle.ui.components.AuthTextField
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.GoogleSignInButton
 import com.team12kotlin.juggle.ui.components.OrDivider
 import com.team12kotlin.juggle.ui.components.PasswordField
 import com.team12kotlin.juggle.ui.components.PillButton
-import com.team12kotlin.juggle.data.auth.requestGoogleIdToken
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
+import com.team12kotlin.juggle.ui.telemetry.ScreenName
+import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,13 +55,23 @@ fun SignInScreen(
     TrackScreenLoad(ScreenName.SignIn)
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val isOffline = rememberIsOnline() == false
+    var googleLoading by remember { mutableStateOf(false) }
 
     fun handleGoogleSignIn() {
+        if (isOffline || googleLoading) return
+        googleLoading = true
         scope.launch {
             try {
                 viewModel.onGoogleSignIn(requestGoogleIdToken(context))
+            } catch (error: TimeoutCancellationException) {
+                viewModel.onGoogleSignInError(error)
+            } catch (error: CancellationException) {
+                throw error
             } catch (error: Throwable) {
                 viewModel.onGoogleSignInError(error)
+            } finally {
+                googleLoading = false
             }
         }
     }
@@ -103,12 +118,23 @@ fun SignInScreen(
                 supportingText = uiState.passwordError
             )
 
+            if (isOffline) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "You're offline. Connect to the internet to sign in.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             PillButton(
                 text = "Sign In",
-                onClick = viewModel::onSignInSubmit,
-                enabled = uiState.canSubmit,
+                onClick = {
+                    if (!isOffline && !googleLoading) viewModel.onSignInSubmit()
+                },
+                enabled = uiState.canSubmit && !isOffline && !googleLoading,
                 isLoading = uiState.isSubmitting
             )
 
@@ -127,7 +153,11 @@ fun SignInScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            GoogleSignInButton(onClick = { handleGoogleSignIn() })
+            GoogleSignInButton(
+                onClick = { handleGoogleSignIn() },
+                enabled = !isOffline && !uiState.isSubmitting && !googleLoading,
+                isLoading = googleLoading
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
