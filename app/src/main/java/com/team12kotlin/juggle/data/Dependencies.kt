@@ -96,7 +96,15 @@ object Dependencies {
     private val taskCacheMapper by lazy { TaskCacheMapper(cacheConverter) }
 
     val authRepository: AuthRepository by lazy { AuthRepository(firebaseAuth) }
-    val taskRepository: TaskRepository by lazy { TaskRepository(api) }
+    val taskRepository: TaskRepository by lazy {
+        TaskRepository(
+            api,
+            database.cachedTaskDao(),
+            taskCacheMapper,
+            networkFirstCache,
+            userSession
+        )
+    }
     val groupRepository: GroupRepository by lazy {
         GroupRepository(
             api,

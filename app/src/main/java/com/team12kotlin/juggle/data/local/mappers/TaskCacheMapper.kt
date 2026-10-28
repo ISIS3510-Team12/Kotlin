@@ -5,6 +5,7 @@ import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.local.entity.CachedTaskEntity
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
+import kotlinx.serialization.SerializationException
 
 class TaskCacheMapper(private val converter: CacheConverter = Dependencies.cacheConverter) {
 
@@ -46,6 +47,13 @@ class TaskCacheMapper(private val converter: CacheConverter = Dependencies.cache
             reminders = converter.remindersFromJson(entity.remindersJson),
             relatedTasks = converter.relatedTasksFromJson(entity.relatedTasksJson),
         )
+
+    fun toDomainOrNull(entity: CachedTaskEntity): Task? =
+        try {
+            toDomain(entity)
+        } catch (e: SerializationException) {
+            null
+        }
 
     private fun toTaskStatus(status: String): TaskStatus =
         when (status) {
