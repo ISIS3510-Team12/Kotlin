@@ -14,5 +14,4 @@ data class CachedGroupEntity(
     val deadline: String?,
     val usersJson: String,
     val pendingTaskCount: Int,
-    val cachedAt: Long
 )

@@ -9,16 +9,16 @@ import com.team12kotlin.juggle.data.local.entity.CachedGroupEntity
 
 @Dao
 interface CacheMetadataDao {
+
     @Query("""
-        SELECT * FROM cache_metadata
-        WHERE userId = :userId AND cachedResource = :resource
-        ORDER BY cachedAt
+        SELECT cachedAt FROM cache_metadata
+        WHERE userId = :userId AND cachedResource = :resource AND scopeId = :scopeId
     """)
-    suspend fun getMetadata(userId: String, resource: String): List<CacheMetadataEntity>
+    suspend fun lastSyncedAt(userId: String, resource: String, scopeId: String): Long?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOne(metadata: CacheMetadataEntity)
 
-    @Query("DELETE FROM cache_metadata WHERE userId = :userId AND cachedResource = :resource")
-    suspend fun deleteForUser(userId: String, resource: String)
+    @Query("DELETE FROM cache_metadata WHERE userId = :userId")
+    suspend fun deleteAllForUser(userId: String, resource: String)
 }

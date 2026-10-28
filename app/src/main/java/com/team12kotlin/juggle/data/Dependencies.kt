@@ -2,6 +2,7 @@ package com.team12kotlin.juggle.data
 
 import com.google.firebase.auth.FirebaseAuth
 import com.team12kotlin.juggle.BuildConfig
+import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.remote.AuthInterceptor
 import com.team12kotlin.juggle.data.remote.JuggleApi
 import com.team12kotlin.juggle.data.repository.AuthRepository
@@ -62,6 +63,13 @@ object Dependencies {
             .create(JuggleApi::class.java)
     }
 
+    private val cacheJson: Json by lazy {
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
+    }
+
     val authRepository: AuthRepository by lazy { AuthRepository(firebaseAuth) }
     val taskRepository: TaskRepository by lazy { TaskRepository(api) }
     val groupRepository: GroupRepository by lazy { GroupRepository(api) }
@@ -70,4 +78,8 @@ object Dependencies {
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
     val telemetryRepository: TelemetryRepository by lazy { TelemetryRepository(api) }
+
+    val cacheConverter: CacheConverter by lazy {
+        CacheConverter(cacheJson)
+    }
 }

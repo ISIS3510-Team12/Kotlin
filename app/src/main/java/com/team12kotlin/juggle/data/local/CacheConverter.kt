@@ -9,7 +9,7 @@ class CacheConverter (private val json: Json) {
     fun usersToJson(users: List<User>): String =
         json.encodeToString(users)
 
-    fun usersFromJson(value: String): List<User> =
+    fun usersFromJson(value: String): MutableList<User> =
         json.decodeFromString(value)
 
     fun remindersToJson(reminders: List<Reminder>): String =

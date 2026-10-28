@@ -1,10 +1,12 @@
 package com.team12kotlin.juggle.data.local.entity
 
 import androidx.room.Entity
+import androidx.room.Index
 
 @Entity(
     tableName = "cached_tasks",
-    primaryKeys = ["userId", "taskId"]
+    primaryKeys = ["userId", "taskId"],
+    indices = [Index("userId", "projectId")]
 )
 data class CachedTaskEntity(
     val userId: String,
@@ -23,5 +25,4 @@ data class CachedTaskEntity(
     val assigneesJson: String,
     val remindersJson: String,
     val relatedTasksJson: String,
-    val cachedAt: Long
 )
