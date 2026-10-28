@@ -47,7 +47,7 @@ class LocationRemindersViewModel(
     private val locationRepository: LocationRepository = Dependencies.locationRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(LocationRemindersUiState())
+    private val _uiState = MutableStateFlow(LocationRemindersUiState(isLoading = true))
     val uiState: StateFlow<LocationRemindersUiState> = _uiState.asStateFlow()
 
     init {

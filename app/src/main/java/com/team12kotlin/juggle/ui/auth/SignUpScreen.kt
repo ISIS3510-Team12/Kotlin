@@ -9,11 +9,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,10 +27,10 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Lock
 import com.composables.icons.materialsymbols.outlined.Mail
 import com.composables.icons.materialsymbols.outlined.Person
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.AuthTextField
 import com.team12kotlin.juggle.ui.components.GoogleSignInButton
 import com.team12kotlin.juggle.ui.components.OrDivider
@@ -77,17 +75,7 @@ fun SignUpScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Sign Up") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Sign Up", onBack = onBackClick)
         }
     ) { innerPadding ->
         Column(
@@ -155,7 +143,8 @@ fun SignUpScreen(
             PillButton(
                 text = "Sign Up",
                 onClick = viewModel::onSignUpSubmit,
-                enabled = uiState.canSubmit
+                enabled = uiState.canSubmit,
+                isLoading = uiState.isSubmitting
             )
 
             uiState.authError?.let { message ->

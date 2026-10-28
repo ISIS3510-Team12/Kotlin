@@ -44,8 +44,10 @@ class HomeViewModel : ViewModel() {
     private val notificationRepository: NotificationRepository = Dependencies.notificationRepository
     private val groupRepository: GroupRepository = Dependencies.groupRepository
 
-    private val _uiState = MutableStateFlow(HomeUiState(user = currentFirebaseUser()))
+    private val _uiState = MutableStateFlow(HomeUiState(user = currentFirebaseUser(), isLoading = true))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    private var hasLoaded = false
 
     fun onTabSelected(tab: Int) {
         _uiState.update { it.copy(selectedTab = tab) }
@@ -61,7 +63,7 @@ class HomeViewModel : ViewModel() {
 
     fun load() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
 
             runCatching {
                 // The four calls are independent
@@ -81,6 +83,7 @@ class HomeViewModel : ViewModel() {
                 }
             }
                 .onSuccess { loaded ->
+                    hasLoaded = true
                     _uiState.update {
                         it.copy(
                             user = loaded.user,

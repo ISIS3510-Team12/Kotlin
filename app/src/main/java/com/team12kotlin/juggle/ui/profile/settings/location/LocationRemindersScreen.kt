@@ -13,14 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -39,11 +37,12 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.My_location
 import com.team12kotlin.juggle.reminders.GeofenceManager
 import com.team12kotlin.juggle.reminders.rememberReminderPermissionsFlow
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.PillButton
 import com.team12kotlin.juggle.ui.dto.UserLocation
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -114,77 +113,69 @@ private fun LocationRemindersContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Location reminders") },
-                navigationIcon = {
-                    IconButton(onClick = goBack) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Location reminders", onBack = goBack)
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Pick a place where you want to be reminded about your pending tasks. We’ll notify you when you’re nearby.",
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (LocalInspectionMode.current) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth().height(280.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    content = {}
+        LoadingContent(isLoading = uiState.isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Pick a place where you want to be reminded about your pending tasks. We’ll notify you when you’re nearby.",
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            } else {
-                LocationMap(
-                    latitude = uiState.latitude,
-                    longitude = uiState.longitude,
-                    radiusMeters = uiState.radiusMeters,
-                    onLocationPicked = onLocationPicked
+                if (LocalInspectionMode.current) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().height(280.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        content = {}
+                    )
+                } else {
+                    LocationMap(
+                        latitude = uiState.latitude,
+                        longitude = uiState.longitude,
+                        radiusMeters = uiState.radiusMeters,
+                        onLocationPicked = onLocationPicked
+                    )
+                }
+                Text(
+                    text = if (uiState.hasLocation) "Tap the map to move the place." else "Tap the map to choose a place.",
+                    modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-            Text(
-                text = if (uiState.hasLocation) "Tap the map to move the place." else "Tap the map to choose a place.",
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            OutlinedButton(onClick = onUseCurrentLocation, modifier = Modifier.fillMaxWidth()) {
-                Icon(
-                    imageVector = MaterialSymbols.Outlined.My_location,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                OutlinedButton(onClick = onUseCurrentLocation, modifier = Modifier.fillMaxWidth()) {
+                    Icon(
+                        imageVector = MaterialSymbols.Outlined.My_location,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(text = "Use my current location", modifier = Modifier.padding(start = 8.dp))
+                }
+                OutlinedTextField(
+                    value = uiState.radiusText,
+                    onValueChange = onRadiusChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Notify within (meters)") },
+                    suffix = { Text("m") },
+                    supportingText = { Text(uiState.radiusError ?: "Maximum 1000 m (1 km)") },
+                    isError = uiState.radiusError != null,
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-                Text(text = "Use my current location", modifier = Modifier.padding(start = 8.dp))
+                uiState.errorMessage?.let { message ->
+                    ErrorCard(message = message)
+                }
+                PillButton(text = "Save location", onClick = onSaveLocation, enabled = uiState.canSave)
             }
-            OutlinedTextField(
-                value = uiState.radiusText,
-                onValueChange = onRadiusChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Notify within (meters)") },
-                suffix = { Text("m") },
-                supportingText = { Text(uiState.radiusError ?: "Maximum 1000 m (1 km)") },
-                isError = uiState.radiusError != null,
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-            uiState.errorMessage?.let { message ->
-                ErrorCard(message = message)
-            }
-            PillButton(text = "Save location", onClick = onSaveLocation, enabled = uiState.canSave)
         }
     }
 

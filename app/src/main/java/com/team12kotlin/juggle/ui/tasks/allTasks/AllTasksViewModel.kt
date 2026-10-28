@@ -28,7 +28,7 @@ class AllTasksViewModel(
     private val repository: TaskRepository = Dependencies.taskRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AllTasksUiState())
+    private val _uiState = MutableStateFlow(AllTasksUiState(isLoading = true))
     val uiState: StateFlow<AllTasksUiState> = _uiState.asStateFlow()
 
     init {

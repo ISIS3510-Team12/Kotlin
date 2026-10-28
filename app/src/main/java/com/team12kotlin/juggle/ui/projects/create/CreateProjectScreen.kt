@@ -24,9 +24,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
-import com.team12kotlin.juggle.ui.projects.ProjectTopBar
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
@@ -68,7 +68,7 @@ internal fun CreateProjectContent(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { ProjectTopBar(title = "Create project", onBackClick = onBackClick) }
+        topBar = { BackTopBar(title = "Create project", onBack = onBackClick) }
     ) { innerPadding ->
         Column(
             modifier = Modifier

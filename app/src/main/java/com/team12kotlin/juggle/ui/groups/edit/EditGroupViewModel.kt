@@ -48,10 +48,11 @@ class EditGroupViewModel(
     private val userRepository: UserRepository = Dependencies.userRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(EditGroupUiState())
+    private val _uiState = MutableStateFlow(EditGroupUiState(isLoading = true))
     val uiState: StateFlow<EditGroupUiState> = _uiState.asStateFlow()
 
     private var loadedGroupId: Int? = null
+    private var hasLoaded = false
 
     fun load(groupId: Int) {
         if (loadedGroupId == groupId) return
@@ -67,6 +68,7 @@ class EditGroupViewModel(
                 }
             }
                 .onSuccess { (group, users) ->
+                    hasLoaded = true
                     // The back only lets members be added (leaving is per-user), so only non-members are offered.
                     val memberIds = group.users.map { it.userId }.toSet()
                     _uiState.update {
