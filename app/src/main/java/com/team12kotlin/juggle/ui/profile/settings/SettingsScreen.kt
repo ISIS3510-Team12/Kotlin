@@ -206,28 +206,20 @@ private fun DailyReminderSettingsItem(
     minute: Int = 0,
     trailing: @Composable () -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = supportingText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        trailing()
-    }
+    SettingsItem(
+        title = title,
+        supportingText = supportingText,
+        onClick = onClick,
+        modifier = modifier,
+        trailing = trailing
+    )
     if (showDetail) {
         var showDialog by remember { mutableStateOf(false) }
-        val timePickerState = rememberTimePickerState(is24Hour = true)
+        val timePickerState = rememberTimePickerState(
+            initialHour = hour,
+            initialMinute = minute,
+            is24Hour = true
+        )
         Column(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -240,14 +232,14 @@ private fun DailyReminderSettingsItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(role = Role.Button, onClick = onClick)
+                    .clickable(role = Role.Button, onClick = { showDialog = true })
                     .padding(horizontal = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
                 Text(
-                    text = "Every day at "+ formatTime(hour, minute),
+                    text = "Every day at ${formatTime(hour, minute)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
