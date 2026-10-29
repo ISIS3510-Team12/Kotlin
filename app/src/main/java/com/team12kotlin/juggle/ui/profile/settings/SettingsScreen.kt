@@ -1,6 +1,7 @@
 package com.team12kotlin.juggle.ui.profile.settings
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,15 +12,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +46,8 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Chevron_right
+import com.composables.icons.materialsymbols.outlined.Edit
+import com.composables.icons.materialsymbols.outlined.Schedule
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @Composable
@@ -54,6 +68,8 @@ fun SettingsScreen(
         goBack = goBack,
         onThemeClick = viewModel::onThemeClick,
         onSoundAndVibrationChange = viewModel::onSoundAndVibrationChange,
+        onDailyRemindersChange = viewModel::onDailyRemindersChange,
+        onDailyReminderTimeChange = viewModel::onDailyReminderTimeChange,
         onLocationRemindersClick = onLocationRemindersClick,
         onSignOutClick = {
             LocationReminderSync.onSignedOut(context)
@@ -70,6 +86,8 @@ private fun SettingsContent(
     goBack: () -> Unit = {},
     onThemeClick: () -> Unit = {},
     onSoundAndVibrationChange: (Boolean) -> Unit = {},
+    onDailyRemindersChange: (Boolean) -> Unit = {},
+    onDailyReminderTimeChange: (Int, Int) -> Unit = {_,_ -> },
     onLocationRemindersClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {}
 ) {
@@ -117,6 +135,17 @@ private fun SettingsContent(
                     ) {
                         ChevronIcon()
                     }
+                    DailyReminderSettingsItem(
+                        title = "Daily reminders",
+                        supportingText = "Get notified at a specific time",
+                        onClick = { onDailyRemindersChange(!uiState.dailyRemindersEnabled) },
+                        showDetail = uiState.dailyRemindersEnabled
+                    ) {
+                        Switch(
+                            checked = uiState.dailyRemindersEnabled,
+                            onCheckedChange = onDailyRemindersChange
+                        )
+                    }
                 }
             }
             Button(
@@ -139,7 +168,7 @@ private fun SettingsItem(
     supportingText: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    trailing: @Composable () -> Unit
+    trailing: @Composable () -> Unit,
 ) {
     Row(
         modifier = modifier
@@ -163,6 +192,93 @@ private fun SettingsItem(
 }
 
 @Composable
+private fun DailyReminderSettingsItem(
+    title: String,
+    supportingText: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    showDetail: Boolean = true,
+    onDailyRemindersTimeChange: (Int, Int) -> Unit = { _, _->},
+    hour: Int = 18,
+    minute: Int = 0,
+    trailing: @Composable () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = supportingText,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        trailing()
+    }
+    if (showDetail) {
+        var showDialog by remember { mutableStateOf(false) }
+        val timePickerState = rememberTimePickerState(is24Hour = true)
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                thickness = 1.dp
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button, onClick = onClick)
+                    .padding(horizontal = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                Text(
+                    text = "Every day at "+ formatTime(hour, minute),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                IconButton(onClick = { showDialog = true }) {
+                    Icon(
+                        imageVector = MaterialSymbols.Outlined.Edit,
+                        contentDescription = "Pick a time",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+        if (showDialog) {
+            DatePickerDialog(
+                onDismissRequest = { showDialog = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onDailyRemindersTimeChange(timePickerState.hour, timePickerState.minute)
+                            showDialog = false
+                        }
+                    ) { Text("OK") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) { Text("Cancel") }
+                }
+            ) {
+                TimePicker(state = timePickerState)
+            }
+        }
+    }
+}
+
+@Composable
 private fun ChevronIcon() {
     Icon(
         imageVector = MaterialSymbols.Outlined.Chevron_right,
@@ -177,3 +293,16 @@ private fun SettingsScreenPreview() {
         SettingsContent(uiState = SettingsUiState())
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun SettingsItemPreview() {
+    JuggleTheme {
+        SettingsItem(title = "Item", supportingText = "Supporting text", onClick = {})
+        {
+            ChevronIcon()
+        }
+    }
+}
+
+private fun formatTime(hour: Int, minute: Int): String = "%02d:%02d".format(hour, minute)
