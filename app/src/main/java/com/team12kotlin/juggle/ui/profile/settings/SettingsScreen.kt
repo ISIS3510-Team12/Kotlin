@@ -140,8 +140,8 @@ private fun SettingsContent(
                         supportingText = "Get notified at a specific time",
                         onClick = { onDailyRemindersChange(!uiState.dailyRemindersEnabled) },
                         showDetail = uiState.dailyRemindersEnabled,
-                        hour = uiState.hour,
-                        minute = uiState.minute,
+                        hour = uiState.dailyReminderHour,
+                        minute = uiState.dailyReminderMinute,
                         onDailyRemindersTimeChange = onDailyReminderTimeChange
                     ) {
                         Switch(
