@@ -116,10 +116,12 @@ fun NextTaskSection(
                 .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp),
             textAlign = TextAlign.Center
         )
-        NextTaskUiState.Error -> ErrorCard(
-            message = "Couldn't load the next task",
-            modifier = modifier.fillMaxWidth()
-        )
+        NextTaskUiState.Error -> Box(modifier = modifier.padding(horizontal = 24.dp)) {
+            ErrorCard(
+                message = "Couldn't load the next task",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -136,7 +138,7 @@ private fun NextTaskAvatar(reason: NextTaskReason, modifier: Modifier = Modifier
         )
         else -> IconMonogram(
             icon = MaterialSymbols.Outlined.Check,
-            contentDescription = "",
+            contentDescription = "Next task",
             modifier = modifier,
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
