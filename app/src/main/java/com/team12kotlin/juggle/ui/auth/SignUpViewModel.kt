@@ -42,11 +42,23 @@ class SignUpViewModel(
     val uiState: StateFlow<SignUpUiState> = _uiState.asStateFlow()
 
     fun onFirstNameChange(value: String) {
-        _uiState.update { it.copy(firstName = value, firstNameError = null, authError = null) }
+        _uiState.update {
+            it.copy(
+                firstName = value.take(AuthValidation.NAME_MAX_LENGTH),
+                firstNameError = null,
+                authError = null
+            )
+        }
     }
 
     fun onLastNameChange(value: String) {
-        _uiState.update { it.copy(lastName = value, lastNameError = null, authError = null) }
+        _uiState.update {
+            it.copy(
+                lastName = value.take(AuthValidation.NAME_MAX_LENGTH),
+                lastNameError = null,
+                authError = null
+            )
+        }
     }
 
     fun onEmailChange(value: String) {
@@ -67,8 +79,8 @@ class SignUpViewModel(
         val state = _uiState.value
         if (state.isSubmitting) return
 
-        val firstNameError = AuthValidation.validateRequired(state.firstName, "First name")
-        val lastNameError = AuthValidation.validateRequired(state.lastName, "Last name")
+        val firstNameError = AuthValidation.validateName(state.firstName, "First name")
+        val lastNameError = AuthValidation.validateName(state.lastName, "Last name")
         val emailError = AuthValidation.validateEmail(state.email)
         val passwordError = AuthValidation.validatePassword(state.password)
         val confirmPasswordError = passwordError
