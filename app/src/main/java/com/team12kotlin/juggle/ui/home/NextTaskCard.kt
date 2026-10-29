@@ -1,11 +1,14 @@
 package com.team12kotlin.juggle.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,11 +16,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Check
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.IconMonogram
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.NextTask
@@ -79,6 +84,42 @@ fun NextTaskCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun NextTaskSection(
+    state: NextTaskUiState,
+    modifier: Modifier = Modifier,
+    onTaskClick: (Int) -> Unit = {}
+) {
+    when (state) {
+        NextTaskUiState.Loading -> Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .heightIn(min = 100.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        is NextTaskUiState.Content -> NextTaskCard(
+            task = state.task,
+            flag = state.flag,
+            modifier = modifier,
+            onClick = { onTaskClick(state.task.taskId) }
+        )
+        is NextTaskUiState.Empty -> Text(
+            text = state.message,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp),
+            textAlign = TextAlign.Center
+        )
+        NextTaskUiState.Error -> ErrorCard(
+            message = "Couldn't load the next task",
+            modifier = modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -162,6 +203,33 @@ private fun NextTaskCardPreviewDark() {
         Column {
             previewTasks.forEach { task -> NextTaskCard(task = task, flag = task.toFlag()) }
             NextTaskCard(task = previewTasks[5], flag = null)
+        }
+    }
+}
+
+private val previewStates = listOf(
+    NextTaskUiState.Loading,
+    NextTaskUiState.Content(previewTasks[1], previewTasks[1].toFlag()),
+    NextTaskUiState.Empty(NEXT_TASK_EMPTY_MESSAGE),
+    NextTaskUiState.Error
+)
+
+@Preview(showBackground = true)
+@Composable
+private fun NextTaskSectionPreview() {
+    JuggleTheme {
+        Column {
+            previewStates.forEach { state -> NextTaskSection(state = state) }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NextTaskSectionPreviewDark() {
+    JuggleTheme(darkTheme = true) {
+        Column {
+            previewStates.forEach { state -> NextTaskSection(state = state) }
         }
     }
 }

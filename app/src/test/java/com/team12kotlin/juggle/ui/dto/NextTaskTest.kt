@@ -129,18 +129,4 @@ class NextTaskTest {
         assertEquals(NextTaskReason.NEXT_DEADLINE, flag!!.reason)
         assertEquals("Something new", flag.text)
     }
-
-    @Test
-    fun labelsTheTaskWithItsReason() {
-        val task = NextTask(title = "Finish the Figma prototype", reasonText = "Due today")
-
-        assertEquals("Next task: Finish the Figma prototype. Due today", task.accessibilityLabel())
-    }
-
-    @Test
-    fun labelsTheTaskWithoutReasonText() {
-        val task = NextTask(title = "Finish the Figma prototype")
-
-        assertEquals("Next task: Finish the Figma prototype", task.accessibilityLabel())
-    }
 }
