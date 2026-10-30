@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.local.UserCache
 import com.team12kotlin.juggle.data.repository.AuthRepository
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.NotificationRepository
@@ -134,6 +135,10 @@ class HomeViewModel : ViewModel() {
             }
                 .onSuccess { loaded ->
                     hasLoaded = true
+                    UserCache.save(
+                        firstName = loaded.user.firstName,
+                        displayName = loaded.user.displayName
+                    )
                     _uiState.update {
                         it.copy(
                             user = loaded.user,
@@ -154,8 +159,13 @@ class HomeViewModel : ViewModel() {
     }
 
     private fun currentFirebaseUser(): User {
-        val current = authRepository.currentUser ?: return User(userId = "", firstName = "")
+        val current = authRepository.currentUser
+        val cachedName = UserCache.firstName()
+        if (current == null) {
+            return User(userId = "", firstName = cachedName)
+        }
         val firstName = current.displayName?.trim()?.substringBefore(' ').orEmpty()
+            .ifBlank { cachedName }
         return User(userId = current.uid, firstName = firstName)
     }
 

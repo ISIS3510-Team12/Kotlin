@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.ui.topbar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.local.UserCache
 import com.team12kotlin.juggle.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,14 +42,13 @@ class TopBarViewModel(
         }
     }
 
-    private fun cachedInitial(): String? =
-        Dependencies.authRepository.currentUser
-            ?.displayName
-            ?.trim()
-            ?.firstOrNull()
-            ?.uppercaseChar()
-            ?.toString()
-            ?.takeIf { it.isNotBlank() }
+    private fun cachedInitial(): String? {
+        val name = Dependencies.authRepository.currentUser?.displayName?.takeIf { it.isNotBlank() }
+            ?: UserCache.displayName().takeIf { it.isNotBlank() }
+            ?: UserCache.firstName().takeIf { it.isNotBlank() }
+            ?: return null
+        return name.trim().firstOrNull()?.uppercaseChar()?.toString()
+    }
 
     fun setUserInitial(initial: String) {
         _uiState.update { it.copy(userInitial = initial) }
