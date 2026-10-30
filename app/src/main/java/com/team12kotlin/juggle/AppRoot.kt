@@ -173,6 +173,16 @@ fun AppRoot(
                                 launchSingleTop = true
                             }
                         },
+                        onNotificationsClick = {
+                            navController.navigate(NavigationDestination.Notifications.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onUrgentTasksClick = {
+                            navController.navigate(NavigationDestination.AllTasks.route) {
+                                launchSingleTop = true
+                            }
+                        },
                         onCreateTaskClick = { groupId ->
                             navController.navigate("${NavigationDestination.CreateTask.route}?groupId=$groupId") {
                                 launchSingleTop = true

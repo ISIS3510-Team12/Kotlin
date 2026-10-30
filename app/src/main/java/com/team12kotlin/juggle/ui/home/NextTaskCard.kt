@@ -41,7 +41,9 @@ fun NextTaskCard(
 ) {
     val meta = nextTaskMeta(task.groupName, task.dueAt)
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp, vertical = 10.dp),
         onClick = onClick
     ) {
         Row(

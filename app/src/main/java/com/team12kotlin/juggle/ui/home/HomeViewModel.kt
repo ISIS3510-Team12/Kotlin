@@ -60,7 +60,8 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val firstGroupId: Int? = null,
     val dataLoaded: Boolean = false,
-    val nextTask: NextTaskUiState = NextTaskUiState.Loading
+    val nextTask: NextTaskUiState = NextTaskUiState.Loading,
+    val urgentCount: Int = 0
 ) {
     val taskCount: Int get() = upcomingTasks.size
     val notificationCount: Int get() = notifications.size
@@ -121,11 +122,13 @@ class HomeViewModel : ViewModel() {
                     }
                     val notifications = async { notificationRepository.getNotifications() }
                     val groups = async { groupRepository.getGroups() }
+                    val urgent = async { taskRepository.getAllTasks(priority = true) }
                     Loaded(
                         user = user.await(),
                         tasks = tasks.await(),
                         notifications = notifications.await(),
-                        firstGroupId = groups.await().firstOrNull()?.id
+                        firstGroupId = groups.await().firstOrNull()?.id,
+                        urgent = urgent.await()
                     )
                 }
             }
@@ -138,7 +141,8 @@ class HomeViewModel : ViewModel() {
                             notifications = loaded.notifications.map { item -> item.toNotification() },
                             firstGroupId = loaded.firstGroupId,
                             isLoading = false,
-                            dataLoaded = true
+                            dataLoaded = true,
+                            urgentCount = loaded.urgent.size
                         )
                     }
                 }
@@ -159,7 +163,8 @@ class HomeViewModel : ViewModel() {
         val user: User,
         val tasks: List<Task>,
         val notifications: List<TaskNotification>,
-        val firstGroupId: Int?
+        val firstGroupId: Int?,
+        val urgent: List<Task>
     )
 
     private companion object {

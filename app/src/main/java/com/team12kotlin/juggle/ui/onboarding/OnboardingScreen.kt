@@ -29,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.team12kotlin.juggle.R
-import com.team12kotlin.juggle.ui.components.OfflineBanner
 import com.team12kotlin.juggle.ui.components.PillButton
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
@@ -48,10 +47,6 @@ fun OnboardingScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.primary)
     ) {
-        OfflineBanner(
-            isOnline = rememberIsOnline(),
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
         // Hero - centered logo on the primary background.
         Box(
             modifier = Modifier

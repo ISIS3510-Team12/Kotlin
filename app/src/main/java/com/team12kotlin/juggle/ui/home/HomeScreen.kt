@@ -40,6 +40,7 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Circle_notifications
+import com.composables.icons.materialsymbols.outlinedfilled.Assignment_late
 import com.composables.icons.materialsymbols.roundedfilled.Groups
 import com.composables.icons.materialsymbols.roundedfilled.List_alt
 import com.team12kotlin.juggle.ui.components.ErrorCard
@@ -68,6 +69,8 @@ fun HomeScreen (
     onTaskClick: (Task) -> Unit = {},
     onNextTaskClick: (Int) -> Unit = {},
     onNotificationClick: (Notification) -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onUrgentTasksClick: () -> Unit = {},
     onCreateTaskClick: (Int) -> Unit = {},
     onCreateGroupClick: () -> Unit = {},
 ) {
@@ -174,16 +177,20 @@ fun HomeScreen (
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             OverviewCard(
-                                icon = MaterialSymbols.RoundedFilled.List_alt,
-                                title = "Tasks",
-                                count = uiState.taskCount.takeIf { uiState.dataLoaded },
+                                icon = MaterialSymbols.OutlinedFilled.Assignment_late,
+                                label = "Urgent Tasks",
+                                unit = "Tasks",
+                                count = uiState.urgentCount.takeIf { uiState.dataLoaded },
                                 modifier = Modifier.weight(1f),
+                                onClick = onUrgentTasksClick,
                             )
                             OverviewCard(
                                 icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
-                                title = "Notifications",
+                                label = "Today's Notifications",
+                                unit = "Notifications",
                                 count = uiState.notificationCount.takeIf { uiState.dataLoaded },
                                 modifier = Modifier.weight(1f),
+                                onClick = onNotificationsClick,
                             )
                         }
                         Text(
@@ -228,7 +235,7 @@ fun HomeScreen (
                                 onClick = { viewModel.onTabSelected(1) },
                                 text = {
                                     Text(
-                                        text = "Recent Activity",
+                                        text = "Recent activity",
                                         style = MaterialTheme.typography.titleSmall,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -256,7 +263,7 @@ fun HomeScreen (
                             }
                         } else if (uiState.dataLoaded) {
                             Text(
-                                text = "There are no upcoming tasks for today!",
+                                text = "No upcoming tasks",
                                 style = MaterialTheme.typography.headlineSmall,
                                 modifier = Modifier
                                     .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp),
