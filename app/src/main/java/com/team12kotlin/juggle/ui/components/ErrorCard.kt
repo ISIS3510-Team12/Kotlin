@@ -76,7 +76,7 @@ fun ErrorCard(
 @Composable
 private fun ErrorCardPreview() {
     JuggleTheme {
-        ErrorCard(message = "Couldn't reach the server. Check your connection.", onRetry = {})
+        ErrorCard(message = "Couldn't reach Juggle. Check your connection.", onRetry = {})
     }
 }
 
