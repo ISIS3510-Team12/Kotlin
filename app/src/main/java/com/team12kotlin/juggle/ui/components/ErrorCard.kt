@@ -1,13 +1,12 @@
 package com.team12kotlin.juggle.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -16,7 +15,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -29,37 +27,35 @@ fun ErrorCard(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null
 ) {
-    Card(
-        modifier = modifier
-            .background(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(size = 16.dp))
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
     ) {
-        Surface(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            contentColor = MaterialTheme.colorScheme.error
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Column(
-                modifier = modifier
-                    .widthIn(min = 0.dp)
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Icon(
-                    imageVector = MaterialSymbols.Outlined.Error,
-                    contentDescription = "Error: $message",
-                    modifier = Modifier.size(50.dp)
-                )
-                Text(
-                    text = message,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    textAlign = TextAlign.Center,
-                )
-                if (onRetry != null) {
-                    TextButton(onClick = onRetry) {
-                        Text("Try again")
-                    }
+            Icon(
+                imageVector = MaterialSymbols.Outlined.Error,
+                contentDescription = "Error: $message",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(20.dp)
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.weight(1f)
+            )
+            if (onRetry != null) {
+                TextButton(
+                    onClick = onRetry,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                ) {
+                    Text("Retry")
                 }
             }
         }
@@ -70,7 +66,7 @@ fun ErrorCard(
 @Composable
 private fun ErrorCardPreview() {
     JuggleTheme {
-        ErrorCard(message = "418")
+        ErrorCard(message = "No internet connection. Check your connection and try again.", onRetry = {})
     }
 }
 
@@ -78,6 +74,6 @@ private fun ErrorCardPreview() {
 @Composable
 private fun ErrorCardPreviewDark() {
     JuggleTheme(darkTheme = true) {
-        ErrorCard(message = "418")
+        ErrorCard(message = "The service is unavailable right now. Try again later.", onRetry = {})
     }
 }
