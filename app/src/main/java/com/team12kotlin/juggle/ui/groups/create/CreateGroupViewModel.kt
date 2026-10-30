@@ -46,7 +46,7 @@ class CreateGroupViewModel(
     private val userRepository: UserRepository = Dependencies.userRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(CreateGroupUiState())
+    private val _uiState = MutableStateFlow(CreateGroupUiState(isLoading = true))
     val uiState: StateFlow<CreateGroupUiState> = _uiState.asStateFlow()
 
     init {
@@ -55,6 +55,7 @@ class CreateGroupViewModel(
 
     private fun loadUsers() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
                 coroutineScope {
                     val currentUser = async { userRepository.getCurrentUser() }
@@ -63,8 +64,12 @@ class CreateGroupViewModel(
                     users.await().filterNot { it.userId == currentId }
                 }
             }
-                .onSuccess { users -> _uiState.update { it.copy(availableMembers = users) } }
-                .onFailure { error -> _uiState.update { it.copy(errorMessage = error.message) } }
+                .onSuccess { users ->
+                    _uiState.update { it.copy(availableMembers = users, isLoading = false) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
+                }
         }
     }
 

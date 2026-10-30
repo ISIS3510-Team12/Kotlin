@@ -23,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,11 +37,12 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.TextMonogram
@@ -76,6 +76,7 @@ fun EditGroupScreen(
         selectedIds = uiState.selectedIds,
         errorMessage = uiState.errorMessage,
         canSave = uiState.canSave,
+        isLoading = uiState.isLoading,
         onNameChange = viewModel::onNameChange,
         onDescriptionChange = viewModel::onDescriptionChange,
         onSearch = viewModel::onSearch,
@@ -97,6 +98,7 @@ private fun EditGroupContent(
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
     canSave: Boolean = true,
+    isLoading: Boolean = false,
     onNameChange: (String) -> Unit = {},
     onDescriptionChange: (String) -> Unit = {},
     onSearch: (String) -> Unit = {},
@@ -111,156 +113,148 @@ private fun EditGroupContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Edit Group") },
-                navigationIcon = {
-                    IconButton(onClick = goBack) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Edit Group", onBack = goBack)
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.Top),
-            horizontalAlignment = Alignment.Start,
-        ) {
+        LoadingContent(isLoading = isLoading) {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = name,
-                    supportingText = {
-                        SupportingTextWithCounter(
-                            text = "This is the current name of the group",
-                            length = name.length,
-                            maxLength = GroupFieldLimits.NAME_MAX_LENGTH
-                        )
-                    },
-                    onValueChange = onNameChange,
-                    label = { Text("Name") },
-                )
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = description,
-                    supportingText = {
-                        SupportingTextWithCounter(
-                            text = "This is the current class of the group",
-                            length = description.length,
-                            maxLength = GroupFieldLimits.DESCRIPTION_MAX_LENGTH
-                        )
-                    },
-                    onValueChange = onDescriptionChange,
-                    label = { Text("Class") },
-                )
-            }
-
-            Text(
-                text = "Members",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
-                horizontalAlignment = Alignment.Start,
-            ) {
-                members.forEach { member ->
-                    MemberRow(member = member, onRemove = { onRemoveMember(member) })
-                }
-            }
-
-            Text(
-                text = "Add People",
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.headlineMedium
-            )
-
-            SearchBar(
-                state = searchBarState,
-                inputField = {
-                    SearchBarDefaults.InputField(
-                        searchBarState = searchBarState,
-                        textFieldState = searchTextFieldState,
-                        onSearch = onSearch,
-                        placeholder = {
-                            Text("Search for users...")
-                        },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = MaterialSymbols.Outlined.Search,
-                                contentDescription = "Search"
-                            )
-                        }
-                    )
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
-                horizontalAlignment = Alignment.Start,
-            ) {
-                directory.forEach { member ->
-                    MemberSelectorItem(
-                        member = member,
-                        checkedState = member.userId in selectedIds,
-                        onChecked = onMemberToggled
-                    )
-                }
-            }
-
-            errorMessage?.let { message ->
-                ErrorCard(message = message)
-            }
-
-            Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.Top),
+                horizontalAlignment = Alignment.Start,
             ) {
-                Button(onClick = onSave, enabled = canSave) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Check,
-                            contentDescription = "Check"
-                        )
-                        Text(text = "Edit Group")
-                    }
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = name,
+                        supportingText = {
+                            SupportingTextWithCounter(
+                                text = "This is the current name of the group",
+                                length = name.length,
+                                maxLength = GroupFieldLimits.NAME_MAX_LENGTH
+                            )
+                        },
+                        onValueChange = onNameChange,
+                        label = { Text("Name") },
+                    )
+                    OutlinedTextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = description,
+                        supportingText = {
+                            SupportingTextWithCounter(
+                                text = "This is the current class of the group",
+                                length = description.length,
+                                maxLength = GroupFieldLimits.DESCRIPTION_MAX_LENGTH
+                            )
+                        },
+                        onValueChange = onDescriptionChange,
+                        label = { Text("Class") },
+                    )
                 }
-                OutlinedButton(onClick = goBack) {
-                    Row(
-                        modifier = Modifier.padding(start = 12.dp, end = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Delete,
-                            contentDescription = "Cancel"
-                        )
-                        Text(text = "Cancel")
-                    }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(136.dp))
+                Text(
+                    text = "Members",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
+                    horizontalAlignment = Alignment.Start,
+                ) {
+                    members.forEach { member ->
+                        MemberRow(member = member, onRemove = { onRemoveMember(member) })
+                    }
+                }
+
+                Text(
+                    text = "Add People",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                SearchBar(
+                    state = searchBarState,
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            searchBarState = searchBarState,
+                            textFieldState = searchTextFieldState,
+                            onSearch = onSearch,
+                            placeholder = {
+                                Text("Search for users...")
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = MaterialSymbols.Outlined.Search,
+                                    contentDescription = "Search"
+                                )
+                            }
+                        )
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
+                    horizontalAlignment = Alignment.Start,
+                ) {
+                    directory.forEach { member ->
+                        MemberSelectorItem(
+                            member = member,
+                            checkedState = member.userId in selectedIds,
+                            onChecked = onMemberToggled
+                        )
+                    }
+                }
+
+                errorMessage?.let { message ->
+                    ErrorCard(message = message)
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Button(onClick = onSave, enabled = canSave) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Check,
+                                contentDescription = "Check"
+                            )
+                            Text(text = "Edit Group")
+                        }
+                    }
+                    OutlinedButton(onClick = goBack) {
+                        Row(
+                            modifier = Modifier.padding(start = 12.dp, end = 12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Delete,
+                                contentDescription = "Cancel"
+                            )
+                            Text(text = "Cancel")
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(136.dp))
+            }
         }
     }
 }

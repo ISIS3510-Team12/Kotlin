@@ -9,18 +9,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,18 +25,17 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Lock
 import com.composables.icons.materialsymbols.outlined.Mail
 import com.composables.icons.materialsymbols.outlined.Person
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.AuthTextField
 import com.team12kotlin.juggle.ui.components.GoogleSignInButton
 import com.team12kotlin.juggle.ui.components.OrDivider
 import com.team12kotlin.juggle.ui.components.PasswordField
 import com.team12kotlin.juggle.ui.components.PillButton
-import com.team12kotlin.juggle.data.auth.requestGoogleIdToken
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,18 +48,12 @@ fun SignUpScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.SignUp)
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    fun handleGoogleSignIn() {
-        scope.launch {
-            try {
-                viewModel.onGoogleSignIn(requestGoogleIdToken(context))
-            } catch (error: Throwable) {
-                viewModel.onGoogleSignInError(error)
-            }
-        }
-    }
+    val isOffline = rememberIsOnline() == false
+    val googleSignIn = rememberGoogleSignInHandler(
+        isOffline = isOffline,
+        onIdToken = viewModel::onGoogleSignIn,
+        onError = viewModel::onGoogleSignInError
+    )
 
     // Consume the one-shot navigation signal, then clear it.
     LaunchedEffect(uiState.navigateToSuccess) {
@@ -77,17 +66,7 @@ fun SignUpScreen(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Sign Up") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Sign Up", onBack = onBackClick)
         }
     ) { innerPadding ->
         Column(
@@ -107,7 +86,8 @@ fun SignUpScreen(
                 label = "First Name",
                 leadingIcon = { Icon(MaterialSymbols.Outlined.Person, contentDescription = null) },
                 isError = uiState.firstNameError != null,
-                supportingText = uiState.firstNameError
+                supportingText = uiState.firstNameError,
+                maxLength = AuthValidation.NAME_MAX_LENGTH
             )
             Spacer(modifier = Modifier.height(4.dp))
             AuthTextField(
@@ -116,7 +96,8 @@ fun SignUpScreen(
                 label = "Last Name",
                 leadingIcon = { Icon(MaterialSymbols.Outlined.Person, contentDescription = null) },
                 isError = uiState.lastNameError != null,
-                supportingText = uiState.lastNameError
+                supportingText = uiState.lastNameError,
+                maxLength = AuthValidation.NAME_MAX_LENGTH
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -150,12 +131,24 @@ fun SignUpScreen(
                 supportingText = uiState.confirmPasswordError
             )
 
+            if (isOffline) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "You're offline. Connect to the internet to sign up.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
             Spacer(modifier = Modifier.height(20.dp))
 
             PillButton(
                 text = "Sign Up",
-                onClick = viewModel::onSignUpSubmit,
-                enabled = uiState.canSubmit
+                onClick = {
+                    if (!isOffline && !googleSignIn.isLoading) viewModel.onSignUpSubmit()
+                },
+                enabled = uiState.canSubmit && !isOffline && !googleSignIn.isLoading,
+                isLoading = uiState.isSubmitting
             )
 
             uiState.authError?.let { message ->
@@ -173,7 +166,11 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            GoogleSignInButton(onClick = { handleGoogleSignIn() })
+            GoogleSignInButton(
+                onClick = googleSignIn.onClick,
+                enabled = !isOffline && !uiState.isSubmitting && !googleSignIn.isLoading,
+                isLoading = googleSignIn.isLoading
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 

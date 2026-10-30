@@ -17,13 +17,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,10 +38,11 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
-import com.composables.icons.materialsymbols.outlined.Arrow_back
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Settings
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.IconMonogram
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
@@ -98,17 +97,7 @@ private fun GroupDetailContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Group detail") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Group detail", onBack = onBackClick)
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -132,66 +121,68 @@ private fun GroupDetailContent(
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = group?.name ?: if (isLoading) "Loading..." else errorMessage ?: "Group not found",
-                    style = MaterialTheme.typography.headlineLarge,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = group?.description.orEmpty(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(text = "Members", style = MaterialTheme.typography.headlineMedium)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    group?.users.orEmpty().forEach { member ->
-                        GroupMember(member)
-                    }
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(text = "Related projects", style = MaterialTheme.typography.headlineMedium)
-                if (relatedProjects.isEmpty() && !isLoading) {
+        LoadingContent(isLoading = isLoading) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = "No projects yet",
+                        text = group?.name ?: if (isLoading) "" else errorMessage ?: "Group not found",
+                        style = MaterialTheme.typography.headlineLarge,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = group?.description.orEmpty(),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                relatedProjects.forEach { project ->
-                    RelatedProjectCard(project = project, onClick = { onProjectClick(project) })
+
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(text = "Members", style = MaterialTheme.typography.headlineMedium)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(20.dp)
+                    ) {
+                        group?.users.orEmpty().forEach { member ->
+                            GroupMember(member)
+                        }
+                    }
                 }
-            }
 
-            OutlinedButton(
-                onClick = onLeaveGroup,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Leave group")
-            }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(text = "Related projects", style = MaterialTheme.typography.headlineMedium)
+                    if (relatedProjects.isEmpty() && !isLoading) {
+                        Text(
+                            text = "No projects yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    relatedProjects.forEach { project ->
+                        RelatedProjectCard(project = project, onClick = { onProjectClick(project) })
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(136.dp))
+                OutlinedButton(
+                    onClick = onLeaveGroup,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Leave group")
+                }
+
+                Spacer(modifier = Modifier.height(136.dp))
+            }
         }
     }
 }

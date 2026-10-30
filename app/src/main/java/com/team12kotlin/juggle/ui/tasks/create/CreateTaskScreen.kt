@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,12 +15,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -32,8 +31,9 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
-import com.composables.icons.materialsymbols.outlined.Arrow_back
+import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
@@ -96,17 +96,7 @@ internal fun CreateTaskContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text("Create Task") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Create Task", onBack = onBackClick)
         }
     ) { innerPadding ->
         // Horizontal padding is applied per-item rather than on the
@@ -115,138 +105,140 @@ internal fun CreateTaskContent(
         val contentPadding = Modifier
             .fillMaxWidth()
             .padding(horizontal = horizontalPadding)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            DropdownField(
-                value = uiState.selectedGroupName,
-                label = "Group",
-                options = uiState.groups.map { it.name },
-                onOptionSelected = onGroupSelected,
-                modifier = contentPadding
-            )
-
-            OutlinedTextField(
-                value = uiState.title,
-                onValueChange = onTitleChange,
-                modifier = contentPadding,
-                singleLine = true,
-                label = { Text("Task title") },
-                supportingText = {
-                    SupportingTextWithCounter(
-                        text = "",
-                        length = uiState.title.length,
-                        maxLength = TaskFieldLimits.TITLE_MAX_LENGTH
-                    )
-                }
-            )
-
-            DropdownField(
-                value = uiState.taskType,
-                label = "Task type",
-                options = uiState.taskTypeOptions,
-                onOptionSelected = onTaskTypeSelected,
-                modifier = contentPadding
-            )
-
-            DropdownField(
-                value = uiState.selectedProjectName,
-                label = "Associated project",
-                options = uiState.projects.map { it.name },
-                onOptionSelected = onProjectSelected,
-                modifier = contentPadding
-            )
-
-            Text(
-                text = "Assigned members",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = contentPadding
-            )
-            Row(
+        LoadingContent(isLoading = uiState.isLoading) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = horizontalPadding, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                uiState.assignedMembers.forEach { member ->
-                    AssignedMemberChip(
-                        member = member,
-                        onClick = { onMemberToggled(member) }
-                    )
-                }
-            }
+                DropdownField(
+                    value = uiState.selectedGroupName,
+                    label = "Group",
+                    options = uiState.groups.map { it.name },
+                    onOptionSelected = onGroupSelected,
+                    modifier = contentPadding
+                )
 
-            Text(
-                text = "Current deadline and timing",
-                style = MaterialTheme.typography.titleSmall,
-                modifier = contentPadding
-            )
-            DatePickerField(
-                value = uiState.deadline,
-                onDateSelected = onDeadlineChange,
-                modifier = contentPadding
-            )
-            TimePickerField(
-                value = uiState.time,
-                onTimeSelected = onTimeChange,
-                modifier = contentPadding
-            )
+                OutlinedTextField(
+                    value = uiState.title,
+                    onValueChange = onTitleChange,
+                    modifier = contentPadding,
+                    singleLine = true,
+                    label = { Text("Task title") },
+                    supportingText = {
+                        SupportingTextWithCounter(
+                            text = "",
+                            length = uiState.title.length,
+                            maxLength = TaskFieldLimits.TITLE_MAX_LENGTH
+                        )
+                    }
+                )
 
-            ToggleRow(
-                label = "Is priority",
-                checked = uiState.isPriority,
-                onCheckedChange = onPriorityChange,
-                modifier = contentPadding
-            )
-            ToggleRow(
-                label = "Needs help",
-                checked = uiState.needsHelp,
-                onCheckedChange = onNeedsHelpChange,
-                modifier = contentPadding
-            )
+                DropdownField(
+                    value = uiState.taskType,
+                    label = "Task type",
+                    options = uiState.taskTypeOptions,
+                    onOptionSelected = onTaskTypeSelected,
+                    modifier = contentPadding
+                )
 
-            EvidencesField(
-                imageBytes = uiState.evidenceBytes,
-                onPhotoTaken = onEvidenceTaken,
-                modifier = contentPadding
-            )
+                DropdownField(
+                    value = uiState.selectedProjectName,
+                    label = "Associated project",
+                    options = uiState.projects.map { it.name },
+                    onOptionSelected = onProjectSelected,
+                    modifier = contentPadding
+                )
 
-            if (uiState.relatedTasks.isNotEmpty()) {
                 Text(
-                    text = "Related tasks",
+                    text = "Assigned members",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = contentPadding
                 )
-                RelatedTasksPicker(
-                    query = uiState.relatedQuery,
-                    onQueryChange = onRelatedQueryChange,
-                    tasks = uiState.filteredRelatedTasks,
-                    onToggle = onRelatedTaskToggled,
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = horizontalPadding, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    uiState.assignedMembers.forEach { member ->
+                        AssignedMemberChip(
+                            member = member,
+                            onClick = { onMemberToggled(member) }
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Current deadline and timing",
+                    style = MaterialTheme.typography.titleSmall,
                     modifier = contentPadding
                 )
-            }
+                DatePickerField(
+                    value = uiState.deadline,
+                    onDateSelected = onDeadlineChange,
+                    modifier = contentPadding
+                )
+                TimePickerField(
+                    value = uiState.time,
+                    onTimeSelected = onTimeChange,
+                    modifier = contentPadding
+                )
 
-            uiState.errorMessage?.let { message ->
-                ErrorCard(message = message)
-            }
+                ToggleRow(
+                    label = "Is priority",
+                    checked = uiState.isPriority,
+                    onCheckedChange = onPriorityChange,
+                    modifier = contentPadding
+                )
+                ToggleRow(
+                    label = "Needs help",
+                    checked = uiState.needsHelp,
+                    onCheckedChange = onNeedsHelpChange,
+                    modifier = contentPadding
+                )
 
-            Button(
-                onClick = onCreateClick,
-                enabled = uiState.canCreate,
-                modifier = contentPadding
-            ) {
-                Icon(imageVector = MaterialSymbols.Outlined.Add, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (uiState.isLoading) "Creating..." else "Create Task")
-            }
+                EvidencesField(
+                    imageBytes = uiState.evidenceBytes,
+                    onPhotoTaken = onEvidenceTaken,
+                    modifier = contentPadding
+                )
 
-            Spacer(modifier = Modifier.height(96.dp))
+                if (uiState.relatedTasks.isNotEmpty()) {
+                    Text(
+                        text = "Related tasks",
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = contentPadding
+                    )
+                    RelatedTasksPicker(
+                        query = uiState.relatedQuery,
+                        onQueryChange = onRelatedQueryChange,
+                        tasks = uiState.filteredRelatedTasks,
+                        onToggle = onRelatedTaskToggled,
+                        modifier = contentPadding
+                    )
+                }
+
+                uiState.errorMessage?.let { message ->
+                    ErrorCard(message = message)
+                }
+
+                Button(
+                    onClick = onCreateClick,
+                    enabled = uiState.canCreate,
+                    modifier = contentPadding
+                ) {
+                    Icon(imageVector = MaterialSymbols.Outlined.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (uiState.isLoading) "Creating..." else "Create Task")
+                }
+
+                Spacer(modifier = Modifier.height(96.dp))
+            }
         }
     }
 }
