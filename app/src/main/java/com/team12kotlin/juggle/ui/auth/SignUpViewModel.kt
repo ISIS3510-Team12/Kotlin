@@ -75,6 +75,12 @@ class SignUpViewModel(
         }
     }
 
+    /** Clears every field and error, used when the user shakes the device to reset the form. */
+    fun onResetForm() {
+        if (_uiState.value.isSubmitting) return
+        _uiState.value = SignUpUiState()
+    }
+
     fun onSignUpSubmit() {
         val state = _uiState.value
         if (state.isSubmitting) return
