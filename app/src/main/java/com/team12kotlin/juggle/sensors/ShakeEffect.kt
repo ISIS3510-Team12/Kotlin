@@ -42,7 +42,7 @@ fun ShakeEffect(
             }
         }
 
-        lifecycleOwner.lifecycle.removeObserver(observer)
+        lifecycleOwner.lifecycle.addObserver(observer)
 
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
