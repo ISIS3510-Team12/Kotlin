@@ -95,7 +95,7 @@ class CreateGroupViewModel(
         }
     }
 
-    /** Clears what the user entered and keeps the loaded members, used by the shake to reset. */
+    /** Clears what the user entered and keeps the members already loaded. */
     fun onResetForm() {
         if (_uiState.value.isLoading) return
         _uiState.update {

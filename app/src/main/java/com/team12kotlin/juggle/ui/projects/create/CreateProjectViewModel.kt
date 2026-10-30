@@ -72,7 +72,6 @@ class CreateProjectViewModel(
         _uiState.update { it.copy(deadline = value) }
     }
 
-    /** Clears what the user entered and keeps the group, used by the shake to reset. */
     fun onResetForm() {
         if (_uiState.value.isSaving) return
         _uiState.update {

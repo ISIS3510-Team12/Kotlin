@@ -55,7 +55,7 @@ class EditGroupViewModel(
     private var loadedGroupId: Int? = null
     private var hasLoaded = false
 
-    // Last saved values, restored by the shake to reset
+    // Last saved name and description, restored when the form is reset
     private var savedName: String? = null
     private var savedDescription: String = ""
 

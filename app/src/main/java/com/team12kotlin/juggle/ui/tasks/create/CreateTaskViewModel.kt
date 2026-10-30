@@ -253,6 +253,19 @@ class CreateTaskViewModel(
         }
     }
 
+    /** Goes back to a freshly opened form, keeping the groups already loaded. */
+    fun onResetForm() {
+        if (_uiState.value.isLoading) return
+        _uiState.update {
+            CreateTaskUiState(
+                groups = it.groups,
+                selectedGroupId = navGroupId,
+                taskTypeOptions = taskTypeOptions
+            )
+        }
+        loadGroupData(navGroupId)
+    }
+
     private suspend fun uploadEvidence(taskId: Int) {
         val state = _uiState.value
         val bytes = state.evidenceBytes

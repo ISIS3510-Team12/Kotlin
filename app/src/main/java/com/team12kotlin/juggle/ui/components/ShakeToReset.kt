@@ -14,10 +14,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.sensors.ShakeEffect
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
-/**
- * Asks for confirmation when the device is shaken and calls [onReset] if the user accepts.
- * Does nothing while [enabled] is false or when the shake detector is off in Settings.
- */
+/** Asks for confirmation when the device is shaken and calls [onReset] if the user accepts. */
 @Composable
 fun ShakeToReset(
     enabled: Boolean = true,
