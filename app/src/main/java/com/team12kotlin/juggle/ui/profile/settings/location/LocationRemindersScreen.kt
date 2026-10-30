@@ -40,6 +40,10 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.My_location
 import com.team12kotlin.juggle.reminders.GeofenceManager
 import com.team12kotlin.juggle.reminders.rememberReminderPermissionsFlow
+import androidx.compose.ui.text.style.TextAlign
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
+import androidx.compose.foundation.layout.Box
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
@@ -55,6 +59,9 @@ fun LocationRemindersScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.LocationReminders, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    val isOffline = isOnline == false
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadLocation)
 
     val currentLocation = rememberCurrentLocationRequest(
         onLocation = viewModel::onLocationPicked,
@@ -91,6 +98,8 @@ fun LocationRemindersScreen(
     LocationRemindersContent(
         modifier = modifier,
         uiState = uiState,
+        isOffline = isOffline,
+        onRetry = viewModel::loadLocation,
         goBack = goBack,
         onLocationPicked = viewModel::onLocationPicked,
         onUseCurrentLocation = { currentLocation.request() },
@@ -104,6 +113,8 @@ fun LocationRemindersScreen(
 private fun LocationRemindersContent(
     uiState: LocationRemindersUiState,
     modifier: Modifier = Modifier,
+    isOffline: Boolean = false,
+    onRetry: () -> Unit = {},
     goBack: () -> Unit = {},
     onLocationPicked: (Double, Double) -> Unit = { _, _ -> },
     onUseCurrentLocation: () -> Unit = {},
@@ -131,13 +142,29 @@ private fun LocationRemindersContent(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (LocalInspectionMode.current) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth().height(280.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        content = {}
-                    )
+                if (LocalInspectionMode.current || isOffline) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = "The map needs a connection. Reconnect to pick a place.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(24.dp)
+                                )
+                            }
+                        }
+                    }
                 } else {
                     LocationMap(
                         latitude = uiState.latitude,
@@ -146,12 +173,14 @@ private fun LocationRemindersContent(
                         onLocationPicked = onLocationPicked
                     )
                 }
-                Text(
-                    text = if (uiState.hasLocation) "Tap the map to move the place." else "Tap the map to choose a place.",
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (!isOffline) {
+                    Text(
+                        text = if (uiState.hasLocation) "Tap the map to move the place." else "Tap the map to choose a place.",
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 OutlinedButton(onClick = onUseCurrentLocation, modifier = Modifier.fillMaxWidth()) {
                     Icon(
                         imageVector = MaterialSymbols.Outlined.My_location,
@@ -171,10 +200,16 @@ private fun LocationRemindersContent(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-                uiState.errorMessage?.let { message ->
-                    ErrorCard(message = message)
+                if (uiState.latitude == null && !isOffline) {
+                    uiState.errorMessage?.let { message ->
+                        ErrorCard(message = message, onRetry = onRetry)
+                    }
                 }
-                PillButton(text = "Save location", onClick = onSaveLocation, enabled = uiState.canSave)
+                PillButton(
+                    text = "Save location",
+                    onClick = onSaveLocation,
+                    enabled = uiState.canSave && !isOffline
+                )
             }
         }
     }

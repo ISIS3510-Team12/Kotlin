@@ -18,6 +18,7 @@ import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.dto.toFlag
 import com.team12kotlin.juggle.ui.dto.toNotification
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -58,7 +59,8 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val firstGroupId: Int? = null,
-    val nextTask: NextTaskUiState = NextTaskUiState.Loading,
+    val dataLoaded: Boolean = false,
+    val nextTask: NextTaskUiState = NextTaskUiState.Loading
 ) {
     val taskCount: Int get() = upcomingTasks.size
     val notificationCount: Int get() = notifications.size
@@ -131,13 +133,14 @@ class HomeViewModel : ViewModel() {
                             upcomingTasks = loaded.tasks,
                             notifications = loaded.notifications.map { item -> item.toNotification() },
                             firstGroupId = loaded.firstGroupId,
-                            isLoading = false
+                            isLoading = false,
+                            dataLoaded = true
                         )
                     }
                 }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }

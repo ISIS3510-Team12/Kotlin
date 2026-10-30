@@ -41,9 +41,12 @@ import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Settings
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.IconMonogram
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.User
@@ -67,6 +70,8 @@ fun GroupDetailScreen(
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.GroupDetail, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = { viewModel.load(groupId) })
 
     GroupDetailContent(
         modifier = modifier,
@@ -74,10 +79,12 @@ fun GroupDetailScreen(
         relatedProjects = uiState.relatedProjects,
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
+        isOffline = isOnline == false,
         onBackClick = onBackClick,
         onCreateProjectClick = onCreateProjectClick,
         onProjectClick = onProjectClick,
-        onLeaveGroup = { viewModel.leaveGroup(onBackClick) }
+        onLeaveGroup = { viewModel.leaveGroup(onBackClick) },
+        onRetry = { viewModel.load(groupId) }
     )
 }
 
@@ -89,10 +96,12 @@ private fun GroupDetailContent(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     errorMessage: String? = null,
+    isOffline: Boolean = false,
     onBackClick: () -> Unit = {},
     onCreateProjectClick: () -> Unit = {},
     onProjectClick: (Project) -> Unit = {},
-    onLeaveGroup: () -> Unit = {}
+    onLeaveGroup: () -> Unit = {},
+    onRetry: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
@@ -100,7 +109,7 @@ private fun GroupDetailContent(
             BackTopBar(title = "Group detail", onBack = onBackClick)
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (!isOffline) ExtendedFloatingActionButton(
                 onClick = onCreateProjectClick,
                 modifier = Modifier.padding(bottom = 104.dp),
                 icon = {
@@ -130,6 +139,12 @@ private fun GroupDetailContent(
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                errorMessage?.let { message ->
+                    ErrorCard(
+                        message = message,
+                        onRetry = onRetry
+                    )
+                }
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = group?.name ?: if (isLoading) "" else errorMessage ?: "Group not found",
@@ -176,6 +191,7 @@ private fun GroupDetailContent(
 
                 OutlinedButton(
                     onClick = onLeaveGroup,
+                    enabled = !isOffline,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Leave group")

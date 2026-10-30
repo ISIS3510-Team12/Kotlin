@@ -6,6 +6,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.utils.parseDeadline
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,7 +19,8 @@ private const val FETCH_WINDOW_DAYS = 3L   // ±3 días alrededor del día selec
 data class CalendarUiState(
     val selectedDate: LocalDate = LocalDate.now(),
     val tasksByDate: Map<LocalDate, List<Task>> = emptyMap(),
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 ) {
     val tasksForSelectedDate: List<Task>
         get() = tasksByDate[selectedDate].orEmpty()
@@ -55,7 +57,7 @@ class CalendarViewModel(
 
     private fun fetchTasksAround(center: LocalDate) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val windowStart = center.minusDays(FETCH_WINDOW_DAYS)
                 val windowEnd   = center.plusDays(FETCH_WINDOW_DAYS)
@@ -79,13 +81,20 @@ class CalendarViewModel(
                 _uiState.update { prev ->
                     prev.copy(
                         tasksByDate = prev.tasksByDate + grouped,
-                        isLoading   = false
+                        isLoading   = false,
+                        errorMessage = null
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = e.toUserMessage())
+                }
             }
         }
+    }
+
+    fun retry() {
+        fetchTasksAround(_uiState.value.selectedDate)
     }
 
     fun onTaskClick(task: Task) {

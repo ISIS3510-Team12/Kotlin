@@ -46,6 +46,8 @@ import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
@@ -107,6 +109,7 @@ private fun EditGroupContent(
     onSave: () -> Unit = {},
     goBack: () -> Unit = {}
 ) {
+    val isOffline = rememberIsOnline() == false
     val searchBarState = rememberSearchBarState()
     val searchTextFieldState = rememberTextFieldState()
 
@@ -215,9 +218,16 @@ private fun EditGroupContent(
                     }
                 }
 
-                errorMessage?.let { message ->
-                    ErrorCard(message = message)
+                if (!isOffline) {
+                    errorMessage?.let { message ->
+                        ErrorCard(
+                            message = message,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
+
+                OfflineActionNotice(isOffline = isOffline)
 
                 Row(
                     modifier = Modifier
@@ -226,7 +236,7 @@ private fun EditGroupContent(
                     horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Button(onClick = onSave, enabled = canSave) {
+                    Button(onClick = onSave, enabled = canSave && !isOffline) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,

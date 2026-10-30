@@ -42,10 +42,13 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Circle_notifications
 import com.composables.icons.materialsymbols.roundedfilled.Groups
 import com.composables.icons.materialsymbols.roundedfilled.List_alt
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.components.OverviewCard
 import com.team12kotlin.juggle.ui.components.QuickActionItem
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
@@ -70,6 +73,8 @@ fun HomeScreen (
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Home, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::load)
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     LifecycleResumeEffect(Unit) {
@@ -146,6 +151,13 @@ fun HomeScreen (
                                     )
                                 }
                             }
+                            uiState.errorMessage?.let { message ->
+                                ErrorCard(
+                                    message = message,
+                                    onRetry = viewModel::load,
+                                    modifier = Modifier.padding(top = 12.dp)
+                                )
+                            }
                         }
                         Text(
                             text = "Overview",
@@ -164,13 +176,13 @@ fun HomeScreen (
                             OverviewCard(
                                 icon = MaterialSymbols.RoundedFilled.List_alt,
                                 title = "Tasks",
-                                count = uiState.taskCount,
+                                count = uiState.taskCount.takeIf { uiState.dataLoaded },
                                 modifier = Modifier.weight(1f),
                             )
                             OverviewCard(
                                 icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
                                 title = "Notifications",
-                                count = uiState.notificationCount,
+                                count = uiState.notificationCount.takeIf { uiState.dataLoaded },
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -241,7 +253,7 @@ fun HomeScreen (
                                     onClick = { onTaskClick(task) }
                                 )
                             }
-                        } else {
+                        } else if (uiState.dataLoaded) {
                             Text(
                                 text = "There are no upcoming tasks for today!",
                                 style = MaterialTheme.typography.headlineSmall,
@@ -258,7 +270,7 @@ fun HomeScreen (
                                     onClick = { onNotificationClick(notification) }
                                 )
                             }
-                        } else {
+                        } else if (uiState.dataLoaded) {
                             Text(
                                 text = "There are no notifications today!",
                                 style = MaterialTheme.typography.headlineSmall,

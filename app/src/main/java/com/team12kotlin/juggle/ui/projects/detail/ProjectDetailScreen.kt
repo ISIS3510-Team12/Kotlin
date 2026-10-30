@@ -30,7 +30,10 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Task
@@ -53,6 +56,8 @@ fun ProjectDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.ProjectDetail, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::load)
 
     ProjectDetailContent(
         modifier = modifier,
@@ -60,6 +65,7 @@ fun ProjectDetailScreen(
         onBackClick = onBackClick,
         onTaskClick = onTaskClick,
         onFilterSelected = viewModel::onFilterSelected,
+        onRetry = viewModel::load,
     )
 }
 
@@ -71,6 +77,7 @@ internal fun ProjectDetailContent(
     onBackClick: () -> Unit = {},
     onTaskClick: (Int) -> Unit = {},
     onFilterSelected: (ProjectTaskFilter) -> Unit = {},
+    onRetry: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier,
@@ -84,6 +91,14 @@ internal fun ProjectDetailContent(
                     .padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                uiState.errorMessage?.let { message ->
+                    item {
+                        ErrorCard(
+                            message = message,
+                            onRetry = onRetry
+                        )
+                    }
+                }
                 item {
                     Column {
                         Text(

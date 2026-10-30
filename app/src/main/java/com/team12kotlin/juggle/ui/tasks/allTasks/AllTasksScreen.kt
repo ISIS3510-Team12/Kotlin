@@ -32,7 +32,10 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -47,6 +50,8 @@ fun AllTasksScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.AllTasks, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadTasks)
 
     Scaffold(
         modifier = modifier,
@@ -62,6 +67,13 @@ fun AllTasksScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                uiState.errorMessage?.let { message ->
+                    ErrorCard(
+                        message = message,
+                        onRetry = viewModel::loadTasks,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
                 ButtonGroupFilter(
                     filters = AllTasksFilter.entries.map { it.label },
                     selectedIndex = uiState.selectedFilterIndex,

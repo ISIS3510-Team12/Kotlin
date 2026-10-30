@@ -10,6 +10,7 @@ import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -87,7 +88,7 @@ class ProjectDetailViewModel(
                 }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
-                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
+                    _uiState.update { it.copy(errorMessage = error.toUserMessage(), isLoading = false) }
                 }
         }
     }

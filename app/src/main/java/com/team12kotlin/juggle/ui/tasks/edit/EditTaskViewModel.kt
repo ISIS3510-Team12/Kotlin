@@ -15,6 +15,7 @@ import com.team12kotlin.juggle.ui.tasks.create.RelatedTask
 import com.team12kotlin.juggle.utils.splitDeadline
 import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.toIsoDateTime
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -128,7 +129,7 @@ class EditTaskViewModel(
                 }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }
@@ -346,7 +347,7 @@ class EditTaskViewModel(
                     _uiState.update { it.copy(isLoading = false, savedSuccessfully = true) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }

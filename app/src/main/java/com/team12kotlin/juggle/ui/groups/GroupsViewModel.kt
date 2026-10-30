@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.ui.dto.Group
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,8 @@ data class GroupsUiState(
     val query: String = "",
     val groups: List<Group> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val loadFailed: Boolean = false
 ) {
     val filteredGroups: List<Group>
         get() = groups.filterFor(query)
@@ -43,19 +45,25 @@ class GroupsViewModel(
     fun loadGroups() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
-            runCatching { groupRepository.getGroups() }
-                .onSuccess { groups ->
+            runCatching { groupRepository.getGroupsCached() }
+                .onSuccess { result ->
                     hasLoaded = true
                     _uiState.update {
                         it.copy(
-                            groups = groups,
-                            isLoading = false
+                            groups = result.data,
+                            isLoading = false,
+                            errorMessage = null,
+                            loadFailed = false
                         )
                     }
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.message)
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.toUserMessage(),
+                            loadFailed = true
+                        )
                     }
                 }
         }

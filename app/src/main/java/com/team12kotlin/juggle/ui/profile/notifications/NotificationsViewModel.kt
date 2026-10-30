@@ -6,6 +6,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.NotificationRepository
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.toNotification
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 data class NotificationsUiState(
     val notifications: List<Notification> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val loadFailed: Boolean = false
 )
 
 class NotificationsViewModel(
@@ -42,7 +44,13 @@ class NotificationsViewModel(
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.toUserMessage(),
+                            loadFailed = true
+                        )
+                    }
                 }
         }
     }
