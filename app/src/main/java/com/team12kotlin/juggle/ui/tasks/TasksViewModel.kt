@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 
 data class DrawerItem(
     val id: Int = 0,
@@ -92,7 +93,7 @@ class TasksViewModel(
                     groups = drawerItems,
                     selectedGroupId = selectedId,
                     currentGroup = drawerItems.firstOrNull { item -> item.selected }?.name ?: it.currentGroup,
-                    errorMessage = groupsResult.exceptionOrNull()?.message
+                    errorMessage = groupsResult.exceptionOrNull()?.toUserMessage()
                 )
             }
 
@@ -125,7 +126,7 @@ class TasksViewModel(
                     ownTasks = ownResult.getOrDefault(it.ownTasks),
                     groupTasks = groupResult.getOrDefault(it.groupTasks),
                     isLoading = false,
-                    errorMessage = error?.message
+                    errorMessage = error?.toUserMessage()
                 )
             }
         }
