@@ -75,7 +75,9 @@ class TaskRepository(
                 )
             },
             readLocal = {
-                taskDao.getByGroup(userId, groupId).mapNotNull { mapper.toDomainOrNull(it) }
+                taskDao.getByGroup(userId, groupId)
+                    .mapNotNull { mapper.toDomainOrNull(it) }
+                    .filterNot { it.isOwn(userId) }
             }
         )
     }
