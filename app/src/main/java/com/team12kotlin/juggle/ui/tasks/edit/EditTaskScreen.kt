@@ -36,6 +36,8 @@ import com.composables.icons.materialsymbols.outlined.Check
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.tasks.create.AssignedMemberChip
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.tasks.create.DropdownField
@@ -57,6 +59,7 @@ fun EditTaskScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.EditTask, uiState.isLoading)
+    val isOffline = rememberIsOnline() == false
 
     LaunchedEffect(uiState.savedSuccessfully) {
         if (uiState.savedSuccessfully) {
@@ -202,13 +205,18 @@ fun EditTaskScreen(
                     )
                 }
 
+                OfflineActionNotice(
+                    isOffline = isOffline,
+                    modifier = contentPadding
+                )
+
                 Row(
                     modifier = contentPadding,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
                         onClick = viewModel::onEditTask,
-                        enabled = uiState.canSave,
+                        enabled = uiState.canSave && !isOffline,
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(imageVector = MaterialSymbols.Outlined.Check, contentDescription = null)

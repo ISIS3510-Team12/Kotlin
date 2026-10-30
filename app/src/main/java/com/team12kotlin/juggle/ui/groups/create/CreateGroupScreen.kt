@@ -41,6 +41,8 @@ import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
@@ -82,6 +84,7 @@ fun CreateGroupContent(
     onToggleMember: (User) -> Unit = {},
     onCreateGroup: () -> Unit = {},
 ) {
+    val isOffline = rememberIsOnline() == false
     val searchBarState = rememberSearchBarState()
     val searchTextFieldState = rememberTextFieldState(uiState.query)
 
@@ -191,6 +194,8 @@ fun CreateGroupContent(
                     ErrorCard(message = message)
                 }
 
+                OfflineActionNotice(isOffline = isOffline)
+
                 Row(
                     modifier =modifier
                         .fillMaxWidth()
@@ -200,7 +205,7 @@ fun CreateGroupContent(
                 ) {
                     Button(
                         onClick = onCreateGroup,
-                        enabled = uiState.canCreate
+                        enabled = uiState.canCreate && !isOffline
                     ) {
                         Row(
                             modifier = modifier

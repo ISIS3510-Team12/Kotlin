@@ -60,6 +60,8 @@ import com.composables.icons.materialsymbols.outlined.Star
 import com.composables.icons.materialsymbols.outlined.Stars
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.RelatedTask
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.tasks.create.EvidenceView
@@ -77,6 +79,7 @@ fun ViewTaskScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.ViewTask, uiState.isLoading)
+    val isOffline = rememberIsOnline() == false
 
     BackHandler(enabled = uiState.isFabMenuExpanded) {
         viewModel.onFabMenuDismiss()
@@ -109,6 +112,8 @@ fun ViewTaskScreen(
                     .padding(horizontal = 26.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                OfflineActionNotice(isOffline = isOffline)
+
                 // Title + description
                 Text(
                     text = task.title,
@@ -143,6 +148,7 @@ fun ViewTaskScreen(
                 ScheduledCard(
                     deadline = task.deadline ?: "No deadline set",
                     reminder = task.reminders.firstOrNull(),
+                    isOffline = isOffline,
                     onReminderToggle = viewModel::onReminderToggle,
                     onEditClick = { onEditTask(task.id) }
                 )
@@ -214,21 +220,23 @@ fun ViewTaskScreen(
             }
         }
 
-        TaskActionsFabMenu(
-            expanded = uiState.isFabMenuExpanded,
-            onToggle = viewModel::onFabMenuToggle,
-            onAction = { action ->
-                if (action == TaskAction.EDIT_TASK) {
-                    viewModel.onFabMenuDismiss()
-                    onEditTask(uiState.task.id)
-                } else {
-                    viewModel.onTaskAction(action)
-                }
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(bottom = 104.dp)
-        )
+        if (!isOffline) {
+            TaskActionsFabMenu(
+                expanded = uiState.isFabMenuExpanded,
+                onToggle = viewModel::onFabMenuToggle,
+                onAction = { action ->
+                    if (action == TaskAction.EDIT_TASK) {
+                        viewModel.onFabMenuDismiss()
+                        onEditTask(uiState.task.id)
+                    } else {
+                        viewModel.onTaskAction(action)
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 104.dp)
+            )
+        }
     }
 }
 
@@ -322,6 +330,7 @@ private fun AssistiveChip(
 private fun ScheduledCard(
     deadline: String,
     reminder: Reminder?,
+    isOffline: Boolean,
     onReminderToggle: (Boolean) -> Unit,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -351,7 +360,7 @@ private fun ScheduledCard(
                 label = "Deadline",
                 value = deadline
             ) {
-                TextButton(onClick = onEditClick) { Text("EDIT") }
+                TextButton(onClick = onEditClick, enabled = !isOffline) { Text("EDIT") }
             }
 
             if (reminder != null) {
@@ -361,7 +370,11 @@ private fun ScheduledCard(
                     label = "Reminder",
                     value = reminder.label
                 ) {
-                    Switch(checked = reminder.enabled, onCheckedChange = onReminderToggle)
+                    Switch(
+                        checked = reminder.enabled,
+                        onCheckedChange = onReminderToggle,
+                        enabled = !isOffline
+                    )
                 }
             }
         }
