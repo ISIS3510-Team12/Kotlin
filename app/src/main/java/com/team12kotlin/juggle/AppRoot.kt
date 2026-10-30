@@ -15,6 +15,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.ui.connectivity.IsOnlineProvider
 import com.team12kotlin.juggle.reminders.LocationReminderSync
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -88,6 +89,7 @@ fun AppRoot(
         }
     }
 
+    IsOnlineProvider {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         // Avoid the double top-bar in some devices
@@ -486,6 +488,7 @@ fun AppRoot(
                 )
             }
         }
+    }
     }
 }
 
