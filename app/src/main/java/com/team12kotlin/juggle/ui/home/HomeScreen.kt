@@ -93,12 +93,6 @@ fun HomeScreen (
                     .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
             ) {
-                uiState.errorMessage?.let { message ->
-                    ErrorCard(
-                        message = message,
-                        onRetry = viewModel::load
-                    )
-                }
                 Column(
                     modifier = modifier
                         .padding(8.dp)
@@ -155,6 +149,13 @@ fun HomeScreen (
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
+                            }
+                            uiState.errorMessage?.let { message ->
+                                ErrorCard(
+                                    message = message,
+                                    onRetry = viewModel::load,
+                                    modifier = Modifier.padding(top = 12.dp)
+                                )
                             }
                         }
                         Text(
