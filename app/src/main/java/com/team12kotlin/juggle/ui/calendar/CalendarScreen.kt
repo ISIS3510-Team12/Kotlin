@@ -39,6 +39,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Chevron_left
 import com.composables.icons.materialsymbols.outlined.Chevron_right
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.components.ErrorCard
@@ -63,6 +65,8 @@ fun CalendarScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Calendar, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::retry)
 
     CalendarContent(
         modifier = modifier,

@@ -28,6 +28,8 @@ import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.NotificationCard
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import kotlinx.coroutines.FlowPreview
@@ -41,6 +43,8 @@ fun NotificationsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Notifications, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadNotifications)
 
     NotificationsContent(
         uiState = uiState,

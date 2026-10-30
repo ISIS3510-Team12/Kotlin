@@ -40,6 +40,8 @@ import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -59,6 +61,8 @@ fun GroupsScreen (
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Groups, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadGroups)
     val searchBarState = rememberSearchBarState()
     val textFieldState = rememberTextFieldState(uiState.query)
 

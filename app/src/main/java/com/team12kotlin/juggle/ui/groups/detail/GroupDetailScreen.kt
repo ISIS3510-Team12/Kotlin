@@ -45,6 +45,8 @@ import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.IconMonogram
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.User
@@ -68,6 +70,8 @@ fun GroupDetailScreen(
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.GroupDetail, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = { viewModel.load(groupId) })
 
     GroupDetailContent(
         modifier = modifier,

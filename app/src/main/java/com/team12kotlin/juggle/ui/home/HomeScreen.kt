@@ -47,6 +47,8 @@ import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.components.OverviewCard
 import com.team12kotlin.juggle.ui.components.QuickActionItem
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
@@ -70,6 +72,8 @@ fun HomeScreen (
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Home, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::load)
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     LifecycleResumeEffect(Unit) {

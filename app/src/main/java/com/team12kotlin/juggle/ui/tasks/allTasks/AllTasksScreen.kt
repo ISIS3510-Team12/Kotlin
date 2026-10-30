@@ -34,6 +34,8 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -48,6 +50,8 @@ fun AllTasksScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.AllTasks, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadTasks)
 
     Scaffold(
         modifier = modifier,
