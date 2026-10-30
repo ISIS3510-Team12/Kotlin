@@ -199,7 +199,10 @@ fun CreateGroupContent(
                     }
                 }
 
-                OfflineActionNotice(isOffline = isOffline)
+                OfflineActionNotice(
+                    isOffline = isOffline,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
 
                 Row(
                     modifier =modifier

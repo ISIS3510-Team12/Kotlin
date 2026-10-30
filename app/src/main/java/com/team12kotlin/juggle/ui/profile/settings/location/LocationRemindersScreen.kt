@@ -41,7 +41,6 @@ import com.composables.icons.materialsymbols.outlined.My_location
 import com.team12kotlin.juggle.reminders.GeofenceManager
 import com.team12kotlin.juggle.reminders.rememberReminderPermissionsFlow
 import androidx.compose.ui.text.style.TextAlign
-import com.team12kotlin.juggle.ui.components.OfflineActionNotice
 import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import androidx.compose.foundation.layout.Box
@@ -174,12 +173,14 @@ private fun LocationRemindersContent(
                         onLocationPicked = onLocationPicked
                     )
                 }
-                Text(
-                    text = if (uiState.hasLocation) "Tap the map to move the place." else "Tap the map to choose a place.",
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (!isOffline) {
+                    Text(
+                        text = if (uiState.hasLocation) "Tap the map to move the place." else "Tap the map to choose a place.",
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 OutlinedButton(onClick = onUseCurrentLocation, modifier = Modifier.fillMaxWidth()) {
                     Icon(
                         imageVector = MaterialSymbols.Outlined.My_location,
@@ -199,12 +200,11 @@ private fun LocationRemindersContent(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
-                if (uiState.latitude == null) {
+                if (uiState.latitude == null && !isOffline) {
                     uiState.errorMessage?.let { message ->
                         ErrorCard(message = message, onRetry = onRetry)
                     }
                 }
-                OfflineActionNotice(isOffline = isOffline)
                 PillButton(
                     text = "Save location",
                     onClick = onSaveLocation,
