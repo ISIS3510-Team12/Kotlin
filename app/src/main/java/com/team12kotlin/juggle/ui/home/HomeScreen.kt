@@ -66,6 +66,7 @@ fun HomeScreen (
     viewModel: HomeViewModel = viewModel(),
     onProfileClick: (NavigationDestination) -> Unit = {},
     onTaskClick: (Task) -> Unit = {},
+    onNextTaskClick: (Int) -> Unit = {},
     onNotificationClick: (Notification) -> Unit = {},
     onCreateTaskClick: (Int) -> Unit = {},
     onCreateGroupClick: () -> Unit = {},
@@ -185,6 +186,24 @@ fun HomeScreen (
                                 modifier = Modifier.weight(1f),
                             )
                         }
+                        Text(
+                            text = "Up next",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    }
+                }
+                NextTaskSection(
+                    state = uiState.nextTask,
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    onTaskClick = onNextTaskClick
+                )
+                Column(
+                    modifier = modifier
+                        .padding(8.dp)
+                        .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 0.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Column {
                         val selectedTab = uiState.selectedTab
                         PrimaryTabRow(
                             modifier = modifier

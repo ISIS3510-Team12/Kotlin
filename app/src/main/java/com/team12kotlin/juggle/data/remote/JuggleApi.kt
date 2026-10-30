@@ -4,6 +4,7 @@ import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.GroupCreateRequest
 import com.team12kotlin.juggle.ui.dto.GroupMemberAddRequest
 import com.team12kotlin.juggle.ui.dto.GroupUpdateRequest
+import com.team12kotlin.juggle.ui.dto.NextTaskResponse
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
@@ -168,6 +169,9 @@ interface JuggleApi {
     suspend fun getDeadlinePrediction(
         @Path("project_id") projectId: Int
     ): ProjectDeadlinePrediction
+
+    @GET("/smart/next-task")
+    suspend fun getNextTask(): NextTaskResponse
 
     @GET("/users/current_user")
     suspend fun getCurrentUser(): User
