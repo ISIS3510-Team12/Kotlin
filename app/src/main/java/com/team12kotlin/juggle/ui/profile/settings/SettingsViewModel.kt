@@ -2,7 +2,6 @@ package com.team12kotlin.juggle.ui.profile.settings
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.reminders.ScheduledReminderScheduler
 import com.team12kotlin.juggle.reminders.ScheduledReminderStore
@@ -78,6 +77,8 @@ class SettingsViewModel(
     }
 
     fun onSignOut(onSignedOut: () -> Unit) {
+        ScheduledReminderScheduler.cancel(getApplication<Application>().applicationContext)
+        reminderStore.clear()
         authRepository.signOut()
         onSignedOut()
     }
