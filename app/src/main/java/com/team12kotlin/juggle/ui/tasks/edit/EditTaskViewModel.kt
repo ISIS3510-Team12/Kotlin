@@ -80,7 +80,7 @@ class EditTaskViewModel(
         listOf("Coding", "Design", "Research", "Writing", "Meeting")
 
     private val _uiState = MutableStateFlow(
-        EditTaskUiState(taskTypeOptions = taskTypeOptions)
+        EditTaskUiState(taskTypeOptions = taskTypeOptions, isLoading = true)
     )
     val uiState: StateFlow<EditTaskUiState> = _uiState.asStateFlow()
 

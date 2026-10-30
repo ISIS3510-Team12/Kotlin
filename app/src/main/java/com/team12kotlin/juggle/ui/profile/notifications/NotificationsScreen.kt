@@ -9,11 +9,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -26,7 +24,8 @@ import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Arrow_back
+import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -61,49 +60,41 @@ fun NotificationsContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            TopAppBar(
-                title = { Text(text = "Notifications") },
-                navigationIcon = {
-                    IconButton(onClick = goBack) {
-                        Icon(
-                            imageVector = MaterialSymbols.Outlined.Arrow_back,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
+            BackTopBar(title = "Notifications", onBack = goBack)
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState()),
-        ) {
+        LoadingContent(isLoading = uiState.isLoading) {
             Column(
                 modifier = Modifier
-                    .padding(horizontal = 5.dp, vertical = 10.dp)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
-                horizontalAlignment = Alignment.Start,
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState()),
             ) {
-                if (uiState.notifications.isNotEmpty()) {
-                    uiState.notifications.forEach { notification ->
-                        NotificationCard(
-                            notification= notification,
-                            showDismiss = true,
-                            outlined = true,
-                            onDismiss = { onNotificationDismissed(notification.id) }
+                Column(
+                    modifier = Modifier
+                        .padding(horizontal = 5.dp, vertical = 10.dp)
+                        .fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
+                    horizontalAlignment = Alignment.Start,
+                ) {
+                    if (uiState.notifications.isNotEmpty()) {
+                        uiState.notifications.forEach { notification ->
+                            NotificationCard(
+                                notification= notification,
+                                showDismiss = true,
+                                outlined = true,
+                                onDismiss = { onNotificationDismissed(notification.id) }
+                            )
+                        }
+                    } else if (!uiState.isLoading) {
+                        Text(
+                            text = "No pending notifications",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                            textAlign = TextAlign.Center,
                         )
                     }
-                } else {
-                    Text(
-                        text = "No pending notifications",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                        textAlign = TextAlign.Center,
-                    )
                 }
             }
         }

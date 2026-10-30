@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.ui.groups
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -38,6 +39,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -106,54 +108,56 @@ fun GroupsScreen (
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            SearchBar(
-                state = searchBarState,
-                inputField = {
-                    SearchBarDefaults.InputField(
-                        searchBarState = searchBarState,
-                        textFieldState = textFieldState,
-                        onSearch = { viewModel.onSearch(it) },
-                        placeholder = {
-                            Text("Search for a group...")
-                        },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = MaterialSymbols.Outlined.Search,
-                                contentDescription = "Search"
-                            )
-                        }
-                    )
-                },
-                modifier = Modifier.padding(start=20.dp, top=5.dp, end=20.dp, bottom = 20.dp).fillMaxWidth()
-            )
-            uiState.errorMessage?.let { message ->
-                Row(
-                    modifier = Modifier
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ErrorCard(message = message)
-                }
-            }
-            if (!uiState.isLoading && uiState.filteredGroups.isEmpty() && uiState.errorMessage == null) {
-                Text(
-                    text = "No groups yet",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+        LoadingContent(isLoading = uiState.isLoading) {
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                SearchBar(
+                    state = searchBarState,
+                    inputField = {
+                        SearchBarDefaults.InputField(
+                            searchBarState = searchBarState,
+                            textFieldState = textFieldState,
+                            onSearch = { viewModel.onSearch(it) },
+                            placeholder = {
+                                Text("Search for a group...")
+                            },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = MaterialSymbols.Outlined.Search,
+                                    contentDescription = "Search"
+                                )
+                            }
+                        )
+                    },
+                    modifier = Modifier.padding(start=20.dp, top=5.dp, end=20.dp, bottom = 20.dp).fillMaxWidth()
                 )
-            }
-            Column {
-                uiState.filteredGroups.forEach { group ->
-                    GroupCard(
-                        group = group,
-                        onClick = { onGroupClick(group) }
+                uiState.errorMessage?.let { message ->
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        ErrorCard(message = message)
+                    }
+                }
+                if (!uiState.isLoading && uiState.filteredGroups.isEmpty() && uiState.errorMessage == null) {
+                    Text(
+                        text = "No groups yet",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                     )
+                }
+                Column {
+                    uiState.filteredGroups.forEach { group ->
+                        GroupCard(
+                            group = group,
+                            onClick = { onGroupClick(group) }
+                        )
+                    }
                 }
             }
         }

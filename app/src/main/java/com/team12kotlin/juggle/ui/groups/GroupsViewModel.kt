@@ -35,18 +35,17 @@ class GroupsViewModel(
     private val groupRepository: GroupRepository = Dependencies.groupRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(GroupsUiState())
+    private val _uiState = MutableStateFlow(GroupsUiState(isLoading = true))
     val uiState: StateFlow<GroupsUiState> = _uiState.asStateFlow()
 
-    init {
-        loadGroups()
-    }
+    private var hasLoaded = false
 
     fun loadGroups() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
             runCatching { groupRepository.getGroups() }
                 .onSuccess { groups ->
+                    hasLoaded = true
                     _uiState.update {
                         it.copy(
                             groups = groups,

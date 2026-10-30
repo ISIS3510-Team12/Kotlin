@@ -48,7 +48,9 @@ class ViewTaskViewModel(
 
     private val taskId: Int? = savedStateHandle.get<String>("taskId")?.toIntOrNull()
 
-    private val _uiState = MutableStateFlow(ViewTaskUiState(task = MISSING_TASK))
+    private var hasLoaded = false
+
+    private val _uiState = MutableStateFlow(ViewTaskUiState(task = MISSING_TASK, isLoading = true))
     val uiState: StateFlow<ViewTaskUiState> = _uiState.asStateFlow()
 
     fun loadTask() {
@@ -57,13 +59,14 @@ class ViewTaskViewModel(
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = !hasLoaded) }
             runCatching {
                 val task = repository.getTask(id)
                 val photo = if (task.hasPhoto) repository.getTaskPhoto(id) else null
                 task to photo
             }
                 .onSuccess { (task, photo) ->
+                    hasLoaded = true
                     taskLoaded = true
                     _uiState.update { it.copy(task = task, evidenceBytes = photo, isLoading = false) }
                 }

@@ -7,9 +7,12 @@ import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.team12kotlin.juggle.BuildConfig
+import kotlinx.coroutines.withTimeout
+
+private const val GOOGLE_SIGN_IN_TIMEOUT_MS = 20_000L
 
 // Taken from https://firebase.google.com/docs/auth/android/google-signin
-suspend fun requestGoogleIdToken(context: Context): String {
+suspend fun requestGoogleIdToken(context: Context): String = withTimeout(GOOGLE_SIGN_IN_TIMEOUT_MS) {
     val credentialManager = CredentialManager.create(context)
 
     val result = try {
@@ -22,7 +25,7 @@ suspend fun requestGoogleIdToken(context: Context): String {
     if (credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
         error("Unexpected credential type: ${credential.type}")
     }
-    return GoogleIdTokenCredential.createFrom(credential.data).idToken
+    GoogleIdTokenCredential.createFrom(credential.data).idToken
 }
 
 private fun googleIdRequest(authorizedAccountsOnly: Boolean): GetCredentialRequest =

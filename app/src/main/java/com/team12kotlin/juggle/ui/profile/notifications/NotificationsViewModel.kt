@@ -22,7 +22,7 @@ class NotificationsViewModel(
     private val notificationRepository: NotificationRepository = Dependencies.notificationRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(NotificationsUiState())
+    private val _uiState = MutableStateFlow(NotificationsUiState(isLoading = true))
     val uiState: StateFlow<NotificationsUiState> = _uiState.asStateFlow()
 
     init {
