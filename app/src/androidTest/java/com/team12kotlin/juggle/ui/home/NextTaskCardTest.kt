@@ -141,9 +141,7 @@ class NextTaskCardTest {
     fun sectionShowsTheSharedErrorCard() {
         setContent { NextTaskSection(state = NextTaskUiState.Error) }
 
-        composeRule
-            .onNodeWithText("An error occurred while loading the resource. Try again later.")
-            .assertIsDisplayed()
+        composeRule.onNodeWithText("Couldn't load the next task").assertIsDisplayed()
     }
 
     @Test
