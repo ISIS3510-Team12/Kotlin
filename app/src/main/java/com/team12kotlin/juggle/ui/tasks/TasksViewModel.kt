@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.ui.utils.OFFLINE_MESSAGE
 import com.team12kotlin.juggle.ui.utils.toUserMessage
 
 data class DrawerItem(
@@ -71,8 +72,9 @@ class TasksViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
 
-            val groupsResult = runCatching { groupRepository.getGroups() }
-            val groups = groupsResult.getOrDefault(emptyList())
+            val groupsResult = runCatching { groupRepository.getGroupsCached() }
+            val cachedGroups = groupsResult.getOrNull()
+            val groups = cachedGroups?.data.orEmpty()
             val selectedId = groups.firstOrNull { it.id == _uiState.value.selectedGroupId }?.id
                 ?: groups.firstOrNull()?.id
 
@@ -93,7 +95,11 @@ class TasksViewModel(
                     groups = drawerItems,
                     selectedGroupId = selectedId,
                     currentGroup = drawerItems.firstOrNull { item -> item.selected }?.name ?: it.currentGroup,
-                    errorMessage = groupsResult.exceptionOrNull()?.toUserMessage()
+                    errorMessage = when {
+                        groupsResult.isFailure -> groupsResult.exceptionOrNull()?.toUserMessage()
+                        cachedGroups?.isCacheMiss == true -> OFFLINE_MESSAGE
+                        else -> null
+                    }
                 )
             }
 
@@ -112,21 +118,29 @@ class TasksViewModel(
             _uiState.update { it.copy(isLoading = showLoading, errorMessage = null) }
 
             val (ownResult, groupResult) = coroutineScope {
-                val own = async { runCatching { repository.getOwnTasks(groupId) } }
-                val group = async { runCatching { repository.getGroupTasks(groupId) } }
+                val own = async { runCatching { repository.getOwnTasksCached(groupId) } }
+                val group = async { runCatching { repository.getGroupTasksCached(groupId) } }
                 own.await() to group.await()
             }
 
             val error = ownResult.exceptionOrNull() ?: groupResult.exceptionOrNull()
             if (error is CancellationException) throw error
 
+            val cachedOwnTasks = ownResult.getOrNull()
+            val cachedGroupTasks = groupResult.getOrNull()
+
             hasLoaded = true
             _uiState.update {
                 it.copy(
-                    ownTasks = ownResult.getOrDefault(it.ownTasks),
-                    groupTasks = groupResult.getOrDefault(it.groupTasks),
+                    ownTasks = cachedOwnTasks?.data ?: it.ownTasks,
+                    groupTasks = cachedGroupTasks?.data ?: it.groupTasks,
                     isLoading = false,
-                    errorMessage = error?.toUserMessage()
+                    errorMessage = when {
+                        error != null -> error.toUserMessage()
+                        cachedOwnTasks?.isCacheMiss == true -> OFFLINE_MESSAGE
+                        cachedGroupTasks?.isCacheMiss == true -> OFFLINE_MESSAGE
+                        else -> null
+                    }
                 )
             }
         }

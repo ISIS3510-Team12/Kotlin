@@ -7,6 +7,9 @@ import okio.IOException
 
 sealed interface CacheResult<out T> {
     val data: T
+
+    val isCacheMiss: Boolean
+        get() = this is Stale && lastSyncedAt == null
     data class Fresh<T>(override val data: T): CacheResult<T>
     data class Stale<T>(override val data: T, val lastSyncedAt: Long?) : CacheResult<T>
 }

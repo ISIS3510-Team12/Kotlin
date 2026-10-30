@@ -3,6 +3,8 @@ package com.team12kotlin.juggle.ui.utils
 import retrofit2.HttpException
 import java.io.IOException
 
+val OFFLINE_MESSAGE: String = IOException().toUserMessage()
+
 fun Throwable.toUserMessage(): String = when (this) {
     is IOException ->
         "Couldn't reach Juggle. Check your connection."

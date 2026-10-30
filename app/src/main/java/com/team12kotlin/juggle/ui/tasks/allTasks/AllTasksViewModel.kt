@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.utils.OFFLINE_MESSAGE
 import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,17 +43,18 @@ class AllTasksViewModel(
 
             val filter = selectedFilter()
             runCatching {
-                repository.getAllTasks(
+                repository.getAllTasksCached(
                     dueWithinDays = if (filter == AllTasksFilter.DUE_SOON) DUE_SOON_DAYS else null,
                     mine = filter == AllTasksFilter.ASSIGNED_TO_ME,
                     priority = filter == AllTasksFilter.URGENT
                 )
             }
-                .onSuccess { tasks ->
+                .onSuccess { result ->
                     _uiState.update {
                         it.copy(
-                            tasks = tasks,
-                            isLoading = false
+                            tasks = result.data,
+                            isLoading = false,
+                            errorMessage = if (result.isCacheMiss) OFFLINE_MESSAGE else null
                         )
                     }
                 }

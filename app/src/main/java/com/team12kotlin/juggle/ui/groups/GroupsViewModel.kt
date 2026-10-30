@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.ui.dto.Group
+import com.team12kotlin.juggle.ui.utils.OFFLINE_MESSAGE
 import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,13 +45,14 @@ class GroupsViewModel(
     fun loadGroups() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
-            runCatching { groupRepository.getGroups() }
-                .onSuccess { groups ->
+            runCatching { groupRepository.getGroupsCached() }
+                .onSuccess { result ->
                     hasLoaded = true
                     _uiState.update {
                         it.copy(
-                            groups = groups,
-                            isLoading = false
+                            groups = result.data,
+                            isLoading = false,
+                            errorMessage = if (result.isCacheMiss) OFFLINE_MESSAGE else null
                         )
                     }
                 }
