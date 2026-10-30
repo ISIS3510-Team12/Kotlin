@@ -126,7 +126,7 @@ private fun SettingsContent(
                     }
                     SettingsItem(
                         title = "Shake detector enabled",
-                        supportingText = "Shake phone to delete fields on forms",
+                        supportingText = "Shake phone to reset fields on forms",
                         onClick = { onShakeChange(!uiState.shakeEnabled) }
                     ) {
                         Switch(
