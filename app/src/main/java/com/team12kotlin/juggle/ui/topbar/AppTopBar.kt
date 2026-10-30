@@ -27,6 +27,7 @@ import com.composables.icons.materialsymbols.outlinedfilled.Groups
 import com.team12kotlin.juggle.R
 import com.team12kotlin.juggle.data.connectivity.ConnectivityObserver
 import com.team12kotlin.juggle.ui.components.OfflineBanner
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -49,6 +50,8 @@ fun AppTopBar(
     val isOnline by connectivityObserver.isOnline
         .map<Boolean, Boolean?> { it }
         .collectAsStateWithLifecycle(initialValue = null)
+
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::refresh)
 
     AppTopBarContent(
         modifier = modifier,

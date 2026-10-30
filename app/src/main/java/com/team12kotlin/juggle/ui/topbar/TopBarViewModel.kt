@@ -23,22 +23,32 @@ class TopBarViewModel(
     val uiState: StateFlow<TopBarUiState> = _uiState.asStateFlow()
 
     init {
-        fetchUserInitial()
+        refresh()
     }
 
-    private fun fetchUserInitial() {
+    fun refresh() {
+        cachedInitial()?.let { initial ->
+            _uiState.update { it.copy(userInitial = initial) }
+        }
         viewModelScope.launch {
-            try {
-                val user = userRepository.getCurrentUser()
-                val initial = user.firstName.firstOrNull()?.uppercaseChar()?.toString()
-                    ?: user.displayName.firstOrNull()?.uppercaseChar()?.toString()
-                    ?: "?"
-                _uiState.update { it.copy(userInitial = initial) }
-            } catch (e: Exception) {
-                // Mantener el valor vacío si falla
-            }
+            runCatching { userRepository.getCurrentUser() }
+                .onSuccess { user ->
+                    val initial = user.firstName.firstOrNull()?.uppercaseChar()?.toString()
+                        ?: user.displayName.firstOrNull()?.uppercaseChar()?.toString()
+                        ?: "?"
+                    _uiState.update { it.copy(userInitial = initial) }
+                }
         }
     }
+
+    private fun cachedInitial(): String? =
+        Dependencies.authRepository.currentUser
+            ?.displayName
+            ?.trim()
+            ?.firstOrNull()
+            ?.uppercaseChar()
+            ?.toString()
+            ?.takeIf { it.isNotBlank() }
 
     fun setUserInitial(initial: String) {
         _uiState.update { it.copy(userInitial = initial) }
