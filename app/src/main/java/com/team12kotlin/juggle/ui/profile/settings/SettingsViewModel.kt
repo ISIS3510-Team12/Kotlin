@@ -93,6 +93,7 @@ class SettingsViewModel(
         ScheduledReminderScheduler.cancel(context)
         reminderStore.clear()
         LastSync.clear()
+        viewModelScope.launch { Dependencies.evidenceCache.clear() }
         viewModelScope.launch { GeofenceManager.clear(context) }
         authRepository.signOut()
         onSignedOut()

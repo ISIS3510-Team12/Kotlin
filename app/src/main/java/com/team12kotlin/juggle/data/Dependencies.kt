@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.team12kotlin.juggle.BuildConfig
 import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
+import com.team12kotlin.juggle.data.local.EvidenceCache
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.mappers.GroupCacheMapper
 import com.team12kotlin.juggle.data.local.mappers.ProjectCacheMapper
@@ -86,6 +87,8 @@ object Dependencies {
             .build()
     }
 
+    val evidenceCache: EvidenceCache by lazy { EvidenceCache(appContext) }
+
     private val networkFirstCache: NetworkFirstCache by lazy {
         NetworkFirstCache(database, database.cachedMetadataDao())
     }
@@ -101,6 +104,7 @@ object Dependencies {
             database.cachedTaskDao(),
             taskCacheMapper,
             networkFirstCache,
+            evidenceCache,
             authRepository.currentUserId()
         )
     }

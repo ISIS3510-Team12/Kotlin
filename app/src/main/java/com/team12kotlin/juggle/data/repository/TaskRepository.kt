@@ -1,6 +1,7 @@
 package com.team12kotlin.juggle.data.repository
 
 import com.team12kotlin.juggle.data.local.CacheResult
+import com.team12kotlin.juggle.data.local.EvidenceCache
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.dao.CachedTaskDao
 import com.team12kotlin.juggle.data.local.mappers.TaskCacheMapper
@@ -28,6 +29,7 @@ class TaskRepository(
     private val taskDao: CachedTaskDao,
     private val mapper: TaskCacheMapper,
     private val cache: NetworkFirstCache,
+    private val evidenceCache: EvidenceCache,
     private val userId: String
 ) {
     suspend fun getTasks(): List<Task> =
@@ -125,13 +127,16 @@ class TaskRepository(
         api.getTodaySummary(start, end)
 
     suspend fun getTask(taskId: Int): Task {
-        
-        return try {
+        val task = try {
             api.getTask(taskId)
         } catch (e: IOException) {
             taskDao.getById(userId, taskId).let { mapper.toDomainOrNull(it) } ?:
             throw e
         }
+        if (!task.hasPhoto) {
+            withContext(Dispatchers.IO) { evidenceCache.remove(taskId) }
+        }
+        return task
     }
 
     suspend fun createTask(request: TaskCreateRequest): Task =
@@ -149,17 +154,21 @@ class TaskRepository(
     suspend fun deleteTask(taskId: Int) {
         api.deleteTask(taskId)
         taskDao.deleteTask(userId, taskId)
+        withContext(Dispatchers.IO) { evidenceCache.remove(taskId) }
     }
 
     suspend fun uploadTaskPhoto(taskId: Int, content: ByteArray, mimeType: String) {
         val body = content.toRequestBody(mimeType.toMediaTypeOrNull())
         val part = MultipartBody.Part.createFormData("file", "evidence", body)
         api.uploadTaskPhoto(taskId, part)
+        withContext(Dispatchers.IO) { evidenceCache.put(taskId, content) }
         refreshTask(taskId)
     }
 
     suspend fun getTaskPhoto(taskId: Int): ByteArray? = withContext(Dispatchers.IO) {
-        runCatching { api.getTaskPhoto(taskId).bytes() }.getOrNull()
+        runCatching { api.getTaskPhoto(taskId).bytes() }
+            .onSuccess { evidenceCache.put(taskId, it) }
+            .getOrElse { evidenceCache.get(taskId) }
     }
 
     // --- Reminders -------------------------------------------------------
