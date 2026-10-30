@@ -32,7 +32,6 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Account_circle
 import com.composables.icons.materialsymbols.outlined.Notifications
 import com.composables.icons.materialsymbols.outlined.Settings
-import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.components.BackTopBar
@@ -56,7 +55,6 @@ fun ProfileScreen(
     ProfileContent(
         modifier = modifier,
         uiState = uiState,
-        onRetry = viewModel::loadUser,
         goBack = goBack,
         onProfileInformationClick = onProfileInformationClick,
         onNotificationsClick = onNotificationsClick,
@@ -69,7 +67,6 @@ fun ProfileScreen(
 private fun ProfileContent(
     uiState: ProfileUiState,
     modifier: Modifier = Modifier,
-    onRetry: () -> Unit = {},
     goBack: () -> Unit = {},
     onProfileInformationClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
@@ -89,42 +86,6 @@ private fun ProfileContent(
                     .padding(start = 26.dp, top = 16.dp, end = 26.dp),
                 verticalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                val identityKnown = uiState.displayName.isNotBlank()
-                if (identityKnown) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        TextMonogram(
-                            text = uiState.initial,
-                            size = 56.dp,
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Column {
-                            Text(
-                                text = uiState.displayName,
-                                style = MaterialTheme.typography.displaySmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            if (uiState.subtitle.isNotBlank()) {
-                                Text(
-                                    text = uiState.subtitle,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    uiState.errorMessage?.let { message ->
-                        ErrorCard(message = message, onRetry = onRetry)
-                    }
-                }
                 ProfileMenuItem(
                     icon = MaterialSymbols.Outlined.Account_circle,
                     label = "Profile Information",
