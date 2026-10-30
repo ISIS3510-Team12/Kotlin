@@ -218,8 +218,13 @@ private fun EditGroupContent(
                     }
                 }
 
-                errorMessage?.let { message ->
-                    ErrorCard(message = message)
+                if (!isOffline) {
+                    errorMessage?.let { message ->
+                        ErrorCard(
+                            message = message,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
 
                 OfflineActionNotice(isOffline = isOffline)

@@ -32,6 +32,7 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val firstGroupId: Int? = null,
+    val dataLoaded: Boolean = false,
 ) {
     val taskCount: Int get() = upcomingTasks.size
     val notificationCount: Int get() = notifications.size
@@ -91,7 +92,8 @@ class HomeViewModel : ViewModel() {
                             upcomingTasks = loaded.tasks,
                             notifications = loaded.notifications.map { item -> item.toNotification() },
                             firstGroupId = loaded.firstGroupId,
-                            isLoading = false
+                            isLoading = false,
+                            dataLoaded = true
                         )
                     }
                 }

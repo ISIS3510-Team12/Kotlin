@@ -58,6 +58,8 @@ import com.composables.icons.materialsymbols.outlined.Edit
 import com.composables.icons.materialsymbols.outlined.Info
 import com.composables.icons.materialsymbols.outlined.Star
 import com.composables.icons.materialsymbols.outlined.Stars
+import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.components.OfflineActionNotice
@@ -79,7 +81,9 @@ fun ViewTaskScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.ViewTask, uiState.isLoading)
-    val isOffline = rememberIsOnline() == false
+    val isOnline = rememberIsOnline()
+    val isOffline = isOnline == false
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadTask)
 
     BackHandler(enabled = uiState.isFabMenuExpanded) {
         viewModel.onFabMenuDismiss()
@@ -100,6 +104,20 @@ fun ViewTaskScreen(
             if (uiState.isLoading && uiState.task.id == 0) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
+                }
+                return@Scaffold
+            }
+            if (uiState.task.id == 0) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(innerPadding)
+                        .padding(horizontal = 26.dp, vertical = 10.dp)
+                ) {
+                    ErrorCard(
+                        message = uiState.errorMessage ?: "Couldn't load this task.",
+                        onRetry = viewModel::loadTask
+                    )
                 }
                 return@Scaffold
             }
@@ -169,6 +187,7 @@ fun ViewTaskScreen(
                     )
                     TextButton(
                         onClick = { onEditTask(task.id) },
+                        enabled = !isOffline,
                         contentPadding = PaddingValues(horizontal = 12.dp)
                     ) {
                         Text("EDIT")

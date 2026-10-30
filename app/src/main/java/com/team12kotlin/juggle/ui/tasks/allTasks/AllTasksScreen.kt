@@ -70,7 +70,8 @@ fun AllTasksScreen(
                 uiState.errorMessage?.let { message ->
                     ErrorCard(
                         message = message,
-                        onRetry = viewModel::loadTasks
+                        onRetry = viewModel::loadTasks,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
                 ButtonGroupFilter(

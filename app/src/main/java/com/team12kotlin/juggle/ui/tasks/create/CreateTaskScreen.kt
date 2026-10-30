@@ -227,8 +227,10 @@ internal fun CreateTaskContent(
                     )
                 }
 
-                uiState.errorMessage?.let { message ->
-                    ErrorCard(message = message)
+                if (!isOffline) {
+                    uiState.errorMessage?.let { message ->
+                        ErrorCard(message = message, modifier = contentPadding)
+                    }
                 }
 
                 OfflineActionNotice(

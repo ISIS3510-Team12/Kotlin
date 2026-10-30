@@ -55,7 +55,7 @@ class LocationRemindersViewModel(
         loadLocation()
     }
 
-    private fun loadLocation() {
+    fun loadLocation() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching { locationRepository.getLocation() }

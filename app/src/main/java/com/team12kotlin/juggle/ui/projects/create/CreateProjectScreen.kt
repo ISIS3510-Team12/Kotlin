@@ -143,9 +143,11 @@ internal fun CreateProjectContent(
                 Text(if (uiState.isSaving) "Creating..." else "Create project")
             }
 
-            uiState.errorMessage?.let { message ->
-                Spacer(modifier = Modifier.height(8.dp))
-                ErrorCard(message = message)
+            if (!isOffline) {
+                uiState.errorMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ErrorCard(message = message)
+                }
             }
         }
     }

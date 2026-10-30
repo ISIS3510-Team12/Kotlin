@@ -74,6 +74,7 @@ fun TasksScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Tasks, uiState.isLoading)
     val isOnline = rememberIsOnline()
+    val isOffline = isOnline == false
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadGroups)
 
     LifecycleResumeEffect(Unit) {
@@ -118,28 +119,30 @@ fun TasksScreen(
                 )
             },
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        viewModel.onCreateTask()
-                        uiState.selectedGroupId?.let(onNavigateToCreateTask)
-                    },
-                    modifier = Modifier.padding(bottom = 104.dp),
-                    icon = {
-                        Icon(
-                            MaterialSymbols.Outlined.Add,
-                            contentDescription = "Add",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    },
-                    text = {
-                        Text(
-                            text = "Create Task",
-                            fontSize = 16.sp,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    },
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                if (uiState.selectedGroupId != null) {
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            viewModel.onCreateTask()
+                            uiState.selectedGroupId?.let(onNavigateToCreateTask)
+                        },
+                        modifier = Modifier.padding(bottom = 104.dp),
+                        icon = {
+                            Icon(
+                                MaterialSymbols.Outlined.Add,
+                                contentDescription = "Add",
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "Create Task",
+                                fontSize = 16.sp,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        },
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                }
             }
         ) { innerPadding ->
             LoadingContent(isLoading = uiState.isLoading) {
@@ -151,37 +154,43 @@ fun TasksScreen(
                     uiState.errorMessage?.let { message ->
                         ErrorCard(
                             message = message,
-                            onRetry = viewModel::loadGroups
+                            onRetry = viewModel::loadGroups,
+                            modifier = Modifier.padding(horizontal = 10.dp)
                         )
                     }
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column {
-                            Text(
-                                style = MaterialTheme.typography.headlineMedium, text = "Current Group"
-                            )
-                            Text(
-                                style = MaterialTheme.typography.headlineSmall, text = uiState.currentGroup
-                            )
-                        }
-                        TextButton(
-                            onClick = {
-                                viewModel.onEditGroupClick()
-                                uiState.selectedGroupId?.let(onEditGroupClick)
-                            },
-
+                    if (uiState.selectedGroupId != null) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Icon(
-                                imageVector = MaterialSymbols.OutlinedFilled.Edit,
-                                contentDescription = "Edit group"
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Edit group")
+                            Column {
+                                Text(
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    text = "Current Group"
+                                )
+                                Text(
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    text = uiState.currentGroup
+                                )
+                            }
+                            TextButton(
+                                onClick = {
+                                    viewModel.onEditGroupClick()
+                                    uiState.selectedGroupId?.let(onEditGroupClick)
+                                },
+                                enabled = !isOffline,
+
+                            ) {
+                                Icon(
+                                    imageVector = MaterialSymbols.OutlinedFilled.Edit,
+                                    contentDescription = "Edit group"
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Edit group")
+                            }
                         }
                     }
                     SearchBar(
@@ -204,22 +213,29 @@ fun TasksScreen(
                         },
                         modifier = Modifier.padding(20.dp).fillMaxWidth()
                     )
-                    TasksSection(
-                        title = "Your pending tasks",
-                        tasks = uiState.filteredOwnTasks,
-                        onTaskClick = {
-                            viewModel.onTaskClick(it)
-                            onTaskClick(it)
-                        }
-                    )
-                    TasksSection(
-                        title = "Pending group tasks",
-                        tasks = uiState.filteredGroupTasks,
-                        onTaskClick = {
-                            viewModel.onTaskClick(it)
-                            onTaskClick(it)
-                        }
-                    )
+                    val couldNotLoad = uiState.errorMessage != null
+                    val hasAnyTasks =
+                        uiState.filteredOwnTasks.isNotEmpty() || uiState.filteredGroupTasks.isNotEmpty()
+                    if (hasAnyTasks || !couldNotLoad) {
+                        TasksSection(
+                            title = "Your pending tasks",
+                            tasks = uiState.filteredOwnTasks,
+                            emptyMessage = "No pending tasks.",
+                            onTaskClick = {
+                                viewModel.onTaskClick(it)
+                                onTaskClick(it)
+                            }
+                        )
+                        TasksSection(
+                            title = "Pending group tasks",
+                            tasks = uiState.filteredGroupTasks,
+                            emptyMessage = "No pending group tasks.",
+                            onTaskClick = {
+                                viewModel.onTaskClick(it)
+                                onTaskClick(it)
+                            }
+                        )
+                    }
                     Spacer(modifier = Modifier.height(136.dp))
                 }
             }
@@ -231,6 +247,7 @@ fun TasksScreen(
 private fun TasksSection(
     title: String,
     tasks: List<Task>,
+    emptyMessage: String,
     onTaskClick: (Task) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -240,6 +257,14 @@ private fun TasksSection(
             modifier = Modifier.padding(horizontal = 10.dp),
             style = MaterialTheme.typography.headlineMedium
         )
+        if (tasks.isEmpty()) {
+            Text(
+                text = emptyMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            )
+        }
         tasks.forEach { task ->
             TaskCard(
                 task = task,

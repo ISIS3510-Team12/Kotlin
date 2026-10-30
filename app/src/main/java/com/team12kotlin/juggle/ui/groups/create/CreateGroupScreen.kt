@@ -190,8 +190,13 @@ fun CreateGroupContent(
                     }
                 }
 
-                uiState.errorMessage?.let { message ->
-                    ErrorCard(message = message)
+                if (!isOffline) {
+                    uiState.errorMessage?.let { message ->
+                        ErrorCard(
+                            message = message,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
 
                 OfflineActionNotice(isOffline = isOffline)

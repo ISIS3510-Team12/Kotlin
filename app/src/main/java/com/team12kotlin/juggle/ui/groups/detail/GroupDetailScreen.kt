@@ -79,6 +79,7 @@ fun GroupDetailScreen(
         relatedProjects = uiState.relatedProjects,
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
+        isOffline = isOnline == false,
         onBackClick = onBackClick,
         onCreateProjectClick = onCreateProjectClick,
         onProjectClick = onProjectClick,
@@ -95,6 +96,7 @@ private fun GroupDetailContent(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     errorMessage: String? = null,
+    isOffline: Boolean = false,
     onBackClick: () -> Unit = {},
     onCreateProjectClick: () -> Unit = {},
     onProjectClick: (Project) -> Unit = {},
@@ -107,7 +109,7 @@ private fun GroupDetailContent(
             BackTopBar(title = "Group detail", onBack = onBackClick)
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            if (!isOffline) ExtendedFloatingActionButton(
                 onClick = onCreateProjectClick,
                 modifier = Modifier.padding(bottom = 104.dp),
                 icon = {
@@ -189,6 +191,7 @@ private fun GroupDetailContent(
 
                 OutlinedButton(
                     onClick = onLeaveGroup,
+                    enabled = !isOffline,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Leave group")

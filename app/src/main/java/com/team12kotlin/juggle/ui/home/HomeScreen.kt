@@ -175,13 +175,13 @@ fun HomeScreen (
                             OverviewCard(
                                 icon = MaterialSymbols.RoundedFilled.List_alt,
                                 title = "Tasks",
-                                count = uiState.taskCount,
+                                count = uiState.taskCount.takeIf { uiState.dataLoaded },
                                 modifier = Modifier.weight(1f),
                             )
                             OverviewCard(
                                 icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
                                 title = "Notifications",
-                                count = uiState.notificationCount,
+                                count = uiState.notificationCount.takeIf { uiState.dataLoaded },
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -234,7 +234,7 @@ fun HomeScreen (
                                     onClick = { onTaskClick(task) }
                                 )
                             }
-                        } else {
+                        } else if (uiState.dataLoaded) {
                             Text(
                                 text = "There are no upcoming tasks for today!",
                                 style = MaterialTheme.typography.headlineSmall,
@@ -251,7 +251,7 @@ fun HomeScreen (
                                     onClick = { onNotificationClick(notification) }
                                 )
                             }
-                        } else {
+                        } else if (uiState.dataLoaded) {
                             Text(
                                 text = "There are no notifications today!",
                                 style = MaterialTheme.typography.headlineSmall,

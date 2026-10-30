@@ -36,8 +36,9 @@ class AuthRepository(
         user.updateProfile(request).await()
         return firebaseAuth.currentUser
     }
-    
+
     fun signOut() {
         firebaseAuth.signOut()
     }
+
 }

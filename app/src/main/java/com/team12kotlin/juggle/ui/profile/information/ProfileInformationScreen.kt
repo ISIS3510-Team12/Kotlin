@@ -27,6 +27,10 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Mail
 import com.composables.icons.materialsymbols.outlined.Person
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import androidx.compose.foundation.layout.Box
+import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -39,10 +43,12 @@ fun ProfileInformationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.ProfileInformation, uiState.isLoading)
+    RefreshOnReconnect(isOnline = rememberIsOnline(), onReconnect = viewModel::loadUser)
 
     ProfileInformationContent(
         modifier = modifier,
         uiState = uiState,
+        onRetry = viewModel::loadUser,
         goBack = goBack
     )
 }
@@ -52,6 +58,7 @@ fun ProfileInformationScreen(
 private fun ProfileInformationContent(
     uiState: ProfileInformationUiState,
     modifier: Modifier = Modifier,
+    onRetry: () -> Unit = {},
     goBack: () -> Unit = {}
 ) {
     Scaffold(
@@ -61,6 +68,19 @@ private fun ProfileInformationContent(
         }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {
+            if (uiState.email.isBlank()) {
+                uiState.errorMessage?.let { message ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        ErrorCard(message = message, onRetry = onRetry)
+                    }
+                }
+                return@LoadingContent
+            }
             Column(
                 modifier = Modifier
                     .fillMaxSize()

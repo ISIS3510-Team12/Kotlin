@@ -32,7 +32,7 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 fun OverviewCard(
     icon: ImageVector,
     title: String,
-    count: Int,
+    count: Int?,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -67,7 +67,7 @@ fun OverviewCard(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "$count",
+                        text = count?.toString() ?: "\u2013",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
