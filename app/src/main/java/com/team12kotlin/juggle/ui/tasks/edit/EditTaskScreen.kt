@@ -37,6 +37,7 @@ import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.components.ShakeToReset
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.tasks.create.AssignedMemberChip
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
@@ -67,6 +68,11 @@ fun EditTaskScreen(
             onTaskEdited()
         }
     }
+
+    ShakeToReset(
+        enabled = !uiState.isLoading,
+        onReset = viewModel::onResetForm
+    )
 
     Scaffold(
         modifier = modifier,
