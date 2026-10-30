@@ -2,13 +2,17 @@ package com.team12kotlin.juggle.ui.profile.settings
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.local.LastSync
+import com.team12kotlin.juggle.reminders.GeofenceManager
 import com.team12kotlin.juggle.reminders.ScheduledReminderScheduler
 import com.team12kotlin.juggle.reminders.ScheduledReminderStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 data class SettingsUiState(
     val soundAndVibrationEnabled: Boolean = true,
@@ -85,6 +89,11 @@ class SettingsViewModel(
     }
 
     fun onSignOut(onSignedOut: () -> Unit) {
+        val context = getApplication<Application>().applicationContext
+        ScheduledReminderScheduler.cancel(context)
+        reminderStore.clear()
+        LastSync.clear()
+        viewModelScope.launch { GeofenceManager.clear(context) }
         authRepository.signOut()
         onSignedOut()
     }

@@ -35,6 +35,8 @@ import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -93,6 +95,8 @@ internal fun CreateTaskContent(
     onRelatedTaskToggled: (RelatedTask) -> Unit = {},
     onCreateClick: () -> Unit = {},
 ) {
+    val isOffline = rememberIsOnline() == false
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -223,13 +227,20 @@ internal fun CreateTaskContent(
                     )
                 }
 
-                uiState.errorMessage?.let { message ->
-                    ErrorCard(message = message)
+                if (!isOffline) {
+                    uiState.errorMessage?.let { message ->
+                        ErrorCard(message = message, modifier = contentPadding)
+                    }
                 }
+
+                OfflineActionNotice(
+                    isOffline = isOffline,
+                    modifier = contentPadding
+                )
 
                 Button(
                     onClick = onCreateClick,
-                    enabled = uiState.canCreate,
+                    enabled = uiState.canCreate && !isOffline,
                     modifier = contentPadding
                 ) {
                     Icon(imageVector = MaterialSymbols.Outlined.Add, contentDescription = null)

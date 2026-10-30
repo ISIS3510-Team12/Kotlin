@@ -6,14 +6,21 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.AuthRepository
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.NotificationRepository
+import com.team12kotlin.juggle.data.repository.SmartRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
+import com.team12kotlin.juggle.ui.dto.NextTask
+import com.team12kotlin.juggle.ui.dto.NextTaskFlag
+import com.team12kotlin.juggle.ui.dto.NextTaskResponse
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.User
+import com.team12kotlin.juggle.ui.dto.toFlag
 import com.team12kotlin.juggle.ui.dto.toNotification
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +28,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+sealed interface NextTaskUiState {
+    data object Loading : NextTaskUiState
+    data class Content(val task: NextTask, val flag: NextTaskFlag?) : NextTaskUiState
+    data class Empty(val message: String) : NextTaskUiState
+    data object Error : NextTaskUiState
+}
+
+internal const val NEXT_TASK_EMPTY_MESSAGE = "You have no pending tasks in the next 14 days."
+
+internal fun reduceNextTask(previous: NextTaskUiState, result: Result<NextTaskResponse>): NextTaskUiState {
+    val response = result.getOrNull()
+        ?: return if (previous is NextTaskUiState.Loading) NextTaskUiState.Error else previous
+
+    val task = response.task
+    return if (task != null && task.taskId > 0) {
+        NextTaskUiState.Content(task = task, flag = task.toFlag())
+    } else {
+        NextTaskUiState.Empty(message = response.message?.takeIf { it.isNotBlank() } ?: NEXT_TASK_EMPTY_MESSAGE)
+    }
+}
 
 data class HomeUiState(
     val user: User = User(userId = "", firstName = ""),
@@ -31,6 +59,8 @@ data class HomeUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val firstGroupId: Int? = null,
+    val dataLoaded: Boolean = false,
+    val nextTask: NextTaskUiState = NextTaskUiState.Loading
 ) {
     val taskCount: Int get() = upcomingTasks.size
     val notificationCount: Int get() = notifications.size
@@ -43,11 +73,13 @@ class HomeViewModel : ViewModel() {
     private val taskRepository: TaskRepository = Dependencies.taskRepository
     private val notificationRepository: NotificationRepository = Dependencies.notificationRepository
     private val groupRepository: GroupRepository = Dependencies.groupRepository
+    private val smartRepository: SmartRepository = Dependencies.smartRepository
 
     private val _uiState = MutableStateFlow(HomeUiState(user = currentFirebaseUser(), isLoading = true))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private var hasLoaded = false
+    private var nextTaskJob: Job? = null
 
     fun onTabSelected(tab: Int) {
         _uiState.update { it.copy(selectedTab = tab) }
@@ -61,7 +93,18 @@ class HomeViewModel : ViewModel() {
         _uiState.update { it.copy(showBottomSheet = false) }
     }
 
+    fun loadNextTask() {
+        nextTaskJob?.cancel()
+        nextTaskJob = viewModelScope.launch {
+            val result = runCatching { smartRepository.getNextTask() }
+            result.exceptionOrNull()?.let { if (it is CancellationException) throw it }
+            _uiState.update { it.copy(nextTask = reduceNextTask(it.nextTask, result)) }
+        }
+    }
+
     fun load() {
+        // Separate from the calls below so a failure here never affects the rest of Home
+        loadNextTask()
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
 
@@ -90,13 +133,14 @@ class HomeViewModel : ViewModel() {
                             upcomingTasks = loaded.tasks,
                             notifications = loaded.notifications.map { item -> item.toNotification() },
                             firstGroupId = loaded.firstGroupId,
-                            isLoading = false
+                            isLoading = false,
+                            dataLoaded = true
                         )
                     }
                 }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }

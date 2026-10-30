@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -84,7 +85,7 @@ class EditGroupViewModel(
                 .onFailure { error ->
                     if (error is CancellationException) throw error
                     loadedGroupId = null
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }
@@ -125,7 +126,7 @@ class EditGroupViewModel(
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }
@@ -138,7 +139,7 @@ class EditGroupViewModel(
             runCatching {
                 groupRepository.updateGroup(state.groupId, state.name.trim(), state.description.trim())
             }.onFailure { error ->
-                _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 return@launch
             }
             val failed = state.candidates

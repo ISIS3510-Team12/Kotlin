@@ -1,8 +1,15 @@
 package com.team12kotlin.juggle.data
 
 import android.content.Context
+import androidx.room.Room
 import com.google.firebase.auth.FirebaseAuth
 import com.team12kotlin.juggle.BuildConfig
+import com.team12kotlin.juggle.data.local.AppDatabase
+import com.team12kotlin.juggle.data.local.CacheConverter
+import com.team12kotlin.juggle.data.local.NetworkFirstCache
+import com.team12kotlin.juggle.data.local.mappers.GroupCacheMapper
+import com.team12kotlin.juggle.data.local.mappers.ProjectCacheMapper
+import com.team12kotlin.juggle.data.local.mappers.TaskCacheMapper
 import com.team12kotlin.juggle.data.remote.AuthInterceptor
 import com.team12kotlin.juggle.data.remote.JuggleApi
 import com.team12kotlin.juggle.data.repository.AuthRepository
@@ -10,6 +17,7 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.LocationRepository
 import com.team12kotlin.juggle.data.repository.NotificationRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
+import com.team12kotlin.juggle.data.repository.SmartRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
@@ -22,6 +30,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 
 object Dependencies {
+
+    lateinit var appContext: Context
 
     private val firebaseAuth: FirebaseAuth by lazy {
         FirebaseAuth.getInstance().apply {
@@ -64,20 +74,64 @@ object Dependencies {
             .create(JuggleApi::class.java)
     }
 
+    private val cacheJson: Json by lazy {
+        Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        }
+    }
+
+    private val database: AppDatabase by lazy {
+        Room.databaseBuilder(appContext, AppDatabase::class.java, "juggle.db")
+            .build()
+    }
+
+    private val networkFirstCache: NetworkFirstCache by lazy {
+        NetworkFirstCache(database, database.cachedMetadataDao())
+    }
+
+    private val groupCacheMapper by lazy { GroupCacheMapper(cacheConverter) }
+    private val projectCacheMapper by lazy { ProjectCacheMapper() }
+    private val taskCacheMapper by lazy { TaskCacheMapper(cacheConverter) }
+
     val authRepository: AuthRepository by lazy { AuthRepository(firebaseAuth) }
-    val taskRepository: TaskRepository by lazy { TaskRepository(api) }
-    val groupRepository: GroupRepository by lazy { GroupRepository(api) }
-    val projectRepository: ProjectRepository by lazy { ProjectRepository(api) }
+    val taskRepository: TaskRepository by lazy {
+        TaskRepository(
+            api,
+            database.cachedTaskDao(),
+            taskCacheMapper,
+            networkFirstCache,
+            authRepository.currentUserId()
+        )
+    }
+    val groupRepository: GroupRepository by lazy {
+        GroupRepository(
+            api,
+            database.cachedGroupDao(),
+            database.cachedProjectDao(),
+            database.cachedTaskDao(),
+            groupCacheMapper,
+            networkFirstCache,
+            authRepository.currentUserId()
+            )
+    }
+    val projectRepository: ProjectRepository by lazy {
+        ProjectRepository(
+            api,
+            database.cachedProjectDao(),
+            projectCacheMapper,
+            networkFirstCache,
+            authRepository.currentUserId()
+        )
+    }
     val userRepository: UserRepository by lazy { UserRepository(api) }
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
     val telemetryRepository: TelemetryRepository by lazy { TelemetryRepository(api) }
-
-    private lateinit var appContext: Context
-
-    fun init(context: Context) {
-        appContext = context.applicationContext
-    }
-
+    val smartRepository: SmartRepository by lazy { SmartRepository(api) }
     val shakeEffectStore: ShakeEffectStore by lazy { ShakeEffectStore(appContext) }
+
+    val cacheConverter: CacheConverter by lazy {
+        CacheConverter(cacheJson)
+    }
 }

@@ -9,6 +9,7 @@ import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
 import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
 import com.team12kotlin.juggle.utils.toIsoDateTime
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -97,7 +98,7 @@ class CreateProjectViewModel(
                     _uiState.update { it.copy(isSaving = false, createdProjectId = project.id) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isSaving = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isSaving = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }

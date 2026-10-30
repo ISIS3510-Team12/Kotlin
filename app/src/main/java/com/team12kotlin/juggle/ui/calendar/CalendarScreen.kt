@@ -39,8 +39,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Chevron_left
 import com.composables.icons.materialsymbols.outlined.Chevron_right
+import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.User
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -62,14 +65,18 @@ fun CalendarScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.Calendar, uiState.isLoading)
+    val isOnline = rememberIsOnline()
+    RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::retry)
 
     CalendarContent(
         modifier = modifier,
         selectedDate = uiState.selectedDate,
         tasks = uiState.tasksForSelectedDate,
         isLoading = uiState.isLoading,
+        errorMessage = uiState.errorMessage,
         onProfileClick = onProfileClick,
         onDateSelected = viewModel::onDateSelected,
+        onRetry = viewModel::retry,
         onTaskClick = {
             viewModel.onTaskClick(it)
             onTaskClick(it)
@@ -83,8 +90,10 @@ private fun CalendarContent(
     tasks: List<Task>,
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
+    errorMessage: String? = null,
     onProfileClick: (NavigationDestination) -> Unit = {},
     onDateSelected: (LocalDate) -> Unit = {},
+    onRetry: () -> Unit = {},
     onTaskClick: (Task) -> Unit = {}
 ) {
     Scaffold(
@@ -108,6 +117,14 @@ private fun CalendarContent(
             if (isLoading) {
                 androidx.compose.material3.LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            errorMessage?.let { message ->
+                ErrorCard(
+                    message = message,
+                    onRetry = onRetry,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                 )
             }
 

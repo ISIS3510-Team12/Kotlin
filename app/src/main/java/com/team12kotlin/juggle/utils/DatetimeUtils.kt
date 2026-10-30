@@ -35,11 +35,10 @@ private val DUE_DATE_UI: DateTimeFormatter = DateTimeFormatter.ofPattern("MMM d"
 
 data class TaskDue(val text: String, val isOverdue: Boolean)
 
-fun taskDue(deadline: String?): TaskDue? {
+fun taskDue(deadline: String?, now: LocalDateTime = LocalDateTime.now()): TaskDue? {
     if (deadline.isNullOrBlank()) return null
 
     val parsed = parseDeadline(deadline) ?: return null
-    val now = LocalDateTime.now()
     if (parsed.isBefore(now)) return TaskDue("Overdue", true)
 
     val dueDate = parsed.toLocalDate()
@@ -54,6 +53,16 @@ fun taskDue(deadline: String?): TaskDue? {
     val hours = ChronoUnit.HOURS.between(now, parsed)
     val hourText = if (hours == 1L) "1 hour" else "$hours hours"
     return TaskDue("$dayLabel - $hourText left", false)
+}
+
+fun nextTaskMeta(groupName: String, dueAt: String?, now: LocalDateTime = LocalDateTime.now()): String {
+    val parsed = dueAt?.takeIf { it.isNotBlank() }?.let(::parseDeadline)
+    val due = when {
+        parsed == null -> null
+        parsed.isBefore(now) -> parsed.toLocalDate().format(DUE_DATE_UI)
+        else -> taskDue(dueAt, now)?.text
+    }
+    return listOfNotNull(groupName.takeIf { it.isNotBlank() }, due).joinToString("  ·  ")
 }
 
 fun parseDeadline(deadline: String): LocalDateTime? {

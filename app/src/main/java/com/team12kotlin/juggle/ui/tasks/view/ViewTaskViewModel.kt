@@ -8,6 +8,7 @@ import com.team12kotlin.juggle.ui.dto.RelatedTask
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,7 +72,7 @@ class ViewTaskViewModel(
                     _uiState.update { it.copy(task = task, evidenceBytes = photo, isLoading = false) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
+                    _uiState.update { it.copy(errorMessage = error.toUserMessage(), isLoading = false) }
                 }
         }
     }
@@ -114,7 +115,7 @@ class ViewTaskViewModel(
         viewModelScope.launch {
             runCatching { repository.setReminderEnabled(id, reminder.id, enabled) }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message) }
+                    _uiState.update { it.copy(errorMessage = error.toUserMessage()) }
                 }
         }
     }
@@ -135,7 +136,7 @@ class ViewTaskViewModel(
                     loadTask()
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message) }
+                    _uiState.update { it.copy(errorMessage = error.toUserMessage()) }
                 }
         }
     }
@@ -158,7 +159,7 @@ class ViewTaskViewModel(
             runCatching { repository.deleteTask(id) }
                 .onSuccess { taskDeleted = true }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message) }
+                    _uiState.update { it.copy(errorMessage = error.toUserMessage()) }
                 }
         }
     }

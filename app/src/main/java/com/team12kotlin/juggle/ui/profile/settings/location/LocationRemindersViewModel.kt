@@ -6,6 +6,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.LocationRepository
 import com.team12kotlin.juggle.ui.dto.MAX_NOTIFY_WITHIN_METERS
 import com.team12kotlin.juggle.ui.dto.UserLocation
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -54,7 +55,7 @@ class LocationRemindersViewModel(
         loadLocation()
     }
 
-    private fun loadLocation() {
+    fun loadLocation() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching { locationRepository.getLocation() }
@@ -73,7 +74,7 @@ class LocationRemindersViewModel(
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }
@@ -108,7 +109,7 @@ class LocationRemindersViewModel(
             }
                 .onSuccess { _uiState.update { it.copy(isLoading = false, saved = true) } }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }

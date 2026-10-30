@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.ui.profile.information
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,7 +45,17 @@ class ProfileInformationViewModel : ViewModel() {
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
+                    val cached = Dependencies.authRepository.currentUser
+                    val name = cached?.displayName.orEmpty().trim()
+                    _uiState.update {
+                        it.copy(
+                            firstName = it.firstName.ifBlank { name.substringBefore(' ') },
+                            lastName = it.lastName.ifBlank { name.substringAfter(' ', "") },
+                            email = it.email.ifBlank { cached?.email.orEmpty() },
+                            errorMessage = error.toUserMessage(),
+                            isLoading = false
+                        )
+                    }
                 }
         }
     }

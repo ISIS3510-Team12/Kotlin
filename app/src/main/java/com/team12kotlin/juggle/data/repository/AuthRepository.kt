@@ -12,6 +12,9 @@ class AuthRepository(
     val currentUser: FirebaseUser?
         get() = firebaseAuth.currentUser
 
+    fun currentUserId(): String =
+        currentUser?.uid ?: error("No active session")
+
     suspend fun signIn(email: String, password: String): FirebaseUser {
         val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
         return result.user ?: error("Sign in succeeded but returned no user")
@@ -36,8 +39,9 @@ class AuthRepository(
         user.updateProfile(request).await()
         return firebaseAuth.currentUser
     }
-    
+
     fun signOut() {
         firebaseAuth.signOut()
     }
+
 }

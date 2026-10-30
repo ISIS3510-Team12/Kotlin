@@ -12,7 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.ui.connectivity.IsOnlineProvider
 import com.team12kotlin.juggle.reminders.LocationReminderSync
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -74,6 +77,11 @@ fun AppRoot(
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
+    val startDestination = remember {
+        if (Dependencies.authRepository.currentUser != null) NavigationDestination.Home.route
+        else NavigationDestination.Onboarding.route
+    }
+
     // Make the bottom nav bar in sync with the screen in case of system back
     LaunchedEffect(currentRoute) {
         NavigationDestination.fromRoute(currentRoute)?.let {
@@ -81,6 +89,7 @@ fun AppRoot(
         }
     }
 
+    IsOnlineProvider {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         // Avoid the double top-bar in some devices
@@ -91,7 +100,7 @@ fun AppRoot(
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(
                 navController = navController,
-                startDestination = NavigationDestination.Onboarding.route,
+                startDestination = startDestination,
                 modifier = Modifier.fillMaxSize()
             ) {
                 composable(NavigationDestination.Onboarding.route) {
@@ -151,6 +160,11 @@ fun AppRoot(
                         onProfileClick = { navController.navigate(it.route) },
                         onTaskClick = { task ->
                             navController.navigate("${NavigationDestination.ViewTask.route}/${task.id}") {
+                                launchSingleTop = true
+                            }
+                        },
+                        onNextTaskClick = { taskId ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/$taskId") {
                                 launchSingleTop = true
                             }
                         },
@@ -479,6 +493,7 @@ fun AppRoot(
                 )
             }
         }
+    }
     }
 }
 

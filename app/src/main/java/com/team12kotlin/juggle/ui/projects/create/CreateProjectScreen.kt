@@ -27,6 +27,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
@@ -66,6 +68,7 @@ internal fun CreateProjectContent(
     onDeadlineChange: (String) -> Unit = {},
     onCreateClick: () -> Unit = {},
 ) {
+    val isOffline = rememberIsOnline() == false
     Scaffold(
         modifier = modifier,
         topBar = { BackTopBar(title = "Create project", onBack = onBackClick) }
@@ -130,17 +133,21 @@ internal fun CreateProjectContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            OfflineActionNotice(isOffline = isOffline)
+
             Button(
                 onClick = onCreateClick,
-                enabled = uiState.canCreate,
+                enabled = uiState.canCreate && !isOffline,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(if (uiState.isSaving) "Creating..." else "Create project")
             }
 
-            uiState.errorMessage?.let { message ->
-                Spacer(modifier = Modifier.height(8.dp))
-                ErrorCard(message = message)
+            if (!isOffline) {
+                uiState.errorMessage?.let { message ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ErrorCard(message = message)
+                }
             }
         }
     }

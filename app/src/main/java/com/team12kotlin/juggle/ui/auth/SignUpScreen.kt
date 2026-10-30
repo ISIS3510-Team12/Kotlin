@@ -131,15 +131,6 @@ fun SignUpScreen(
                 supportingText = uiState.confirmPasswordError
             )
 
-            if (isOffline) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "You're offline. Connect to the internet to sign up.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
             Spacer(modifier = Modifier.height(20.dp))
 
             PillButton(
