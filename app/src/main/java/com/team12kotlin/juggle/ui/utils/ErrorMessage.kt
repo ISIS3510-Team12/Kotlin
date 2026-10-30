@@ -5,7 +5,7 @@ import java.io.IOException
 
 fun Throwable.toUserMessage(): String = when (this) {
     is IOException ->
-        "Couldn't load. Try again."
+        "Couldn't reach the server. Check your connection."
     is HttpException -> when {
         code() >= 500 -> "The service is unavailable right now. Try again later."
         code() == 401 -> "Your session has expired. Sign in again."
