@@ -91,7 +91,8 @@ fun NextTaskCard(
 fun NextTaskSection(
     state: NextTaskUiState,
     modifier: Modifier = Modifier,
-    onTaskClick: (Int) -> Unit = {}
+    onTaskClick: (Int) -> Unit = {},
+    onRetry: (() -> Unit)? = null
 ) {
     when (state) {
         NextTaskUiState.Loading -> Box(
@@ -119,7 +120,8 @@ fun NextTaskSection(
         NextTaskUiState.Error -> Box(modifier = modifier.padding(horizontal = 24.dp)) {
             ErrorCard(
                 message = "Couldn't load the next task",
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                onRetry = onRetry
             )
         }
     }

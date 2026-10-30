@@ -195,7 +195,8 @@ fun HomeScreen (
                 NextTaskSection(
                     state = uiState.nextTask,
                     modifier = Modifier.padding(vertical = 12.dp),
-                    onTaskClick = onNextTaskClick
+                    onTaskClick = onNextTaskClick,
+                    onRetry = viewModel::loadNextTask
                 )
                 Column(
                     modifier = modifier

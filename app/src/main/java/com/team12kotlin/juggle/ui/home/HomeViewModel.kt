@@ -95,6 +95,10 @@ class HomeViewModel : ViewModel() {
 
     fun loadNextTask() {
         nextTaskJob?.cancel()
+        // Retrying from the error state shows the spinner again, a refresh keeps the current card
+        _uiState.update {
+            if (it.nextTask is NextTaskUiState.Error) it.copy(nextTask = NextTaskUiState.Loading) else it
+        }
         nextTaskJob = viewModelScope.launch {
             val result = runCatching { smartRepository.getNextTask() }
             result.exceptionOrNull()?.let { if (it is CancellationException) throw it }
