@@ -14,7 +14,7 @@ interface CachedTaskDao {
         SELECT * FROM cached_tasks
         WHERE userId = :userId AND taskId = :taskId
     """)
-    suspend fun getById(userId: String, taskId: Int): CachedTaskEntity
+    suspend fun getById(userId: String, taskId: Int): CachedTaskEntity?
 
     @Query("""
         SELECT * FROM cached_tasks

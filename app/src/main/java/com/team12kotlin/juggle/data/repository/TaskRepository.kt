@@ -2,6 +2,8 @@ package com.team12kotlin.juggle.data.repository
 
 import com.team12kotlin.juggle.data.local.CacheResult
 import com.team12kotlin.juggle.data.local.EvidenceCache
+import com.team12kotlin.juggle.data.local.PendingTask
+import com.team12kotlin.juggle.data.local.PendingTaskStore
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.dao.CachedTaskDao
 import com.team12kotlin.juggle.data.local.mappers.TaskCacheMapper
@@ -30,6 +32,7 @@ class TaskRepository(
     private val mapper: TaskCacheMapper,
     private val cache: NetworkFirstCache,
     private val evidenceCache: EvidenceCache,
+    private val pendingTaskStore: PendingTaskStore,
     private val userId: String
 ) {
     suspend fun getTasks(): List<Task> =
@@ -79,7 +82,7 @@ class TaskRepository(
                     .mapNotNull { mapper.toDomainOrNull(it) }
                     .filterNot { it.isOwn(userId) }
             }
-        )
+        ).withPending(pendingTaskStore.pendingForGroup(groupId).map { it.toTask() })
     }
 
     suspend fun getAllTasks(
@@ -122,7 +125,7 @@ class TaskRepository(
 
                 }
             }
-        )
+        ).withPending(pendingTaskStore.all().map { it.toTask() })
     }
 
     suspend fun getTodaySummary(start: String, end: String): TaskTodaySummary =
@@ -132,7 +135,7 @@ class TaskRepository(
         val task = try {
             api.getTask(taskId)
         } catch (e: IOException) {
-            taskDao.getById(userId, taskId).let { mapper.toDomainOrNull(it) } ?:
+            taskDao.getById(userId, taskId)?.let { mapper.toDomainOrNull(it) } ?:
             throw e
         }
         if (!task.hasPhoto) {
@@ -141,9 +144,40 @@ class TaskRepository(
         return task
     }
 
-    suspend fun createTask(request: TaskCreateRequest): Task =
-        api.createTask(request)
-            .also { saveOne(userId, it) }
+    suspend fun createTask(
+        request: TaskCreateRequest,
+        evidence: ByteArray? = null
+    ): Task =
+        try {
+            api.createTask(request).also { saveOne(userId, it) }
+        } catch (e: IOException) {
+            val pending = pendingTaskStore.enqueue(request, evidence)
+            pending.toTask()
+        }
+
+    suspend fun syncPendingTask(pending: PendingTask) {
+        val task = api.createTask(pending.request)
+        saveOne(userId, task)
+        pending.photoPath?.let { path ->
+            pendingTaskStore.photo(path)?.let { bytes ->
+                runCatching { uploadTaskPhoto(task.id, bytes, "image/jpeg") }
+            }
+        }
+    }
+
+    private fun PendingTask.toTask(): Task =
+        Task(
+            id = taskId,
+            title = request.title,
+            taskType = request.taskType,
+            status = TaskStatus.NOT_STARTED,
+            isPriority = request.isPriority,
+            needsHelp = request.needsHelp,
+            deadline = request.deadline,
+            description = request.description.orEmpty(),
+            projectId = request.projectId,
+            groupId = request.groupId
+        )
 
     suspend fun updateTask(taskId: Int, request: TaskUpdateRequest): Task =
         api.updateTask(taskId, request)
@@ -180,7 +214,7 @@ class TaskRepository(
             api.getReminders(taskId)
         } catch (e: IOException) {
             val cachedTask = taskDao.getById(userId, taskId)
-                .let { mapper.toDomainOrNull(it) }
+                ?.let { mapper.toDomainOrNull(it) }
             cachedTask?.reminders ?: throw e
         }
 
@@ -213,6 +247,16 @@ class TaskRepository(
 
     private suspend fun getLocalByGroup(userId: String, groupId: Int) =
         taskDao.getByGroup(userId, groupId).mapNotNull { mapper.toDomainOrNull(it) }
+
+    private suspend fun CacheResult<List<Task>>.withPending(
+        pending: List<Task>
+    ): CacheResult<List<Task>> {
+        if (pending.isEmpty()) return this
+        return when (this) {
+            is CacheResult.Fresh -> CacheResult.Fresh(data + pending)
+            is CacheResult.Stale -> CacheResult.Stale(data + pending, lastSyncedAt)
+        }
+    }
 
     private fun Task.isOwn(userId: String): Boolean =
        assignees.any { it.userId == userId }   // ajusta al criterio del servidor

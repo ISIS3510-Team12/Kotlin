@@ -35,7 +35,7 @@ fun TaskCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 10.dp),
-        onClick = onClick
+        onClick = { if (task.id > 0) onClick() }
     ) {
         Row(
             modifier = Modifier

@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.BuildConfig
 import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.local.EvidenceCache
+import com.team12kotlin.juggle.data.local.PendingTaskStore
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.mappers.GroupCacheMapper
 import com.team12kotlin.juggle.data.local.mappers.ProjectCacheMapper
@@ -88,6 +89,7 @@ object Dependencies {
     }
 
     val evidenceCache: EvidenceCache by lazy { EvidenceCache(appContext) }
+    val pendingTaskStore: PendingTaskStore by lazy { PendingTaskStore(appContext) }
 
     private val networkFirstCache: NetworkFirstCache by lazy {
         NetworkFirstCache(database, database.cachedMetadataDao())
@@ -105,6 +107,7 @@ object Dependencies {
             taskCacheMapper,
             networkFirstCache,
             evidenceCache,
+            pendingTaskStore,
             authRepository.currentUserId()
         )
     }

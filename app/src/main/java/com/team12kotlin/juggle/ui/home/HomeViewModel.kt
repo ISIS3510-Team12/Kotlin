@@ -80,6 +80,12 @@ class HomeViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState(user = currentFirebaseUser(), isLoading = true))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            Dependencies.pendingTaskStore.synced.collect { load() }
+        }
+    }
+
     private var hasLoaded = false
     private var nextTaskJob: Job? = null
 

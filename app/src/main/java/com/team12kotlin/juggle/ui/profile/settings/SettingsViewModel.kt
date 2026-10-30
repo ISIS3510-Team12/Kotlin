@@ -96,6 +96,7 @@ class SettingsViewModel(
         LastSync.clear()
         UserCache.clear()
         viewModelScope.launch { Dependencies.evidenceCache.clear() }
+        viewModelScope.launch { Dependencies.pendingTaskStore.clear() }
         viewModelScope.launch { GeofenceManager.clear(context) }
         authRepository.signOut()
         onSignedOut()
