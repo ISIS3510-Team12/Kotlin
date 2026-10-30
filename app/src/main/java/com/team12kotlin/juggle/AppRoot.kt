@@ -154,6 +154,11 @@ fun AppRoot(
                                 launchSingleTop = true
                             }
                         },
+                        onNextTaskClick = { taskId ->
+                            navController.navigate("${NavigationDestination.ViewTask.route}/$taskId") {
+                                launchSingleTop = true
+                            }
+                        },
                         onNotificationClick = {
                             navController.navigate(NavigationDestination.Notifications.route) {
                                 launchSingleTop = true
