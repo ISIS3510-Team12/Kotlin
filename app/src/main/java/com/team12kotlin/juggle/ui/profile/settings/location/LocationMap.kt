@@ -10,7 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.Circle
@@ -40,9 +39,8 @@ fun LocationMap(
         position = CameraPosition.fromLatLngZoom(picked ?: DEFAULT_CENTER, if (picked != null) PICKED_ZOOM else DEFAULT_ZOOM)
     }
 
-    // Move the camera to the selected location.
     LaunchedEffect(picked) {
-        picked?.let { cameraPositionState.animate(CameraUpdateFactory.newLatLng(it)) }
+        picked?.let { cameraPositionState.position = CameraPosition.fromLatLngZoom(it, PICKED_ZOOM) }
     }
 
     GoogleMap(
