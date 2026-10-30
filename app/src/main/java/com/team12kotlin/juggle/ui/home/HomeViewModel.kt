@@ -13,6 +13,7 @@ import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskNotification
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.dto.toNotification
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -96,7 +97,7 @@ class HomeViewModel : ViewModel() {
                 }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }

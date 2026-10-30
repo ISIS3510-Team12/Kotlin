@@ -6,6 +6,7 @@ import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.NotificationRepository
 import com.team12kotlin.juggle.ui.dto.Notification
 import com.team12kotlin.juggle.ui.dto.toNotification
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,7 +43,7 @@ class NotificationsViewModel(
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 }
         }
     }

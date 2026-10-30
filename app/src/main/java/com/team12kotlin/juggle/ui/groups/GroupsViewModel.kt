@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.ui.dto.Group
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,7 +56,7 @@ class GroupsViewModel(
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.message)
+                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
                     }
                 }
         }

@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
+import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -68,7 +69,7 @@ class CreateGroupViewModel(
                     _uiState.update { it.copy(availableMembers = users, isLoading = false) }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.message, isLoading = false) }
+                    _uiState.update { it.copy(errorMessage = error.toUserMessage(), isLoading = false) }
                 }
         }
     }
@@ -102,7 +103,7 @@ class CreateGroupViewModel(
             val group = runCatching {
                 groupRepository.createGroup(state.name.trim(), state.description.trim())
             }.getOrElse { error ->
-                _uiState.update { it.copy(isLoading = false, errorMessage = error.message) }
+                _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 return@launch
             }
             // The group already exists at this point, so member failures are reported but not rolled back.
