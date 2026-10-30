@@ -12,6 +12,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +26,8 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 @Composable
 fun ErrorCard(
     message: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onRetry: (() -> Unit)? = null
 ) {
     Card(
         modifier = modifier
@@ -44,16 +46,21 @@ fun ErrorCard(
             ) {
                 Icon(
                     imageVector = MaterialSymbols.Outlined.Error,
-                    contentDescription = "Error $message",
+                    contentDescription = "Error: $message",
                     modifier = Modifier.size(50.dp)
                 )
                 Text(
-                    text = "An error occurred while loading the resource. Try again later.",
+                    text = message,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.headlineSmall,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                     textAlign = TextAlign.Center,
                 )
+                if (onRetry != null) {
+                    TextButton(onClick = onRetry) {
+                        Text("Try again")
+                    }
+                }
             }
         }
     }

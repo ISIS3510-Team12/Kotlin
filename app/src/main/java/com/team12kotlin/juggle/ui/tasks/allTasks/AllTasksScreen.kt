@@ -32,6 +32,7 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.tasks.TaskCard
@@ -62,6 +63,12 @@ fun AllTasksScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                uiState.errorMessage?.let { message ->
+                    ErrorCard(
+                        message = message,
+                        onRetry = viewModel::loadTasks
+                    )
+                }
                 ButtonGroupFilter(
                     filters = AllTasksFilter.entries.map { it.label },
                     selectedIndex = uiState.selectedFilterIndex,

@@ -25,6 +25,7 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.dto.Notification
@@ -46,6 +47,7 @@ fun NotificationsScreen(
         modifier = modifier,
         goBack = goBack,
         onNotificationDismissed = viewModel::onNotificationDismissed,
+        onRetry = viewModel::loadNotifications,
     )
 }
 
@@ -56,6 +58,7 @@ fun NotificationsContent(
     modifier: Modifier = Modifier,
     goBack: () -> Unit = {},
     onNotificationDismissed: (Int) -> Unit = {},
+    onRetry: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier,
@@ -77,6 +80,12 @@ fun NotificationsContent(
                     verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
                     horizontalAlignment = Alignment.Start,
                 ) {
+                    uiState.errorMessage?.let { message ->
+                        ErrorCard(
+                            message = message,
+                            onRetry = onRetry
+                        )
+                    }
                     if (uiState.notifications.isNotEmpty()) {
                         uiState.notifications.forEach { notification ->
                             NotificationCard(
@@ -86,7 +95,7 @@ fun NotificationsContent(
                                 onDismiss = { onNotificationDismissed(notification.id) }
                             )
                         }
-                    } else if (!uiState.isLoading) {
+                    } else if (!uiState.isLoading && uiState.errorMessage == null) {
                         Text(
                             text = "No pending notifications",
                             style = MaterialTheme.typography.bodyLarge,

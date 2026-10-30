@@ -41,6 +41,7 @@ import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Settings
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.IconMonogram
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.TextMonogram
@@ -77,7 +78,8 @@ fun GroupDetailScreen(
         onBackClick = onBackClick,
         onCreateProjectClick = onCreateProjectClick,
         onProjectClick = onProjectClick,
-        onLeaveGroup = { viewModel.leaveGroup(onBackClick) }
+        onLeaveGroup = { viewModel.leaveGroup(onBackClick) },
+        onRetry = { viewModel.load(groupId) }
     )
 }
 
@@ -92,7 +94,8 @@ private fun GroupDetailContent(
     onBackClick: () -> Unit = {},
     onCreateProjectClick: () -> Unit = {},
     onProjectClick: (Project) -> Unit = {},
-    onLeaveGroup: () -> Unit = {}
+    onLeaveGroup: () -> Unit = {},
+    onRetry: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
@@ -130,6 +133,12 @@ private fun GroupDetailContent(
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                errorMessage?.let { message ->
+                    ErrorCard(
+                        message = message,
+                        onRetry = onRetry
+                    )
+                }
                 Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
                         text = group?.name ?: if (isLoading) "" else errorMessage ?: "Group not found",

@@ -45,6 +45,7 @@ import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Keyboard_arrow_down
 import com.composables.icons.materialsymbols.outlined.Search
 import com.composables.icons.materialsymbols.outlinedfilled.Edit
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
@@ -143,6 +144,12 @@ fun TasksScreen(
                         .padding(innerPadding)
                         .verticalScroll(rememberScrollState())
                 ) {
+                    uiState.errorMessage?.let { message ->
+                        ErrorCard(
+                            message = message,
+                            onRetry = viewModel::loadGroups
+                        )
+                    }
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

@@ -140,7 +140,10 @@ fun GroupsScreen (
                             .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        ErrorCard(message = message)
+                        ErrorCard(
+                            message = message,
+                            onRetry = viewModel::loadGroups
+                        )
                     }
                 }
                 if (!uiState.isLoading && uiState.filteredGroups.isEmpty() && uiState.errorMessage == null) {

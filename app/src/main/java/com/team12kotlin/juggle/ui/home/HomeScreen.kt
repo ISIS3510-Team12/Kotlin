@@ -42,6 +42,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Circle_notifications
 import com.composables.icons.materialsymbols.roundedfilled.Groups
 import com.composables.icons.materialsymbols.roundedfilled.List_alt
+import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.NotificationCard
 import com.team12kotlin.juggle.ui.components.OverviewCard
@@ -88,6 +89,12 @@ fun HomeScreen (
                     .padding(innerPadding)
                     .verticalScroll(rememberScrollState())
             ) {
+                uiState.errorMessage?.let { message ->
+                    ErrorCard(
+                        message = message,
+                        onRetry = viewModel::load
+                    )
+                }
                 Column(
                     modifier = modifier
                         .padding(8.dp)
