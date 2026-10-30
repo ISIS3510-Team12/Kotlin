@@ -39,6 +39,7 @@ class NetworkFirstCache(
             saveLocal(remoteData)
             metadataDao.insertOne(CacheMetadataEntity(userId, resource, scopeId, clock()))
         }
+        LastSync.mark(clock())
         return CacheResult.Fresh(remoteData)
     }
 }
