@@ -213,7 +213,7 @@ fun TasksScreen(
                         },
                         modifier = Modifier.padding(20.dp).fillMaxWidth()
                     )
-                    val couldNotLoad = uiState.errorMessage != null
+                    val couldNotLoad = uiState.loadFailed
                     val hasAnyTasks =
                         uiState.filteredOwnTasks.isNotEmpty() || uiState.filteredGroupTasks.isNotEmpty()
                     if (hasAnyTasks || !couldNotLoad) {

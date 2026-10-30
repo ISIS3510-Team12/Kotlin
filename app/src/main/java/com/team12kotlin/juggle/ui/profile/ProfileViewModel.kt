@@ -45,7 +45,17 @@ class ProfileViewModel : ViewModel() {
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = error.toUserMessage(), isLoading = false) }
+                    val cached = Dependencies.authRepository.currentUser
+                    _uiState.update {
+                        it.copy(
+                            displayName = it.displayName.ifBlank { cached?.displayName.orEmpty() },
+                            initial = it.initial.ifBlank {
+                                cached?.displayName?.trim()?.take(1)?.uppercase().orEmpty()
+                            },
+                            errorMessage = error.toUserMessage(),
+                            isLoading = false
+                        )
+                    }
                 }
         }
     }

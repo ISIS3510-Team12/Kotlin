@@ -16,7 +16,8 @@ import kotlinx.coroutines.launch
 data class NotificationsUiState(
     val notifications: List<Notification> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val loadFailed: Boolean = false
 )
 
 class NotificationsViewModel(
@@ -43,7 +44,13 @@ class NotificationsViewModel(
                     }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.toUserMessage(),
+                            loadFailed = true
+                        )
+                    }
                 }
         }
     }

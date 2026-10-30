@@ -99,7 +99,7 @@ fun NotificationsContent(
                                 onDismiss = { onNotificationDismissed(notification.id) }
                             )
                         }
-                    } else if (!uiState.isLoading && uiState.errorMessage == null) {
+                    } else if (!uiState.isLoading && !uiState.loadFailed) {
                         Text(
                             text = "No pending notifications",
                             style = MaterialTheme.typography.bodyLarge,

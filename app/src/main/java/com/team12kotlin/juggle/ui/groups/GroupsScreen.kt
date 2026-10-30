@@ -150,7 +150,7 @@ fun GroupsScreen (
                         )
                     }
                 }
-                if (!uiState.isLoading && uiState.filteredGroups.isEmpty() && uiState.errorMessage == null) {
+                if (!uiState.isLoading && !uiState.loadFailed && uiState.filteredGroups.isEmpty()) {
                     Text(
                         text = "No groups yet",
                         style = MaterialTheme.typography.bodyLarge,

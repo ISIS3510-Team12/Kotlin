@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
-import com.team12kotlin.juggle.ui.utils.OFFLINE_MESSAGE
 import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,7 +53,7 @@ class AllTasksViewModel(
                         it.copy(
                             tasks = result.data,
                             isLoading = false,
-                            errorMessage = if (result.isCacheMiss) OFFLINE_MESSAGE else null
+                            errorMessage = null
                         )
                     }
                 }

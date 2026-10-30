@@ -108,16 +108,15 @@ fun ViewTaskScreen(
                 return@Scaffold
             }
             if (uiState.task.id == 0) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(innerPadding)
-                        .padding(horizontal = 26.dp, vertical = 10.dp)
-                ) {
-                    ErrorCard(
-                        message = uiState.errorMessage ?: "Couldn't load this task.",
-                        onRetry = viewModel::loadTask
-                    )
+                uiState.errorMessage?.let { message ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(innerPadding)
+                            .padding(horizontal = 26.dp, vertical = 10.dp)
+                    ) {
+                        ErrorCard(message = message, onRetry = viewModel::loadTask)
+                    }
                 }
                 return@Scaffold
             }

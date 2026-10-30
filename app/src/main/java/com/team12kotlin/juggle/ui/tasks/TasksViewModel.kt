@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.team12kotlin.juggle.data.Dependencies
-import com.team12kotlin.juggle.ui.utils.OFFLINE_MESSAGE
 import com.team12kotlin.juggle.ui.utils.toUserMessage
 
 data class DrawerItem(
@@ -32,7 +31,8 @@ data class TasksUiState(
     val groups: List<DrawerItem> = emptyList(),
     val selectedGroupId: Int? = null,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val loadFailed: Boolean = false
 ) {
     val filteredOwnTasks: List<Task>
         get() = ownTasks.filterFor(query)
@@ -95,11 +95,8 @@ class TasksViewModel(
                     groups = drawerItems,
                     selectedGroupId = selectedId,
                     currentGroup = drawerItems.firstOrNull { item -> item.selected }?.name ?: it.currentGroup,
-                    errorMessage = when {
-                        groupsResult.isFailure -> groupsResult.exceptionOrNull()?.toUserMessage()
-                        cachedGroups?.isCacheMiss == true -> OFFLINE_MESSAGE
-                        else -> null
-                    }
+                    errorMessage = groupsResult.exceptionOrNull()?.toUserMessage(),
+                    loadFailed = groupsResult.isFailure
                 )
             }
 
@@ -135,12 +132,8 @@ class TasksViewModel(
                     ownTasks = cachedOwnTasks?.data ?: it.ownTasks,
                     groupTasks = cachedGroupTasks?.data ?: it.groupTasks,
                     isLoading = false,
-                    errorMessage = when {
-                        error != null -> error.toUserMessage()
-                        cachedOwnTasks?.isCacheMiss == true -> OFFLINE_MESSAGE
-                        cachedGroupTasks?.isCacheMiss == true -> OFFLINE_MESSAGE
-                        else -> null
-                    }
+                    errorMessage = error?.toUserMessage(),
+                    loadFailed = error != null
                 )
             }
         }

@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.ui.dto.Group
-import com.team12kotlin.juggle.ui.utils.OFFLINE_MESSAGE
 import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +16,8 @@ data class GroupsUiState(
     val query: String = "",
     val groups: List<Group> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val loadFailed: Boolean = false
 ) {
     val filteredGroups: List<Group>
         get() = groups.filterFor(query)
@@ -52,13 +52,18 @@ class GroupsViewModel(
                         it.copy(
                             groups = result.data,
                             isLoading = false,
-                            errorMessage = if (result.isCacheMiss) OFFLINE_MESSAGE else null
+                            errorMessage = null,
+                            loadFailed = false
                         )
                     }
                 }
                 .onFailure { error ->
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = error.toUserMessage(),
+                            loadFailed = true
+                        )
                     }
                 }
         }

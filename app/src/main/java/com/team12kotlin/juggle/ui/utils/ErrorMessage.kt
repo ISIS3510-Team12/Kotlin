@@ -3,11 +3,8 @@ package com.team12kotlin.juggle.ui.utils
 import retrofit2.HttpException
 import java.io.IOException
 
-val OFFLINE_MESSAGE: String = IOException().toUserMessage()
-
-fun Throwable.toUserMessage(): String = when (this) {
-    is IOException ->
-        "Couldn't reach Juggle. Check your connection."
+fun Throwable.toUserMessage(): String? = when (this) {
+    is IOException -> null
     is HttpException -> when {
         code() >= 500 -> "The service is unavailable right now. Try again later."
         code() == 401 -> "Your session has expired. Sign in again."
