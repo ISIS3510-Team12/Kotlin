@@ -37,13 +37,23 @@ class TaskRepository(
             getLocalAll(userId)
         }
 
-    suspend fun getOwnTasks(groupId: Int): List<Task> =
-        try {
-            api.getOwnTasks(groupId)
-        } catch (e: IOException) {
-            
-            getLocalByGroup(userId, groupId).filter { it.isOwn(userId) }
-        }
+    suspend fun getOwnTasks(groupId: Int): List<Task> = getOwnTasksCached(groupId).data
+
+    suspend fun getOwnTasksCached(groupId: Int): CacheResult<List<Task>> =
+        cache.fetch(
+            userId = userId,
+            resource = "ownTasks",
+            scopeId = groupId.toString(),
+            remote = { api.getOwnTasks(groupId) },
+            saveLocal = { tasks ->
+                taskDao.insertAll(
+                    tasks.map { mapper.toEntity(userId, it).copy(groupId = groupId) }
+                )
+            },
+            readLocal = {
+                getLocalByGroup(userId, groupId).filter { it.isOwn(userId) }
+            }
+        )
 
     suspend fun getGroupTasks(groupId: Int): List<Task> = getGroupTasksCached(groupId).data
 
@@ -56,7 +66,11 @@ class TaskRepository(
             scopeId = groupId.toString(),
             remote = { api.getGroupTasks(groupId) },
             saveLocal = { tasks ->
-                taskDao.replaceForGroup(userId, groupId, tasks.map { mapper.toEntity(userId, it) })
+                taskDao.replaceForGroup(
+                    userId,
+                    groupId,
+                    tasks.map { mapper.toEntity(userId, it).copy(groupId = groupId) }
+                )
             },
             readLocal = {
                 taskDao.getByGroup(userId, groupId).mapNotNull { mapper.toDomainOrNull(it) }
