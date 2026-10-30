@@ -1,5 +1,6 @@
 package com.team12kotlin.juggle.data
 
+import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.team12kotlin.juggle.BuildConfig
 import com.team12kotlin.juggle.data.remote.AuthInterceptor
@@ -12,6 +13,7 @@ import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
+import com.team12kotlin.juggle.sensors.ShakeEffectStore
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -70,4 +72,12 @@ object Dependencies {
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
     val telemetryRepository: TelemetryRepository by lazy { TelemetryRepository(api) }
+
+    private lateinit var appContext: Context
+
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
+
+    val shakeEffectStore: ShakeEffectStore by lazy { ShakeEffectStore(appContext) }
 }

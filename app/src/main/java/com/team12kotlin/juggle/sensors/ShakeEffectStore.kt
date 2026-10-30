@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class ShakeEffectStore(context: Context) {
-    private val preferences = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _enabledFlow = MutableStateFlow(preferences.getBoolean(KEY_ENABLED, false))
     val enabledFlow: StateFlow<Boolean> = _enabledFlow.asStateFlow()

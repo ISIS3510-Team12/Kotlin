@@ -2,7 +2,6 @@ package com.team12kotlin.juggle.ui.profile.settings
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.reminders.ScheduledReminderScheduler
 import com.team12kotlin.juggle.reminders.ScheduledReminderStore
@@ -13,6 +12,7 @@ import kotlinx.coroutines.flow.update
 
 data class SettingsUiState(
     val soundAndVibrationEnabled: Boolean = true,
+    val shakeEnabled: Boolean = true,
     val dailyRemindersEnabled: Boolean = true,
     val dailyReminderHour: Int = 18,
     val dailyReminderMinute: Int = 0,
@@ -24,9 +24,11 @@ class SettingsViewModel(
 
     private val authRepository = Dependencies.authRepository
     private val reminderStore = ScheduledReminderStore(application.applicationContext)
+    private val shakeStore = Dependencies.shakeEffectStore
 
     private val _uiState = MutableStateFlow(
         SettingsUiState(
+            shakeEnabled = shakeStore.enabled,
             dailyRemindersEnabled = reminderStore.enabled,
             dailyReminderHour = reminderStore.hour,
             dailyReminderMinute = reminderStore.minute
@@ -36,6 +38,11 @@ class SettingsViewModel(
 
     fun onSoundAndVibrationChange(enabled: Boolean) {
         _uiState.update { it.copy(soundAndVibrationEnabled = enabled) }
+    }
+
+    fun onShakeChange(enabled: Boolean) {
+        shakeStore.enabled = enabled
+        _uiState.update { it.copy(shakeEnabled = enabled) }
     }
 
     fun onDailyRemindersChange(enabled: Boolean) {
