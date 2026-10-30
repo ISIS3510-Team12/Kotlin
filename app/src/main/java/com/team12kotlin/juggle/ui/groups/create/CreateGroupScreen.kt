@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -24,6 +25,9 @@ import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,6 +46,7 @@ import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.components.ShakeToReset
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -61,9 +66,20 @@ fun CreateGroupScreen(
         if (uiState.created) onCreated(uiState.notice)
     }
 
+    // The search box keeps its own text, so it is cleared with this key
+    var searchResetKey by remember { mutableIntStateOf(0) }
+    ShakeToReset(
+        enabled = !uiState.isLoading,
+        onReset = {
+            viewModel.onResetForm()
+            searchResetKey++
+        }
+    )
+
     CreateGroupContent(
         uiState = uiState,
         modifier = modifier,
+        searchResetKey = searchResetKey,
         goBack = goBack,
         onNameChange = viewModel::onNameChange,
         onDescriptionChange = viewModel::onDescriptionChange,
@@ -77,6 +93,7 @@ fun CreateGroupScreen(
 fun CreateGroupContent(
     uiState: CreateGroupUiState,
     modifier: Modifier = Modifier,
+    searchResetKey: Int = 0,
     goBack: () -> Unit = {},
     onNameChange: (String) -> Unit = {},
     onDescriptionChange: (String) -> Unit = {},
@@ -87,6 +104,9 @@ fun CreateGroupContent(
     val isOffline = rememberIsOnline() == false
     val searchBarState = rememberSearchBarState()
     val searchTextFieldState = rememberTextFieldState(uiState.query)
+    LaunchedEffect(searchResetKey) {
+        if (searchResetKey > 0) searchTextFieldState.clearText()
+    }
 
     Scaffold(
         modifier = modifier,

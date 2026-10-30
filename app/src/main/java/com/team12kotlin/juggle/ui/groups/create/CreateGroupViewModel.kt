@@ -95,6 +95,21 @@ class CreateGroupViewModel(
         }
     }
 
+    /** Clears what the user entered and keeps the loaded members, used by the shake to reset. */
+    fun onResetForm() {
+        if (_uiState.value.isLoading) return
+        _uiState.update {
+            it.copy(
+                name = "",
+                description = "",
+                query = "",
+                selectedIds = emptySet(),
+                errorMessage = null,
+                notice = null
+            )
+        }
+    }
+
     fun onCreateGroup() {
         val state = _uiState.value
         if (!state.canCreate) return
