@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.room.Room
 import com.google.firebase.auth.FirebaseAuth
 import com.team12kotlin.juggle.BuildConfig
-import com.team12kotlin.juggle.data.auth.UsserSession
 import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
@@ -89,8 +88,6 @@ object Dependencies {
         NetworkFirstCache(database, database.cachedMetadataDao())
     }
 
-    private val userSession: UsserSession by lazy { UsserSession(firebaseAuth) }
-
     private val groupCacheMapper by lazy { GroupCacheMapper(cacheConverter) }
     private val projectCacheMapper by lazy { ProjectCacheMapper() }
     private val taskCacheMapper by lazy { TaskCacheMapper(cacheConverter) }
@@ -102,7 +99,7 @@ object Dependencies {
             database.cachedTaskDao(),
             taskCacheMapper,
             networkFirstCache,
-            userSession
+            authRepository.currentUserId()
         )
     }
     val groupRepository: GroupRepository by lazy {
@@ -113,7 +110,7 @@ object Dependencies {
             database.cachedTaskDao(),
             groupCacheMapper,
             networkFirstCache,
-            userSession
+            authRepository.currentUserId()
             )
     }
     val projectRepository: ProjectRepository by lazy {
@@ -122,7 +119,7 @@ object Dependencies {
             database.cachedProjectDao(),
             projectCacheMapper,
             networkFirstCache,
-            userSession
+            authRepository.currentUserId()
         )
     }
     val userRepository: UserRepository by lazy { UserRepository(api) }

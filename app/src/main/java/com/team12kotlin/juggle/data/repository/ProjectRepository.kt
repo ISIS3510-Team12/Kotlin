@@ -1,6 +1,5 @@
 package com.team12kotlin.juggle.data.repository
 
-import com.team12kotlin.juggle.data.auth.UsserSession
 import com.team12kotlin.juggle.data.local.CacheResult
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.dao.CachedProjectDao
@@ -16,13 +15,12 @@ class ProjectRepository(
     private val projectDao: CachedProjectDao,
     private val mapper: ProjectCacheMapper,
     private val cache: NetworkFirstCache,
-    private val session: UsserSession
+    private val userId: String
 ) {
     suspend fun getProjects(groupId: Int): List<Project> = getProjectsCached(groupId).data
 
     suspend fun getProjectsCached(groupId: Int): CacheResult<List<Project>> {
-        val userId = session.currentUserId()
-
+        
         return cache.fetch(
             userId = userId,
             resource = "projects",
@@ -38,19 +36,19 @@ class ProjectRepository(
     }
 
     suspend fun getProject(projectId: Int): Project {
-        val userId = session.currentUserId()
+        
 
         return try {
             api.getProject(projectId).also { saveOne(userId, it) }
         } catch (e: IOException) {
-            projectDao.getProject(userId, projectId)?.let { mapper.toDomainOrNull(it) }
+            projectDao.getProject(userId, projectId).let { mapper.toDomainOrNull(it) }
                 ?: throw e
         }
     }
 
     suspend fun createProject(request: ProjectCreateRequest): Project =
         api.createProject(request)
-            .also { saveOne(session.currentUserId(), it) }
+            .also { saveOne(userId, it) }
 
     suspend fun getDeadlinePrediction(projectId: Int): ProjectDeadlinePrediction =
         api.getDeadlinePrediction(projectId)

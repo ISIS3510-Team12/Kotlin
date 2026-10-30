@@ -1,6 +1,5 @@
 package com.team12kotlin.juggle.data.repository
 
-import com.team12kotlin.juggle.data.auth.UsserSession
 import com.team12kotlin.juggle.data.local.CacheResult
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.dao.CachedTaskDao
@@ -29,27 +28,27 @@ class TaskRepository(
     private val taskDao: CachedTaskDao,
     private val mapper: TaskCacheMapper,
     private val cache: NetworkFirstCache,
-    private val session: UsserSession
+    private val userId: String
 ) {
     suspend fun getTasks(): List<Task> =
         try {
             api.getTasks()
         } catch (e: IOException) {
-            getLocalAll(session.currentUserId())
+            getLocalAll(userId)
         }
 
     suspend fun getOwnTasks(groupId: Int): List<Task> =
         try {
             api.getOwnTasks(groupId)
         } catch (e: IOException) {
-            val userId = session.currentUserId()
+            
             getLocalByGroup(userId, groupId).filter { it.isOwn(userId) }
         }
 
     suspend fun getGroupTasks(groupId: Int): List<Task> = getGroupTasksCached(groupId).data
 
     suspend fun getGroupTasksCached(groupId: Int): CacheResult<List<Task>> {
-        val userId = session.currentUserId()
+        
 
         return cache.fetch(
             userId = userId,
@@ -87,7 +86,7 @@ class TaskRepository(
         startDate: String? = null,
         endDate: String? = null
     ): CacheResult<List<Task>> {
-        val userId = session.currentUserId()
+        
 
         return cache.fetch(
             userId = userId,
@@ -112,7 +111,7 @@ class TaskRepository(
         api.getTodaySummary(start, end)
 
     suspend fun getTask(taskId: Int): Task {
-        val userId = session.currentUserId()
+        
         return try {
             api.getTask(taskId)
         } catch (e: IOException) {
@@ -123,19 +122,19 @@ class TaskRepository(
 
     suspend fun createTask(request: TaskCreateRequest): Task =
         api.createTask(request)
-            .also { saveOne(session.currentUserId(), it) }
+            .also { saveOne(userId, it) }
 
     suspend fun updateTask(taskId: Int, request: TaskUpdateRequest): Task =
         api.updateTask(taskId, request)
-            .also { saveOne(session.currentUserId(), it) }
+            .also { saveOne(userId, it) }
 
     suspend fun changeStatus(taskId: Int, status: TaskStatus): Task =
         api.changeTaskStatus(taskId, status.serializedName)
-            .also { saveOne(session.currentUserId(), it) }
+            .also { saveOne(userId, it) }
 
     suspend fun deleteTask(taskId: Int) {
         api.deleteTask(taskId)
-        taskDao.deleteTask(session.currentUserId(), taskId)
+        taskDao.deleteTask(userId, taskId)
     }
 
     suspend fun uploadTaskPhoto(taskId: Int, content: ByteArray, mimeType: String) {
@@ -155,7 +154,7 @@ class TaskRepository(
         try {
             api.getReminders(taskId)
         } catch (e: IOException) {
-            val cachedTask = taskDao.getById(session.currentUserId(), taskId)
+            val cachedTask = taskDao.getById(userId, taskId)
                 .let { mapper.toDomainOrNull(it) }
             cachedTask?.reminders ?: throw e
         }
@@ -181,7 +180,7 @@ class TaskRepository(
 
     private suspend fun refreshTask(taskId: Int) {
         runCatching { api.getTask(taskId) }
-            .onSuccess { saveOne(session.currentUserId(), it) }
+            .onSuccess { saveOne(userId, it) }
     }
 
     private suspend fun getLocalAll(userId: String) =

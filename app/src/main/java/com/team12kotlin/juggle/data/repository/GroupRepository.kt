@@ -1,6 +1,5 @@
 package com.team12kotlin.juggle.data.repository
 
-import com.team12kotlin.juggle.data.auth.UsserSession
 import com.team12kotlin.juggle.data.local.CacheResult
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.dao.CachedGroupDao
@@ -21,13 +20,11 @@ class GroupRepository(
     private val taskDao: CachedTaskDao,
     private val mapper: GroupCacheMapper,
     private val cache: NetworkFirstCache,
-    private val session: UsserSession
+    private val userId: String
 ) {
     suspend fun getGroups(): List<Group> = getGroupsCached().data
 
     suspend fun getGroupsCached(): CacheResult<List<Group>> {
-        val userId = session.currentUserId()
-
         return cache.fetch(
             userId = userId,
             resource = "groups",
@@ -43,7 +40,6 @@ class GroupRepository(
     }
 
     suspend fun getGroup(groupId: Int): Group {
-        val userId = session.currentUserId()
         return try {
             api.getGroup(groupId).also { saveOne(userId, it) }
         } catch (e: IOException) {
@@ -54,25 +50,25 @@ class GroupRepository(
 
     suspend fun createGroup(name: String, description: String): Group =
         api.createGroup(GroupCreateRequest(name = name, description = description))
-            .also { saveOne(session.currentUserId(), it) }
+            .also { saveOne(userId, it) }
 
     suspend fun updateGroup(groupId: Int, name: String, description: String): Group =
         api.updateGroup(groupId, GroupUpdateRequest(name = name, description = description))
-            .also { saveOne(session.currentUserId(), it) }
+            .also { saveOne(userId, it) }
 
     suspend fun addMember(groupId: Int, email: String): Group =
         api.addGroupMember(groupId, GroupMemberAddRequest(email = email))
-            .also { saveOne(session.currentUserId(), it) }
+            .also { saveOne(userId, it) }
 
     suspend fun removeMember(groupId: Int, memberUserId: String) {
         api.removeGroupMember(groupId, memberUserId)
         runCatching { api.getGroup(groupId) }
-            .onSuccess { saveOne(session.currentUserId(), it) }
+            .onSuccess { saveOne(userId, it) }
     }
 
     suspend fun leaveGroup(groupId: Int) {
         api.leaveGroup(groupId)
-        val userId = session.currentUserId()
+        
         taskDao.deleteForGroup(userId, groupId)
         projectDao.deleteForGroup(userId, groupId)
         groupDao.deleteGroup(userId, groupId)
