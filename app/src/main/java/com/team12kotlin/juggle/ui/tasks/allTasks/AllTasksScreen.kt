@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
@@ -53,10 +54,19 @@ fun AllTasksScreen(
     val isOnline = rememberIsOnline()
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadTasks)
 
+    LifecycleResumeEffect(Unit) {
+        viewModel.loadTasks()
+        onPauseOrDispose { }
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
-            BackTopBar(title = "All tasks", onBack = onBackClick)
+            BackTopBar(
+                title = "All tasks",
+                onBack = onBackClick,
+                showCachedData = isOnline == false && uiState.tasks.isNotEmpty()
+            )
         }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {

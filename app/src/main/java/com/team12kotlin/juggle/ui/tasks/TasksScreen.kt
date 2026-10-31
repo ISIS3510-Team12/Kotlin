@@ -114,6 +114,8 @@ fun TasksScreen(
             topBar = {
                 AppTopBar(
                     showGroupIcon = true,
+                    showCachedData = isOnline == false &&
+                        (uiState.groups.isNotEmpty() || uiState.ownTasks.isNotEmpty() || uiState.groupTasks.isNotEmpty()),
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onProfileClick = onProfileClick
                 )

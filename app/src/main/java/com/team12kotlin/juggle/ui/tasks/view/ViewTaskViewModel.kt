@@ -23,8 +23,7 @@ enum class TaskAction(val label: String) {
     EDIT_TASK("Edit Task"),
     DELETE_TASK("Delete Task"),
     ASK_FOR_HELP("Ask for help"),
-    MARK_AS_STARTED("Mark as started"),
-    ASSIGN_TIME_SLOT("Assign a time slot")
+    MARK_AS_STARTED("Mark as started")
 }
 
 data class ViewTaskUiState(
@@ -33,7 +32,8 @@ data class ViewTaskUiState(
     val isFabMenuExpanded: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isPending: Boolean = false
+    val isPending: Boolean = false,
+    val deleted: Boolean = false
 )
 
 class ViewTaskViewModel(
@@ -114,7 +114,6 @@ class ViewTaskViewModel(
             TaskAction.DELETE_TASK -> onDeleteTask()
             TaskAction.ASK_FOR_HELP -> onAskForHelp()
             TaskAction.MARK_AS_STARTED -> onMarkAsStarted()
-            TaskAction.ASSIGN_TIME_SLOT -> onAssignTimeSlot()
         }
     }
 
@@ -178,7 +177,10 @@ class ViewTaskViewModel(
         val id = taskId ?: return
         viewModelScope.launch {
             runCatching { repository.deleteTask(id) }
-                .onSuccess { taskDeleted = true }
+                .onSuccess {
+                    taskDeleted = true
+                    _uiState.update { it.copy(deleted = true) }
+                }
                 .onFailure { error ->
                     _uiState.update { it.copy(errorMessage = error.toUserMessage()) }
                 }
@@ -194,10 +196,6 @@ class ViewTaskViewModel(
         val id = taskId ?: return
         if (!taskLoaded || taskDeleted) return
         TelemetryReporter.reportTaskDetailSession(id, openedAt, LocalDateTime.now(), progressUpdated)
-    }
-
-    private fun onAssignTimeSlot() {
-        // TODO: open the time-slot picker, then call repository.createTimeBlock(...).
     }
 
     private companion object {

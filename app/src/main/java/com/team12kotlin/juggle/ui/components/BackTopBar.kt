@@ -18,7 +18,8 @@ import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 fun BackTopBar(
     title: String,
     onBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showCachedData: Boolean = false
 ) {
     val isOnline = rememberIsOnline()
     Column(modifier = modifier) {
@@ -34,5 +35,8 @@ fun BackTopBar(
             }
         )
         OfflineBanner(isOnline = isOnline)
+        if (showCachedData) {
+            CachedDataBanner()
+        }
     }
 }

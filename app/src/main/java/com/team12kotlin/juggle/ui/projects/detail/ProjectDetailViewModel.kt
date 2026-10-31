@@ -12,6 +12,7 @@ import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.utils.toUserMessage
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,13 +61,12 @@ class ProjectDetailViewModel(
     private val _uiState = MutableStateFlow(ProjectDetailUiState(isLoading = true))
     val uiState: StateFlow<ProjectDetailUiState> = _uiState.asStateFlow()
 
-    init {
-        load()
-    }
+    private var loadJob: Job? = null
 
     fun load() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
                 coroutineScope {
                     val project = async { projectRepository.getProject(projectId) }

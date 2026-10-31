@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.utils.toUserMessage
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,12 +34,11 @@ class AllTasksViewModel(
     private val _uiState = MutableStateFlow(AllTasksUiState(isLoading = true))
     val uiState: StateFlow<AllTasksUiState> = _uiState.asStateFlow()
 
-    init {
-        loadTasks()
-    }
+    private var loadJob: Job? = null
 
     fun loadTasks() {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             val filter = selectedFilter()
@@ -58,8 +59,13 @@ class AllTasksViewModel(
                     }
                 }
                 .onFailure { error ->
+                    if (error is CancellationException) throw error
                     _uiState.update {
-                        it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                        it.copy(
+                            tasks = emptyList(),
+                            isLoading = false,
+                            errorMessage = error.toUserMessage()
+                        )
                     }
                 }
         }

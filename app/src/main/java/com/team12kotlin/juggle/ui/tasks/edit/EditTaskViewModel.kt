@@ -49,7 +49,8 @@ data class EditTaskUiState(
     val taskTypeOptions: List<String> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val savedSuccessfully: Boolean = false
+    val savedSuccessfully: Boolean = false,
+    val isPending: Boolean = false
 ) {
     val canSave: Boolean get() = title.isNotBlank() && !isLoading
 
@@ -105,7 +106,12 @@ class EditTaskViewModel(
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
                 val pending = Dependencies.pendingTaskStore.find(id)
                 if (pending == null) {
-                    _uiState.update { it.copy(isLoading = false) }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            errorMessage = "This task was already uploaded. Open it again from the list."
+                        )
+                    }
                     return@launch
                 }
                 val groups = runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
@@ -136,7 +142,8 @@ class EditTaskViewModel(
                     assignedMembers = base.assignedMembers.map {
                         it.copy(selected = it.userId in selectedIds)
                     },
-                    relatedTasks = related
+                    relatedTasks = related,
+                    isPending = true
                 )
                 loadedState = loaded
                 _uiState.value = loaded
@@ -221,7 +228,7 @@ class EditTaskViewModel(
         val allTasks = runCatching { repository.getAllTasks() }.getOrDefault(emptyList())
         val related: MutableList<RelatedTask> = mutableListOf()
         for (task in allTasks) {
-            if (task.groupId == groupId) {
+            if (task.groupId == groupId && task.id > 0) {
                 related.add(
                     RelatedTask(
                         task = task,
@@ -392,9 +399,18 @@ class EditTaskViewModel(
                         photo = state.evidenceBytes.takeIf { state.evidenceDirty }
                     )
                 }
-                    .onSuccess {
-                        _uiState.update {
-                            it.copy(isLoading = false, savedSuccessfully = true)
+                    .onSuccess { updated ->
+                        if (updated) {
+                            _uiState.update {
+                                it.copy(isLoading = false, savedSuccessfully = true)
+                            }
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMessage = "This task was already uploaded. Open it again from the list."
+                                )
+                            }
                         }
                     }
                     .onFailure { error ->

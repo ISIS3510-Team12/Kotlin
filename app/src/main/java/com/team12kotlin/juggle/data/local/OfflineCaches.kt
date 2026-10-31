@@ -33,9 +33,10 @@ class NotificationsCache(context: Context) {
         runCatching { file.writeText(json.encodeToString(items)) }
     }
 
-    fun read(): List<TaskNotification> =
-        runCatching { json.decodeFromString<List<TaskNotification>>(file.readText()) }
-            .getOrDefault(emptyList())
+    fun read(): List<TaskNotification>? =
+        if (!file.exists()) null else runCatching {
+            json.decodeFromString<List<TaskNotification>>(file.readText())
+        }.getOrNull()
 
     fun clear() {
         file.delete()

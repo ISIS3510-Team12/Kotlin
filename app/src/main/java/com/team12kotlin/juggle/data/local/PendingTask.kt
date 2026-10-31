@@ -84,10 +84,12 @@ class PendingTaskStore(private val context: Context) {
 
     suspend fun find(taskId: Int): PendingTask? = all().firstOrNull { it.taskId == taskId }
 
-    suspend fun update(taskId: Int, request: TaskCreateRequest, photo: ByteArray?) {
-        mutex.withLock {
+    suspend fun update(taskId: Int, request: TaskCreateRequest, photo: ByteArray?): Boolean {
+        val updated = mutex.withLock {
+            val items = read()
+            if (items.none { it.taskId == taskId }) return@withLock false
             write(
-                read().map {
+                items.map {
                     if (it.taskId == taskId) {
                         it.copy(
                             request = request,
@@ -98,8 +100,10 @@ class PendingTaskStore(private val context: Context) {
                     }
                 }
             )
+            true
         }
-        schedule()
+        if (updated) schedule()
+        return updated
     }
 
     suspend fun remove(taskId: Int) {
@@ -149,7 +153,15 @@ class PendingTaskStore(private val context: Context) {
             .getOrDefault(emptyList())
 
     private fun write(items: List<PendingTask>) {
-        runCatching { file.writeText(json.encodeToString(items)) }
+        runCatching {
+            val temp = File(file.parentFile, "${file.name}.tmp")
+            val content = json.encodeToString(items)
+            temp.writeText(content)
+            if (!temp.renameTo(file)) {
+                file.writeText(content)
+                temp.delete()
+            }
+        }
     }
 
     private companion object {

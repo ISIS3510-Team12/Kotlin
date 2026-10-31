@@ -6,9 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.team12kotlin.juggle.data.Dependencies
-import com.team12kotlin.juggle.data.local.LastSync
-import com.team12kotlin.juggle.data.local.UserCache
 import com.team12kotlin.juggle.reminders.LocationReminderSync
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
@@ -18,8 +15,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        LastSync.init(this)
-        UserCache.init(this)
         requestLocalNetworkAccessIfNeeded()
         LocationReminderSync.sync(this)
         setContent {
@@ -27,8 +22,6 @@ class MainActivity : ComponentActivity() {
                 AppRoot()
             }
         }
-
-        Dependencies.appContext = applicationContext
     }
 
     /**
