@@ -1,5 +1,10 @@
 package com.team12kotlin.juggle.ui.profile.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.team12kotlin.juggle.reminders.LocationReminderSync
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +63,31 @@ fun SettingsScreen(
     TrackScreenLoad(ScreenName.Settings)
     val context = LocalContext.current
 
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            viewModel.onDailyRemindersChange(true)
+        } else {
+            Toast.makeText(
+                context,
+                "Allow notifications to receive daily reminders.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    val onDailyRemindersChange: (Boolean) -> Unit = { enabled ->
+        when {
+            !enabled -> viewModel.onDailyRemindersChange(false)
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED -> viewModel.onDailyRemindersChange(true)
+            else -> notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     SettingsContent(
         modifier = modifier,
         uiState = uiState,
@@ -64,7 +95,7 @@ fun SettingsScreen(
         onThemeClick = viewModel::onThemeClick,
         onSoundAndVibrationChange = viewModel::onSoundAndVibrationChange,
         onShakeChange = viewModel::onShakeChange,
-        onDailyRemindersChange = viewModel::onDailyRemindersChange,
+        onDailyRemindersChange = onDailyRemindersChange,
         onDailyReminderTimeChange = viewModel::onDailyReminderTimeChange,
         onLocationRemindersClick = onLocationRemindersClick,
         onSignOutClick = {
