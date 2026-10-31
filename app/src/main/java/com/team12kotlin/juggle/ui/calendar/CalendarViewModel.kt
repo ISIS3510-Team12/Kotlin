@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.ui.calendar
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.local.CacheResult
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.utils.parseDeadline
@@ -70,11 +71,12 @@ class CalendarViewModel(
                 val windowStart = center.minusDays(FETCH_WINDOW_DAYS)
                 val windowEnd   = center.plusDays(FETCH_WINDOW_DAYS)
 
-                val tasks = repository.getAllTasks(
+                val result = repository.getAllTasksCached(
                     mine = true,
                     startDate = windowStart.atStartOfDay().toString(),
                     endDate   = windowEnd.atTime(23, 59, 59).toString()
                 )
+                val tasks = result.data
 
                 val grouped = tasks.groupBy { task ->
                     task.deadline?.let { d ->
@@ -82,15 +84,27 @@ class CalendarViewModel(
                     } ?: center
                 }
 
-                // Expandir el rango conocido y mergear con el mapa existente
-                loadedStart = minOf(loadedStart ?: windowStart, windowStart)
-                loadedEnd   = maxOf(loadedEnd   ?: windowEnd,   windowEnd)
+                if (result is CacheResult.Fresh) {
+                    loadedStart = minOf(loadedStart ?: windowStart, windowStart)
+                    loadedEnd = maxOf(loadedEnd ?: windowEnd, windowEnd)
+                    rangePrefs.edit()
+                        .putLong("start", loadedStart!!.toEpochDay())
+                        .putLong("end", loadedEnd!!.toEpochDay())
+                        .apply()
+                }
+
+                val selectedDate = _uiState.value.selectedDate
+                val start = loadedStart
+                val end = loadedEnd
+                val outsideWindow =
+                    start == null || end == null || selectedDate < start || selectedDate > end
 
                 _uiState.update { prev ->
                     prev.copy(
                         tasksByDate = prev.tasksByDate + grouped,
-                        isLoading   = false,
-                        errorMessage = null
+                        isLoading = false,
+                        errorMessage = null,
+                        dayNotLoaded = outsideWindow && result is CacheResult.Stale
                     )
                 }
             } catch (e: Exception) {
