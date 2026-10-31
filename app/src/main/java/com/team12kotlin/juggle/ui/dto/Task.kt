@@ -87,5 +87,7 @@ data class Task(
     val assignees: List<User> = emptyList(),
     val reminders: List<Reminder> = emptyList(),
     @SerialName("related_tasks")
-    val relatedTasks: List<RelatedTask> = emptyList()
+    val relatedTasks: List<RelatedTask> = emptyList(),
+    /** Time of the last change of the task, in UTC and without an offset. */
+    val lastChangedAt: String? = null
 )
