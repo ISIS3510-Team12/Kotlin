@@ -7,6 +7,7 @@ import com.team12kotlin.juggle.BuildConfig
 import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.local.EvidenceCache
+import com.team12kotlin.juggle.data.local.MIGRATION_1_2
 import com.team12kotlin.juggle.data.local.NotificationsCache
 import com.team12kotlin.juggle.data.local.PendingTaskStore
 import com.team12kotlin.juggle.data.local.ProfileCache
@@ -87,6 +88,7 @@ object Dependencies {
 
     private val database: AppDatabase by lazy {
         Room.databaseBuilder(appContext, AppDatabase::class.java, "juggle.db")
+            .addMigrations(MIGRATION_1_2)
             .build()
     }
 

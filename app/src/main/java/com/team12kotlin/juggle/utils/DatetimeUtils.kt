@@ -4,6 +4,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -53,6 +54,22 @@ fun taskDue(deadline: String?, now: LocalDateTime = LocalDateTime.now()): TaskDu
     val hours = ChronoUnit.HOURS.between(now, parsed)
     val hourText = if (hours == 1L) "1 hour" else "$hours hours"
     return TaskDue("$dayLabel - $hourText left", false)
+}
+
+/** Text for how long ago a task changed; the backend sends UTC, so [now] is UTC too. */
+fun lastUpdateText(lastChangedAt: String?, now: LocalDateTime = LocalDateTime.now(ZoneOffset.UTC)): String? {
+    if (lastChangedAt.isNullOrBlank()) return null
+
+    val changedAt = parseDeadline(lastChangedAt) ?: return null
+    val minutes = maxOf(ChronoUnit.MINUTES.between(changedAt, now), 0L)
+    if (minutes < 1L) return "Updated just now"
+    if (minutes < 60L) return "Updated $minutes min ago"
+
+    val hours = minutes / 60L
+    if (hours < 24L) return if (hours == 1L) "Updated 1 hour ago" else "Updated $hours hours ago"
+
+    val days = hours / 24L
+    return if (days == 1L) "Updated 1 day ago" else "Updated $days days ago"
 }
 
 fun nextTaskMeta(groupName: String, dueAt: String?, now: LocalDateTime = LocalDateTime.now()): String {

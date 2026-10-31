@@ -23,6 +23,7 @@ import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.utils.lastUpdateText
 import com.team12kotlin.juggle.utils.taskDue
 
 @Composable
@@ -91,6 +92,15 @@ fun TaskCard(
                             MaterialTheme.colorScheme.onSurfaceVariant
                         }
                     )
+                }
+                if (task.id >= 0) {
+                    lastUpdateText(task.lastChangedAt)?.let { text ->
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
         }

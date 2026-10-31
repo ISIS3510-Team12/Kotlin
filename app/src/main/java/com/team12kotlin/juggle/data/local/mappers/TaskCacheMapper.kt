@@ -27,6 +27,7 @@ class TaskCacheMapper(private val converter: CacheConverter = Dependencies.cache
             assigneesJson = converter.usersToJson(task.assignees),
             remindersJson = converter.remindersToJson(task.reminders),
             relatedTasksJson = converter.relatedTasksToJson(task.relatedTasks),
+            lastChangedAt = task.lastChangedAt,
         )
 
     fun toDomain(entity: CachedTaskEntity): Task =
@@ -46,6 +47,7 @@ class TaskCacheMapper(private val converter: CacheConverter = Dependencies.cache
             assignees = converter.usersFromJson(entity.assigneesJson),
             reminders = converter.remindersFromJson(entity.remindersJson),
             relatedTasks = converter.relatedTasksFromJson(entity.relatedTasksJson),
+            lastChangedAt = entity.lastChangedAt,
         )
 
     fun toDomainOrNull(entity: CachedTaskEntity): Task? =

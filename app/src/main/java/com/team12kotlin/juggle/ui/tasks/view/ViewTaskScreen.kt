@@ -70,6 +70,7 @@ import com.team12kotlin.juggle.ui.dto.RelatedTask
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.tasks.create.EvidenceView
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.utils.lastUpdateText
 import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.splitDeadline
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -175,6 +176,17 @@ fun ViewTaskScreen(
                             icon = MaterialSymbols.Outlined.Info,
                             label = "High priority",
                             contentColor = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+
+                // Last update
+                if (!uiState.isPending) {
+                    lastUpdateText(task.lastChangedAt)?.let { text ->
+                        Text(
+                            text = text,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

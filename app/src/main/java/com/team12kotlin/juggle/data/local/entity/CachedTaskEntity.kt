@@ -25,4 +25,5 @@ data class CachedTaskEntity(
     val assigneesJson: String,
     val remindersJson: String,
     val relatedTasksJson: String,
+    val lastChangedAt: String? = null,
 )
