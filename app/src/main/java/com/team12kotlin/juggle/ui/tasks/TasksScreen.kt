@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerValue
@@ -19,13 +19,11 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -82,8 +80,6 @@ fun TasksScreen(
         onPauseOrDispose { }
     }
 
-    val searchBarState = rememberSearchBarState()
-    val textFieldState = rememberTextFieldState(uiState.query)
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -195,25 +191,21 @@ fun TasksScreen(
                             }
                         }
                     }
-                    SearchBar(
-                        state = searchBarState,
-                        inputField = {
-                            SearchBarDefaults.InputField(
-                                searchBarState = searchBarState,
-                                textFieldState = textFieldState,
-                                onSearch = { viewModel.onSearch(it) },
-                                placeholder = {
-                                    Text("Search for a task...")
-                                },
-                                trailingIcon = {
-                                    Icon(
-                                        imageVector = MaterialSymbols.Outlined.Search,
-                                        contentDescription = "Search"
-                                    )
-                                }
+                    OutlinedTextField(
+                        value = uiState.query,
+                        onValueChange = viewModel::onQueryChange,
+                        singleLine = true,
+                        shape = RoundedCornerShape(100.dp),
+                        placeholder = { Text("Search for a task...") },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Search,
+                                contentDescription = "Search"
                             )
                         },
-                        modifier = Modifier.padding(20.dp).fillMaxWidth()
+                        modifier = Modifier
+                            .padding(20.dp)
+                            .fillMaxWidth()
                     )
                     val couldNotLoad = uiState.loadFailed
                     val hasAnyTasks =

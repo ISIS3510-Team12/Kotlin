@@ -26,7 +26,11 @@ data class CreateProjectUiState(
     val createdProjectId: Int? = null,
 ) {
     val canCreate: Boolean
-        get() = name.isNotBlank() && deadline.isNotBlank() && groupId != null && !isSaving
+        get() = name.isNotBlank() &&
+            description.isNotBlank() &&
+            deadline.isNotBlank() &&
+            groupId != null &&
+            !isSaving
 }
 
 class CreateProjectViewModel(

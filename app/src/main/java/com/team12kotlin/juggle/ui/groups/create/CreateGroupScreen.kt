@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.clearText
@@ -42,6 +43,7 @@ import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.showKeyboardOnFocus
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
@@ -183,6 +185,7 @@ fun CreateGroupContent(
                             searchBarState = searchBarState,
                             textFieldState = searchTextFieldState,
                             onSearch = { onSearch(it) },
+                            modifier = Modifier.showKeyboardOnFocus(),
                             placeholder = {
                                 Text("Search for a user...")
                             },
@@ -198,6 +201,10 @@ fun CreateGroupContent(
                 )
 
                 Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 280.dp)
+                        .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(5.dp, Alignment.Top),
                     horizontalAlignment = Alignment.Start,
                 ) {
