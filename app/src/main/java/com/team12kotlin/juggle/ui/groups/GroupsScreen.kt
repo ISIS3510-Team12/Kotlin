@@ -7,16 +7,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -61,8 +59,6 @@ fun GroupsScreen (
     TrackScreenLoad(ScreenName.Groups, uiState.isLoading)
     val isOnline = rememberIsOnline()
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadGroups)
-    val searchBarState = rememberSearchBarState()
-    val textFieldState = rememberTextFieldState(uiState.query)
 
     LifecycleResumeEffect(Unit) {
         viewModel.loadGroups()
@@ -121,22 +117,16 @@ fun GroupsScreen (
                 contentPadding = PaddingValues(bottom = 120.dp)
             ) {
                 item {
-                    SearchBar(
-                        state = searchBarState,
-                        inputField = {
-                            SearchBarDefaults.InputField(
-                                searchBarState = searchBarState,
-                                textFieldState = textFieldState,
-                                onSearch = { viewModel.onSearch(it) },
-                                placeholder = {
-                                    Text("Search for a group...")
-                                },
-                                trailingIcon = {
-                                    Icon(
-                                        imageVector = MaterialSymbols.Outlined.Search,
-                                        contentDescription = "Search"
-                                    )
-                                }
+                    OutlinedTextField(
+                        value = uiState.query,
+                        onValueChange = viewModel::onQueryChange,
+                        singleLine = true,
+                        shape = RoundedCornerShape(100.dp),
+                        placeholder = { Text("Search for a group...") },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = MaterialSymbols.Outlined.Search,
+                                contentDescription = "Search"
                             )
                         },
                         modifier = Modifier

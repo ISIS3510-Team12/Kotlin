@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -298,8 +297,10 @@ private fun DailyReminderSettingsItem(
             }
         }
         if (showDialog) {
-            DatePickerDialog(
+            AlertDialog(
                 onDismissRequest = { showDialog = false },
+                title = { Text("Select time") },
+                text = { TimePicker(state = timePickerState) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -311,9 +312,7 @@ private fun DailyReminderSettingsItem(
                 dismissButton = {
                     TextButton(onClick = { showDialog = false }) { Text("Cancel") }
                 }
-            ) {
-                TimePicker(state = timePickerState)
-            }
+            )
         }
     }
 }

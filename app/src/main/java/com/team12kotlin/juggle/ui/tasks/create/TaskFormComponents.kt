@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -196,8 +197,10 @@ internal fun TimePickerField(
     )
 
     if (showDialog) {
-        DatePickerDialog(
+        AlertDialog(
             onDismissRequest = { showDialog = false },
+            title = { Text("Select time") },
+            text = { TimePicker(state = timePickerState) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -209,9 +212,7 @@ internal fun TimePickerField(
             dismissButton = {
                 TextButton(onClick = { showDialog = false }) { Text("Cancel") }
             }
-        ) {
-            TimePicker(state = timePickerState)
-        }
+        )
     }
 }
 
@@ -333,7 +334,8 @@ internal fun RelatedTasksPicker(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(RELATED_TASKS_HEIGHT)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             tasks.forEach { related ->
                 RelatedTaskItem(

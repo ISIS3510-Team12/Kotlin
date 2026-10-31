@@ -124,7 +124,7 @@ internal fun CreateProjectContent(
                     placeholder = { Text("Describe the project") },
                     supportingText = {
                         SupportingTextWithCounter(
-                            text = "Optional",
+                            text = "Required",
                             length = uiState.description.length,
                             maxLength = ProjectFieldLimits.DESCRIPTION_MAX_LENGTH
                         )

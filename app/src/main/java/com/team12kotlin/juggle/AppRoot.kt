@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -476,7 +475,7 @@ fun AppRoot(
                     viewModel = navbarViewModel,
                     onDestinationSelected = { destination ->
                         navController.navigate(destination.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
+                            popUpTo(NavigationDestination.Home.route) {
                                 saveState = true
                             }
                             launchSingleTop = true

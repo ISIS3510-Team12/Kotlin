@@ -46,6 +46,7 @@ import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Search
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.showKeyboardOnFocus
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
@@ -211,6 +212,7 @@ private fun EditGroupContent(
                             searchBarState = searchBarState,
                             textFieldState = searchTextFieldState,
                             onSearch = onSearch,
+                            modifier = Modifier.showKeyboardOnFocus(),
                             placeholder = {
                                 Text("Search for users...")
                             },
