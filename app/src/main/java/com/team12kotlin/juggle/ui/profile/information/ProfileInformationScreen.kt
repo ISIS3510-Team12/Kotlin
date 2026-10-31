@@ -48,6 +48,7 @@ fun ProfileInformationScreen(
     ProfileInformationContent(
         modifier = modifier,
         uiState = uiState,
+        showCachedData = rememberIsOnline() == false && uiState.loaded,
         onRetry = viewModel::loadUser,
         goBack = goBack
     )
@@ -58,13 +59,18 @@ fun ProfileInformationScreen(
 private fun ProfileInformationContent(
     uiState: ProfileInformationUiState,
     modifier: Modifier = Modifier,
+    showCachedData: Boolean = false,
     onRetry: () -> Unit = {},
     goBack: () -> Unit = {}
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
-            BackTopBar(title = "Profile Information", onBack = goBack)
+            BackTopBar(
+                title = "Profile Information",
+                onBack = goBack,
+                showCachedData = showCachedData
+            )
         }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {

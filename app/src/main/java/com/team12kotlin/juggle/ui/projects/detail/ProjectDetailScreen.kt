@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
@@ -59,6 +60,11 @@ fun ProjectDetailScreen(
     val isOnline = rememberIsOnline()
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::load)
 
+    LifecycleResumeEffect(Unit) {
+        viewModel.load()
+        onPauseOrDispose { }
+    }
+
     ProjectDetailContent(
         modifier = modifier,
         uiState = uiState,
@@ -81,7 +87,13 @@ internal fun ProjectDetailContent(
 ) {
     Scaffold(
         modifier = modifier,
-        topBar = { BackTopBar(title = "Project detail", onBack = onBackClick) }
+        topBar = {
+            BackTopBar(
+                title = "Project detail",
+                onBack = onBackClick,
+                showCachedData = rememberIsOnline() == false && uiState.project != null
+            )
+        }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {
             LazyColumn(

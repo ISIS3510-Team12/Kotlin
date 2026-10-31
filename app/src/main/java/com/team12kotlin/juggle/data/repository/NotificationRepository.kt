@@ -12,7 +12,7 @@ class NotificationRepository(
         try {
             api.getNotifications().also { cache.save(it) }
         } catch (e: java.io.IOException) {
-            val cached = cache.read()
-            if (cached.isEmpty()) throw e else cached
+            val cached = cache.read() ?: throw e
+            cached
         }
 }

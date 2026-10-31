@@ -50,6 +50,7 @@ fun NotificationsScreen(
         uiState = uiState,
         modifier = modifier,
         goBack = goBack,
+        showCachedData = isOnline == false && uiState.notifications.isNotEmpty(),
         onNotificationDismissed = viewModel::onNotificationDismissed,
         onRetry = viewModel::loadNotifications,
     )
@@ -61,13 +62,18 @@ fun NotificationsContent(
     uiState: NotificationsUiState,
     modifier: Modifier = Modifier,
     goBack: () -> Unit = {},
+    showCachedData: Boolean = false,
     onNotificationDismissed: (Int) -> Unit = {},
     onRetry: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier,
         topBar = {
-            BackTopBar(title = "Notifications", onBack = goBack)
+            BackTopBar(
+                title = "Notifications",
+                onBack = goBack,
+                showCachedData = showCachedData
+            )
         }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {

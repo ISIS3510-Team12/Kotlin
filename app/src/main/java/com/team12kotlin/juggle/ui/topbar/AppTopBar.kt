@@ -28,6 +28,7 @@ import com.team12kotlin.juggle.R
 import com.team12kotlin.juggle.ui.components.OfflineBanner
 import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
+import com.team12kotlin.juggle.ui.components.CachedDataBanner
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -38,6 +39,7 @@ fun AppTopBar(
     modifier: Modifier = Modifier,
     viewModel: TopBarViewModel = viewModel(),
     showGroupIcon: Boolean? = false,
+    showCachedData: Boolean = false,
     onMenuClick: () -> Unit = {},
     onProfileClick: (NavigationDestination) -> Unit = {}
 ) {
@@ -51,6 +53,7 @@ fun AppTopBar(
         userInitial = uiState.userInitial,
         showGroupIcon = showGroupIcon ?: uiState.showGroupIcon,
         isOnline = isOnline,
+        showCachedData = showCachedData,
         onMenuClick = {
             viewModel.onMenuClick()
             onMenuClick()
@@ -83,6 +86,7 @@ private fun AppTopBarContent(
     modifier: Modifier = Modifier,
     darkTheme: Boolean = isSystemInDarkTheme(),
     isOnline: Boolean? = true,
+    showCachedData: Boolean = false,
     onMenuClick: () -> Unit = {},
     onProfileClick: () -> Unit = {}
 ) {
@@ -121,6 +125,9 @@ private fun AppTopBarContent(
         }
         if (isOnline == false) {
             OfflineBanner(isOnline = false)
+        }
+        if (showCachedData) {
+            CachedDataBanner()
         }
     }
 }

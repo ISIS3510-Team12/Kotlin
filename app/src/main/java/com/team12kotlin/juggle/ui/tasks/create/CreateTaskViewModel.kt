@@ -162,7 +162,7 @@ class CreateTaskViewModel(
 
                     val related: MutableList<RelatedTask> = mutableListOf()
                     for (task in allTasks) {
-                        if (task.groupId == groupId) {
+                        if (task.groupId == groupId && task.id > 0) {
                             related.add(
                                 RelatedTask(
                                     task = task,

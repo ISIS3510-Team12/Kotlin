@@ -190,11 +190,7 @@ fun AppRoot(
                         },
                         onCreateGroupClick = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     )
@@ -210,11 +206,7 @@ fun AppRoot(
                         },
                         onAllTasksClick = {
                             navController.navigate(NavigationDestination.AllTasks.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         onEditGroupClick = { groupId ->
@@ -227,11 +219,7 @@ fun AppRoot(
                         },
                         onNavigateToCreateGroup = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         }
                     )
@@ -311,11 +299,7 @@ fun AppRoot(
                         onProfileClick = { navController.navigate(it.route) },
                         onNavigateToCreateGroup = {
                             navController.navigate(NavigationDestination.CreateGroup.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
                                 launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         onGroupClick = { group ->

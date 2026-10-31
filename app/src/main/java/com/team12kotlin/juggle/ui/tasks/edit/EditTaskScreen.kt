@@ -222,7 +222,7 @@ fun EditTaskScreen(
                 ) {
                     Button(
                         onClick = viewModel::onEditTask,
-                        enabled = uiState.canSave && !isOffline,
+                        enabled = uiState.canSave && (!isOffline || uiState.isPending),
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(imageVector = MaterialSymbols.Outlined.Check, contentDescription = null)

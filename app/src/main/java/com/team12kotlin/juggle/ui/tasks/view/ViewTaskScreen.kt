@@ -1,5 +1,6 @@
 package com.team12kotlin.juggle.ui.tasks.view
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,9 +35,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ToggleFloatingActionButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +60,6 @@ import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Edit
 import com.composables.icons.materialsymbols.outlined.Info
 import com.composables.icons.materialsymbols.outlined.Star
-import com.composables.icons.materialsymbols.outlined.Stars
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.components.BackTopBar
@@ -69,6 +71,7 @@ import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.tasks.create.EvidenceView
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.utils.taskDue
+import com.team12kotlin.juggle.utils.splitDeadline
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,7 +86,12 @@ fun ViewTaskScreen(
     TrackScreenLoad(ScreenName.ViewTask, uiState.isLoading)
     val isOnline = rememberIsOnline()
     val isOffline = isOnline == false
+    val context = LocalContext.current
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::loadTask)
+
+    LaunchedEffect(uiState.deleted) {
+        if (uiState.deleted) onBackClick()
+    }
 
     BackHandler(enabled = uiState.isFabMenuExpanded) {
         viewModel.onFabMenuDismiss()
@@ -98,7 +106,11 @@ fun ViewTaskScreen(
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                BackTopBar(title = "View task", onBack = onBackClick)
+                BackTopBar(
+                    title = "View task",
+                    onBack = onBackClick,
+                    showCachedData = isOffline && uiState.task.id > 0 && !uiState.isPending
+                )
             }
         ) { innerPadding ->
             if (uiState.isLoading && uiState.task.id == 0) {
@@ -169,7 +181,16 @@ fun ViewTaskScreen(
 
                 // Scheduled card
                 ScheduledCard(
-                    deadline = task.deadline ?: "No deadline set",
+                    deadline = task.deadline?.takeIf { it.isNotBlank() }?.let { value ->
+                        val (date, time) = splitDeadline(value)
+                        if (date.isBlank()) {
+                            value
+                        } else if (time.isBlank()) {
+                            date
+                        } else {
+                            "$date $time"
+                        }
+                    } ?: "No deadline set",
                     reminder = task.reminders.firstOrNull(),
                     isOffline = isOffline || uiState.isPending,
                     onReminderToggle = viewModel::onReminderToggle,
@@ -244,23 +265,30 @@ fun ViewTaskScreen(
             }
         }
 
-        if (!isOffline && !uiState.isPending) {
-            TaskActionsFabMenu(
-                expanded = uiState.isFabMenuExpanded,
-                onToggle = viewModel::onFabMenuToggle,
-                onAction = { action ->
-                    if (action == TaskAction.EDIT_TASK) {
-                        viewModel.onFabMenuDismiss()
-                        onEditTask(uiState.task.id)
-                    } else {
-                        viewModel.onTaskAction(action)
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 104.dp)
-            )
-        }
+        TaskActionsFabMenu(
+            expanded = uiState.isFabMenuExpanded,
+            actionsEnabled = !isOffline && !uiState.isPending,
+            onToggle = viewModel::onFabMenuToggle,
+            onAction = { action ->
+                if (action == TaskAction.EDIT_TASK) {
+                    viewModel.onFabMenuDismiss()
+                    onEditTask(uiState.task.id)
+                } else {
+                    viewModel.onTaskAction(action)
+                }
+            },
+            onDisabledAction = { action ->
+                val message = if (isOffline) {
+                    action.offlineMessage
+                } else {
+                    "This task is still waiting to upload."
+                }
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(bottom = 104.dp)
+        )
     }
 }
 
@@ -268,12 +296,24 @@ fun ViewTaskScreen(
 @Composable
 private fun TaskActionsFabMenu(
     expanded: Boolean,
+    actionsEnabled: Boolean,
     onToggle: () -> Unit,
     onAction: (TaskAction) -> Unit,
+    onDisabledAction: (TaskAction) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val fabContainerColor = MaterialTheme.colorScheme.primary
     val fabContentColor = MaterialTheme.colorScheme.primaryContainer
+    val itemContainerColor = if (actionsEnabled) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+    val itemContentColor = if (actionsEnabled) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
 
     FloatingActionButtonMenu(
         expanded = expanded,
@@ -298,7 +338,9 @@ private fun TaskActionsFabMenu(
     ) {
         TaskAction.entries.forEach { action ->
             FloatingActionButtonMenuItem(
-                onClick = { onAction(action) },
+                onClick = {
+                    if (actionsEnabled) onAction(action) else onDisabledAction(action)
+                },
                 icon = { Icon(imageVector = action.icon, contentDescription = null) },
                 text = {
                     Text(
@@ -306,8 +348,8 @@ private fun TaskActionsFabMenu(
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                     )
                 },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                containerColor = itemContainerColor,
+                contentColor = itemContentColor
             )
         }
     }
@@ -320,7 +362,15 @@ private val TaskAction.icon: ImageVector
         TaskAction.DELETE_TASK -> MaterialSymbols.Outlined.Delete
         TaskAction.ASK_FOR_HELP -> MaterialSymbols.Outlined.Chat
         TaskAction.MARK_AS_STARTED -> MaterialSymbols.Outlined.Star
-        TaskAction.ASSIGN_TIME_SLOT -> MaterialSymbols.Outlined.Stars
+    }
+
+private val TaskAction.offlineMessage: String
+    get() = when (this) {
+        TaskAction.MARK_AS_COMPLETE -> "No connection. Reconnect to complete this task."
+        TaskAction.EDIT_TASK -> "No connection. Reconnect to edit this task."
+        TaskAction.DELETE_TASK -> "No connection. Reconnect to delete this task."
+        TaskAction.ASK_FOR_HELP -> "No connection. Reconnect to ask for help."
+        TaskAction.MARK_AS_STARTED -> "No connection. Reconnect to start this task."
     }
 
 @Composable

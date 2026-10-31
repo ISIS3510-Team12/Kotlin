@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,7 +19,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,8 +36,7 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add
-import com.composables.icons.materialsymbols.outlined.Check
-import com.composables.icons.materialsymbols.outlined.Settings
+import com.composables.icons.materialsymbols.outlined.Folder
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.IconMonogram
@@ -78,6 +75,7 @@ fun GroupDetailScreen(
         group = uiState.group,
         relatedProjects = uiState.relatedProjects,
         isLoading = uiState.isLoading,
+        showCachedData = isOnline == false && uiState.group != null,
         errorMessage = uiState.errorMessage,
         isOffline = isOnline == false,
         onBackClick = onBackClick,
@@ -97,6 +95,7 @@ private fun GroupDetailContent(
     isLoading: Boolean = false,
     errorMessage: String? = null,
     isOffline: Boolean = false,
+    showCachedData: Boolean = false,
     onBackClick: () -> Unit = {},
     onCreateProjectClick: () -> Unit = {},
     onProjectClick: (Project) -> Unit = {},
@@ -106,7 +105,11 @@ private fun GroupDetailContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            BackTopBar(title = "Group detail", onBack = onBackClick)
+            BackTopBar(
+                title = "Group detail",
+                onBack = onBackClick,
+                showCachedData = showCachedData
+            )
         },
         floatingActionButton = {
             if (!isOffline) ExtendedFloatingActionButton(
@@ -245,7 +248,7 @@ private fun RelatedProjectCard(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             IconMonogram(
-                icon = MaterialSymbols.Outlined.Check,
+                icon = MaterialSymbols.Outlined.Folder,
                 contentDescription = "Project"
             )
             Column(
@@ -258,22 +261,6 @@ private fun RelatedProjectCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = MaterialSymbols.Outlined.Settings,
-                        contentDescription = "Project options",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
         }
     }

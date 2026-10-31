@@ -357,26 +357,36 @@ internal fun EvidencesField(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pendingUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingFile by remember { mutableStateOf<File?>(null) }
 
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         val uri = pendingUri
+        val file = pendingFile
+        pendingUri = null
+        pendingFile = null
         if (success && uri != null) {
             scope.launch {
                 val result = withContext(Dispatchers.IO) {
-                    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
-                    val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
-                    if (bytes != null) bytes to mimeType else null
+                    runCatching {
+                        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                        val mimeType = context.contentResolver.getType(uri) ?: "image/jpeg"
+                        if (bytes != null) bytes to mimeType else null
+                    }.getOrNull()
                 }
+                file?.delete()
                 result?.let { (bytes, mimeType) -> onPhotoTaken(bytes, mimeType) }
             }
+        } else {
+            file?.delete()
         }
     }
 
     fun takePhoto() {
-        val uri = createEvidenceUri(context)
+        val (uri, file) = createEvidenceUri(context)
         pendingUri = uri
+        pendingFile = file
         cameraLauncher.launch(uri)
     }
 
@@ -547,10 +557,10 @@ private fun previewSampleSize(width: Int, height: Int): Int {
 
 private const val PREVIEW_MAX_PX = 1080
 
-private fun createEvidenceUri(context: Context): Uri {
+private fun createEvidenceUri(context: Context): Pair<Uri, File> {
     val directory = File(context.filesDir, "evidences").apply { mkdirs() }
     val file = File.createTempFile("evidence_", ".jpg", directory)
-    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file) to file
 }
 
 private fun formatSelectedDate(millis: Long): String {

@@ -39,16 +39,8 @@ class CalendarViewModel(
     )
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
-    private val rangePrefs = Dependencies.appContext
-        .getSharedPreferences("calendar_window", android.content.Context.MODE_PRIVATE)
-
-    // Rango actualmente en caché (null = nada cargado aún)
-    private var loadedStart: LocalDate? = rangePrefs.getLong("start", 0L)
-        ?.takeIf { it > 0L }
-        ?.let { LocalDate.ofEpochDay(it) }
-    private var loadedEnd: LocalDate? = rangePrefs.getLong("end", 0L)
-        ?.takeIf { it > 0L }
-        ?.let { LocalDate.ofEpochDay(it) }
+    private var loadedStart: LocalDate? = null
+    private var loadedEnd: LocalDate? = null
 
     init {
         fetchTasksAround(today)
@@ -84,13 +76,12 @@ class CalendarViewModel(
                     } ?: center
                 }
 
-                if (result is CacheResult.Fresh) {
+                val hasLocalRange =
+                    result is CacheResult.Fresh ||
+                        (result is CacheResult.Stale && !result.isCacheMiss)
+                if (hasLocalRange) {
                     loadedStart = minOf(loadedStart ?: windowStart, windowStart)
                     loadedEnd = maxOf(loadedEnd ?: windowEnd, windowEnd)
-                    rangePrefs.edit()
-                        .putLong("start", loadedStart!!.toEpochDay())
-                        .putLong("end", loadedEnd!!.toEpochDay())
-                        .apply()
                 }
 
                 val selectedDate = _uiState.value.selectedDate
@@ -100,8 +91,9 @@ class CalendarViewModel(
                     start == null || end == null || selectedDate < start || selectedDate > end
 
                 _uiState.update { prev ->
+                    val kept = prev.tasksByDate.filterKeys { it < windowStart || it > windowEnd }
                     prev.copy(
-                        tasksByDate = prev.tasksByDate + grouped,
+                        tasksByDate = kept + grouped,
                         isLoading = false,
                         errorMessage = null,
                         dayNotLoaded = outsideWindow && result is CacheResult.Stale

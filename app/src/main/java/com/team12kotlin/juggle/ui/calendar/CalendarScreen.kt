@@ -74,6 +74,7 @@ fun CalendarScreen(
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
         dayNotLoaded = uiState.dayNotLoaded,
+        showCachedData = isOnline == false && uiState.tasksByDate.isNotEmpty(),
         onProfileClick = onProfileClick,
         onDateSelected = viewModel::onDateSelected,
         onRetry = viewModel::retry,
@@ -92,6 +93,7 @@ private fun CalendarContent(
     isLoading: Boolean = false,
     errorMessage: String? = null,
     dayNotLoaded: Boolean = false,
+    showCachedData: Boolean = false,
     onProfileClick: (NavigationDestination) -> Unit = {},
     onDateSelected: (LocalDate) -> Unit = {},
     onRetry: () -> Unit = {},
@@ -100,7 +102,10 @@ private fun CalendarContent(
     Scaffold(
         modifier = modifier,
         topBar = {
-            AppTopBar(onProfileClick = onProfileClick)
+            AppTopBar(
+                onProfileClick = onProfileClick,
+                showCachedData = showCachedData
+            )
         }
     ) { innerPadding ->
         Column(

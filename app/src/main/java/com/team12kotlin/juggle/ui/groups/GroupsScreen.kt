@@ -1,14 +1,13 @@
 package com.team12kotlin.juggle.ui.groups
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -26,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,7 +83,10 @@ fun GroupsScreen (
             SnackbarHost(snackbarHostState, modifier = Modifier.padding(bottom = 104.dp))
         },
         topBar = {
-            AppTopBar(onProfileClick = onProfileClick)
+            AppTopBar(
+                onProfileClick = onProfileClick,
+                showCachedData = isOnline == false && uiState.groups.isNotEmpty()
+            )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -113,58 +114,64 @@ fun GroupsScreen (
         }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {
-            Column(
+            LazyColumn(
                 modifier = Modifier
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(bottom = 120.dp)
             ) {
-                SearchBar(
-                    state = searchBarState,
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            searchBarState = searchBarState,
-                            textFieldState = textFieldState,
-                            onSearch = { viewModel.onSearch(it) },
-                            placeholder = {
-                                Text("Search for a group...")
-                            },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = MaterialSymbols.Outlined.Search,
-                                    contentDescription = "Search"
-                                )
-                            }
-                        )
-                    },
-                    modifier = Modifier.padding(start=20.dp, top=5.dp, end=20.dp, bottom = 20.dp).fillMaxWidth()
-                )
-                uiState.errorMessage?.let { message ->
-                    Row(
+                item {
+                    SearchBar(
+                        state = searchBarState,
+                        inputField = {
+                            SearchBarDefaults.InputField(
+                                searchBarState = searchBarState,
+                                textFieldState = textFieldState,
+                                onSearch = { viewModel.onSearch(it) },
+                                placeholder = {
+                                    Text("Search for a group...")
+                                },
+                                trailingIcon = {
+                                    Icon(
+                                        imageVector = MaterialSymbols.Outlined.Search,
+                                        contentDescription = "Search"
+                                    )
+                                }
+                            )
+                        },
                         modifier = Modifier
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ErrorCard(
-                            message = message,
-                            onRetry = viewModel::loadGroups
-                        )
+                            .padding(start = 20.dp, top = 5.dp, end = 20.dp, bottom = 20.dp)
+                            .fillMaxWidth()
+                    )
+                }
+                uiState.errorMessage?.let { message ->
+                    item {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            ErrorCard(
+                                message = message,
+                                onRetry = viewModel::loadGroups
+                            )
+                        }
                     }
                 }
                 if (!uiState.isLoading && !uiState.loadFailed && uiState.filteredGroups.isEmpty()) {
-                    Text(
-                        text = "No groups yet",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
-                    )
-                }
-                Column {
-                    uiState.filteredGroups.forEach { group ->
-                        GroupCard(
-                            group = group,
-                            onClick = { onGroupClick(group) }
+                    item {
+                        Text(
+                            text = "No groups yet",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
                         )
                     }
+                }
+                items(uiState.filteredGroups, key = { it.id }) { group ->
+                    GroupCard(
+                        group = group,
+                        onClick = { onGroupClick(group) }
+                    )
                 }
             }
         }

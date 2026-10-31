@@ -21,6 +21,7 @@ data class SettingsUiState(
     val dailyRemindersEnabled: Boolean = true,
     val dailyReminderHour: Int = 18,
     val dailyReminderMinute: Int = 0,
+    val pendingSignOutChanges: Int? = null,
 )
 
 class SettingsViewModel(
@@ -89,7 +90,28 @@ class SettingsViewModel(
         // TODO: theme selection is not designed yet, the app follows the system appearance
     }
 
-    fun onSignOut(onSignedOut: () -> Unit) {
+    fun onSignOutRequested(onSignedOut: () -> Unit) {
+        if (_uiState.value.pendingSignOutChanges != null) return
+        viewModelScope.launch {
+            val pendingChanges = Dependencies.pendingTaskStore.all().size
+            if (pendingChanges > 0) {
+                _uiState.update { it.copy(pendingSignOutChanges = pendingChanges) }
+            } else {
+                signOut(onSignedOut)
+            }
+        }
+    }
+
+    fun onSignOutConfirmed(onSignedOut: () -> Unit) {
+        _uiState.update { it.copy(pendingSignOutChanges = null) }
+        signOut(onSignedOut)
+    }
+
+    fun onSignOutDismissed() {
+        _uiState.update { it.copy(pendingSignOutChanges = null) }
+    }
+
+    private fun signOut(onSignedOut: () -> Unit) {
         val context = getApplication<Application>().applicationContext
         ScheduledReminderScheduler.cancel(context)
         reminderStore.clear()

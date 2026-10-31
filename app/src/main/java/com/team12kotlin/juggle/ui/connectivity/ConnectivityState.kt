@@ -18,9 +18,9 @@ fun IsOnlineProvider(content: @Composable () -> Unit) {
     val observer = remember(context) {
         ConnectivityObserver(context.applicationContext)
     }
-    val isOnline by observer.isOnline
-        .map<Boolean, Boolean?> { it }
-        .collectAsStateWithLifecycle(initialValue = null)
+    val isOnline by remember(observer) {
+        observer.isOnline.map<Boolean, Boolean?> { it }
+    }.collectAsStateWithLifecycle(initialValue = null)
 
     CompositionLocalProvider(LocalIsOnline provides isOnline, content = content)
 }

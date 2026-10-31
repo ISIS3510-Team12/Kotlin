@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -68,8 +69,46 @@ fun SettingsScreen(
         onDailyReminderTimeChange = viewModel::onDailyReminderTimeChange,
         onLocationRemindersClick = onLocationRemindersClick,
         onSignOutClick = {
-            LocationReminderSync.onSignedOut(context)
-            viewModel.onSignOut(onSignedOut)
+            viewModel.onSignOutRequested(onSignedOut)
+        }
+    )
+
+    uiState.pendingSignOutChanges?.let { pendingChanges ->
+        SignOutConfirmationDialog(
+            pendingChanges = pendingChanges,
+            onDismiss = viewModel::onSignOutDismissed,
+            onConfirm = {
+                LocationReminderSync.onSignedOut(context)
+                viewModel.onSignOutConfirmed(onSignedOut)
+            }
+        )
+    }
+}
+
+@Composable
+private fun SignOutConfirmationDialog(
+    pendingChanges: Int,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    val changes = if (pendingChanges == 1) "change is" else "changes are"
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Sign out?") },
+        text = {
+            Text(
+                "$pendingChanges $changes still waiting to upload and will be discarded if you sign out."
+            )
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Stay signed in")
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text("Sign out")
+            }
         }
     )
 }

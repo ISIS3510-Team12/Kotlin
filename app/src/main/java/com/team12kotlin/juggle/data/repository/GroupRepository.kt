@@ -29,15 +29,20 @@ class GroupRepository(
             userId = userId,
             resource = "groups",
             scopeId = userId,
-            remote = {api.getGroups()},
-            saveLocal = {groups ->
+            remote = { api.getGroups().withoutEmptyNames() },
+            saveLocal = { groups ->
                 groupDao.replaceForUser(userId, groups.map { mapper.toEntity(userId, it) })
             },
             readLocal = {
-                groupDao.getGroups(userId).mapNotNull { mapper.toDomainOrNull(it) }
+                groupDao.getGroups(userId)
+                    .mapNotNull { mapper.toDomainOrNull(it) }
+                    .withoutEmptyNames()
             }
         )
     }
+
+    private fun List<Group>.withoutEmptyNames(): List<Group> =
+        filter { it.name.isNotBlank() }
 
     suspend fun getGroup(groupId: Int): Group {
         return try {

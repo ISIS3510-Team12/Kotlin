@@ -6,8 +6,6 @@ import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Task
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -117,11 +115,8 @@ class TasksViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = showLoading, errorMessage = null) }
 
-            val (ownResult, groupResult) = coroutineScope {
-                val own = async { runCatching { repository.getOwnTasksCached(groupId) } }
-                val group = async { runCatching { repository.getGroupTasksCached(groupId) } }
-                own.await() to group.await()
-            }
+            val groupResult = runCatching { repository.getGroupTasksCached(groupId) }
+            val ownResult = runCatching { repository.getOwnTasksCached(groupId) }
 
             val error = ownResult.exceptionOrNull() ?: groupResult.exceptionOrNull()
             if (error is CancellationException) throw error

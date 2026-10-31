@@ -27,6 +27,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -85,7 +86,7 @@ class HomeViewModel : ViewModel() {
 
     init {
         viewModelScope.launch {
-            Dependencies.pendingTaskStore.synced.collect { load() }
+            Dependencies.pendingTaskStore.synced.filter { it > 0L }.collect { load() }
         }
     }
 

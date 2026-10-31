@@ -91,7 +91,11 @@ fun HomeScreen (
     Scaffold(
         modifier = modifier,
         topBar = {
-            AppTopBar(onProfileClick = onProfileClick)
+            AppTopBar(
+                onProfileClick = onProfileClick,
+                showCachedData = isOnline == false &&
+                    (uiState.dataLoaded || uiState.notificationsLoaded || uiState.user.firstName.isNotBlank())
+            )
         },
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {
