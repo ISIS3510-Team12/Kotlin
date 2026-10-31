@@ -62,7 +62,7 @@ fun nextTaskMeta(groupName: String, dueAt: String?, now: LocalDateTime = LocalDa
         parsed.isBefore(now) -> parsed.toLocalDate().format(DUE_DATE_UI)
         else -> taskDue(dueAt, now)?.text
     }
-    return listOfNotNull(groupName.takeIf { it.isNotBlank() }, due).joinToString("  ·  ")
+    return listOfNotNull(groupName.takeIf { it.isNotBlank() }, due).joinToString("  -  ")
 }
 
 fun parseDeadline(deadline: String): LocalDateTime? {

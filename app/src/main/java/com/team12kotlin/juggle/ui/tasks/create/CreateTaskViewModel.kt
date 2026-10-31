@@ -305,7 +305,8 @@ class CreateTaskViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
                 taskRepository.createTask(
-                    TaskCreateRequest(
+                    evidence = state.evidenceBytes.takeIf { state.evidenceDirty },
+                    request = TaskCreateRequest(
                         title = state.title,
                         taskType = state.taskType ?: "",
                         description = state.notes.takeIf { it.isNotBlank() },
@@ -320,7 +321,7 @@ class CreateTaskViewModel(
                 )
             }
                 .onSuccess { task ->
-                    uploadEvidence(task.id)
+                    if (task.id > 0) uploadEvidence(task.id)
                     _uiState.update { it.copy(isLoading = false, createdTaskId = task.id) }
                 }
                 .onFailure { error ->

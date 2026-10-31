@@ -2,6 +2,9 @@ package com.team12kotlin.juggle.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +43,7 @@ import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlinedfilled.Circle_notifications
+import com.composables.icons.materialsymbols.outlinedfilled.Assignment_late
 import com.composables.icons.materialsymbols.roundedfilled.Groups
 import com.composables.icons.materialsymbols.roundedfilled.List_alt
 import com.team12kotlin.juggle.ui.components.ErrorCard
@@ -68,6 +72,8 @@ fun HomeScreen (
     onTaskClick: (Task) -> Unit = {},
     onNextTaskClick: (Int) -> Unit = {},
     onNotificationClick: (Notification) -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onUrgentTasksClick: () -> Unit = {},
     onCreateTaskClick: (Int) -> Unit = {},
     onCreateGroupClick: () -> Unit = {},
 ) {
@@ -75,6 +81,7 @@ fun HomeScreen (
     TrackScreenLoad(ScreenName.Home, uiState.isLoading)
     val isOnline = rememberIsOnline()
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::load)
+    val showNextTask = !(uiState.nextTask is NextTaskUiState.Error && isOnline == false)
     val sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
 
     LifecycleResumeEffect(Unit) {
@@ -88,131 +95,128 @@ fun HomeScreen (
         },
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {
-            Column(
+            Box(
                 modifier = modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
             ) {
-                Column(
-                    modifier = modifier
-                        .padding(8.dp)
-                        .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 0.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 136.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(
-                            start = 0.dp,
-                            top = 0.dp,
-                            end = 0.dp,
-                            bottom = 0.dp
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
-                        horizontalAlignment = Alignment.Start,
-                    ) {
-                        Column(modifier = Modifier) {
-                            Text(
-                                text = "Hi " + uiState.user.firstName + "!",
-                                style = MaterialTheme.typography.displayMedium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = LocalDate.now().format(HOME_DATE),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.weight(1f),
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                OutlinedButton(
-                                    onClick = { viewModel.onQuickActionPress() },
-                                    modifier = Modifier
-                                        .padding(start = 8.dp),
-                                    shape = RoundedCornerShape(20.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color.Transparent,
-                                        contentColor = MaterialTheme.colorScheme.onBackground
-                                    ),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                                ) {
-                                    Text(
-                                        text = "Quick Actions",
-                                        style = MaterialTheme.typography.labelLarge,
-                                        fontWeight = FontWeight.SemiBold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-                            }
+                    item {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             uiState.errorMessage?.let { message ->
                                 ErrorCard(
                                     message = message,
                                     onRetry = viewModel::load,
-                                    modifier = Modifier.padding(top = 12.dp)
+                                    modifier = Modifier.padding(bottom = 12.dp)
                                 )
                             }
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                Column(modifier = Modifier) {
+                                    Text(
+                                        text = "Hi " + uiState.user.firstName + "!",
+                                        style = MaterialTheme.typography.displayMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            text = LocalDate.now().format(HOME_DATE),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.weight(1f),
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        OutlinedButton(
+                                            onClick = { viewModel.onQuickActionPress() },
+                                            modifier = Modifier.padding(start = 8.dp),
+                                            shape = RoundedCornerShape(20.dp),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.Transparent,
+                                                contentColor = MaterialTheme.colorScheme.onBackground
+                                            ),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = "Quick Actions",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                fontWeight = FontWeight.SemiBold,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+                                Text(
+                                    text = "Overview",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        10.dp,
+                                        Alignment.CenterHorizontally
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    OverviewCard(
+                                        icon = MaterialSymbols.OutlinedFilled.Assignment_late,
+                                        label = "Urgent Tasks",
+                                        unit = "Tasks",
+                                        count = uiState.urgentCount.takeIf { uiState.urgentLoaded },
+                                        modifier = Modifier.weight(1f),
+                                        onClick = onUrgentTasksClick,
+                                    )
+                                    OverviewCard(
+                                        icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
+                                        label = "Today's Notifications",
+                                        unit = "Notifications",
+                                        count = uiState.notificationCount.takeIf { uiState.notificationsLoaded },
+                                        modifier = Modifier.weight(1f),
+                                        onClick = onNotificationsClick,
+                                    )
+                                }
+                            }
                         }
-                        Text(
-                            text = "Overview",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Row(
+                    }
+                    if (showNextTask) {
+                        item {
+                            Text(
+                                text = "Up next",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(start = 12.dp, top = 12.dp, end = 12.dp, bottom = 0.dp)
+                            )
+                        }
+                        item {
+                            NextTaskSection(
+                                state = uiState.nextTask,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                onTaskClick = onNextTaskClick,
+                                onRetry = viewModel::loadNextTask
+                            )
+                        }
+                    }
+                    item {
+                        PrimaryTabRow(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
-                            horizontalArrangement = Arrangement.spacedBy(
-                                10.dp,
-                                Alignment.CenterHorizontally
-                            ),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            OverviewCard(
-                                icon = MaterialSymbols.RoundedFilled.List_alt,
-                                title = "Tasks",
-                                count = uiState.taskCount.takeIf { uiState.dataLoaded },
-                                modifier = Modifier.weight(1f),
-                            )
-                            OverviewCard(
-                                icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
-                                title = "Notifications",
-                                count = uiState.notificationCount.takeIf { uiState.dataLoaded },
-                                modifier = Modifier.weight(1f),
-                            )
-                        }
-                        Text(
-                            text = "Up next",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-                }
-                NextTaskSection(
-                    state = uiState.nextTask,
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    onTaskClick = onNextTaskClick,
-                    onRetry = viewModel::loadNextTask
-                )
-                Column(
-                    modifier = modifier
-                        .padding(8.dp)
-                        .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 0.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Column {
-                        val selectedTab = uiState.selectedTab
-                        PrimaryTabRow(
-                            modifier = modifier
-                                .fillMaxWidth(),
+                                .padding(horizontal = 12.dp),
                             selectedTabIndex = uiState.selectedTab
                         ) {
                             Tab(
-                                selected = selectedTab == 0,
+                                selected = uiState.selectedTab == 0,
                                 onClick = { viewModel.onTabSelected(0) },
                                 text = {
                                     Text(
@@ -224,110 +228,101 @@ fun HomeScreen (
                                 }
                             )
                             Tab(
-                                selected = selectedTab == 1,
+                                selected = uiState.selectedTab == 1,
                                 onClick = { viewModel.onTabSelected(1) },
                                 text = {
                                     Text(
-                                        text = "Recent Activity",
+                                        text = "Recent activity",
                                         style = MaterialTheme.typography.titleSmall,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             )
-
                         }
-
                     }
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp),
-                    verticalArrangement = Arrangement.Center
-                ) {
                     if (uiState.selectedTab == 0) {
-                        if (uiState.upcomingTasks.isNotEmpty()) {
-                            uiState.upcomingTasks.forEach { task ->
-                                TaskCard(
-                                    task = task,
-                                    onClick = { onTaskClick(task) }
+                        items(uiState.upcomingTasks, key = { it.id }) { task ->
+                            TaskCard(
+                                task = task,
+                                onClick = { onTaskClick(task) }
+                            )
+                        }
+                        if (uiState.upcomingTasks.isEmpty() && uiState.tasksLoaded) {
+                            item {
+                                Text(
+                                    text = "No upcoming tasks",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 12.dp, top = 12.dp, end = 12.dp),
+                                    textAlign = TextAlign.Center
                                 )
                             }
-                        } else if (uiState.dataLoaded) {
-                            Text(
-                                text = "There are no upcoming tasks for today!",
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier
-                                    .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp),
-                                textAlign = TextAlign.Center
-                            )
                         }
                     } else {
-                        if (uiState.notifications.isNotEmpty()) {
-                            uiState.notifications.forEach { notification ->
-                                NotificationCard(
-                                    notification = notification,
-                                    onClick = { onNotificationClick(notification) }
-                                )
-                            }
-                        } else if (uiState.dataLoaded) {
-                            Text(
-                                text = "There are no notifications today!",
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier
-                                    .padding(start = 26.dp, top = 16.dp, end = 26.dp, bottom = 0.dp),
-                                textAlign = TextAlign.Center
+                        items(uiState.notifications, key = { it.id }) { notification ->
+                            NotificationCard(
+                                notification = notification,
+                                onClick = { onNotificationClick(notification) }
                             )
                         }
+                        if (uiState.notifications.isEmpty() && uiState.notificationsLoaded) {
+                            item {
+                                Text(
+                                    text = "There are no notifications today!",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 12.dp, top = 12.dp, end = 12.dp),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
-                    Spacer(modifier = Modifier.height(136.dp))
-                    if (uiState.showBottomSheet) {
-                        ModalBottomSheet(
-                            onDismissRequest = {
-                                viewModel.onDismissalBottomSheet()
-                            },
-                            sheetState = sheetState
+                }
+
+                if (uiState.showBottomSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { viewModel.onDismissalBottomSheet() },
+                        sheetState = sheetState
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(start = 30.dp, top = 10.dp, end = 30.dp, bottom = 30.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.Top),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(
+                                    10.dp,
+                                    Alignment.CenterHorizontally
+                                ),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "Quick Actions",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                             Column(
-                                modifier = Modifier
-                                    .padding(start = 30.dp, top = 10.dp, end = 30.dp, bottom = 30.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.Top),
+                                verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(
-                                        10.dp,
-                                        Alignment.CenterHorizontally
-                                    ),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Text(
-                                        text="Quick Actions",
-                                        style=MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    QuickActionItem(
-                                        title = "Add task",
-                                        description = "Create a new task instantly",
-                                        icon = MaterialSymbols.RoundedFilled.List_alt,
-                                        onClick = { uiState.firstGroupId?.let(onCreateTaskClick) }
-                                    )
-                                    QuickActionItem(
-                                        title = "Create new group",
-                                        description = "Create a group workspace",
-                                        icon = MaterialSymbols.RoundedFilled.Groups,
-                                        onClick = onCreateGroupClick
-                                    )
-                                }
-
+                                QuickActionItem(
+                                    title = "Add task",
+                                    description = "Create a new task instantly",
+                                    icon = MaterialSymbols.RoundedFilled.List_alt,
+                                    onClick = { uiState.firstGroupId?.let(onCreateTaskClick) }
+                                )
+                                QuickActionItem(
+                                    title = "Create new group",
+                                    description = "Create a group workspace",
+                                    icon = MaterialSymbols.RoundedFilled.Groups,
+                                    onClick = onCreateGroupClick
+                                )
                             }
                         }
                     }

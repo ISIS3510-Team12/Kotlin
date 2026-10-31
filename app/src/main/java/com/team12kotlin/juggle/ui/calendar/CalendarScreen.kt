@@ -74,6 +74,7 @@ fun CalendarScreen(
         tasks = uiState.tasksForSelectedDate,
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
+        dayNotLoaded = uiState.dayNotLoaded,
         onProfileClick = onProfileClick,
         onDateSelected = viewModel::onDateSelected,
         onRetry = viewModel::retry,
@@ -91,6 +92,7 @@ private fun CalendarContent(
     modifier: Modifier = Modifier,
     isLoading: Boolean = false,
     errorMessage: String? = null,
+    dayNotLoaded: Boolean = false,
     onProfileClick: (NavigationDestination) -> Unit = {},
     onDateSelected: (LocalDate) -> Unit = {},
     onRetry: () -> Unit = {},
@@ -142,7 +144,11 @@ private fun CalendarContent(
 
             if (tasks.isEmpty()) {
                 Text(
-                    text = "No tasks due this day",
+                    text = if (dayNotLoaded) {
+                        "This day wasn't loaded. Reconnect to see it."
+                    } else {
+                        "No tasks due this day"
+                    },
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

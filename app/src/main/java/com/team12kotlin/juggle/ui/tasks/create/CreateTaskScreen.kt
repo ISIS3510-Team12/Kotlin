@@ -239,14 +239,9 @@ internal fun CreateTaskContent(
                     }
                 }
 
-                OfflineActionNotice(
-                    isOffline = isOffline,
-                    modifier = contentPadding
-                )
-
                 Button(
                     onClick = onCreateClick,
-                    enabled = uiState.canCreate && !isOffline,
+                    enabled = uiState.canCreate,
                     modifier = contentPadding
                 ) {
                     Icon(imageVector = MaterialSymbols.Outlined.Add, contentDescription = null)

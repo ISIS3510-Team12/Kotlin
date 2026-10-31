@@ -1,6 +1,7 @@
 package com.team12kotlin.juggle.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.team12kotlin.juggle.data.Dependencies
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
@@ -17,18 +18,24 @@ class AuthRepository(
 
     suspend fun signIn(email: String, password: String): FirebaseUser {
         val result = firebaseAuth.signInWithEmailAndPassword(email, password).await()
-        return result.user ?: error("Sign in succeeded but returned no user")
+        val user = result.user ?: error("Sign in succeeded but returned no user")
+        Dependencies.resetSessionScopedRepositories()
+        return user
     }
 
     suspend fun signUp(email: String, password: String): FirebaseUser {
         val result = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
-        return result.user ?: error("Sign up succeeded but returned no user")
+        val user = result.user ?: error("Sign up succeeded but returned no user")
+        Dependencies.resetSessionScopedRepositories()
+        return user
     }
 
     suspend fun signInWithGoogle(idToken: String): FirebaseUser {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         val result = firebaseAuth.signInWithCredential(credential).await()
-        return result.user ?: error("Google sign in succeeded but returned no user")
+        val user = result.user ?: error("Google sign in succeeded but returned no user")
+        Dependencies.resetSessionScopedRepositories()
+        return user
     }
 
     suspend fun updateDisplayName(displayName: String): FirebaseUser? {
@@ -42,6 +49,7 @@ class AuthRepository(
 
     fun signOut() {
         firebaseAuth.signOut()
+        Dependencies.resetSessionScopedRepositories()
     }
 
 }

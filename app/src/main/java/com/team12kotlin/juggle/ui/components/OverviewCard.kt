@@ -31,11 +31,14 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 @Composable
 fun OverviewCard(
     icon: ImageVector,
-    title: String,
+    label: String,
+    unit: String,
     count: Int?,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier
             .background(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(size = 16.dp))
             .padding(start = 0.dp, top = 0.dp, end = 0.dp, bottom = 0.dp)
@@ -53,10 +56,10 @@ fun OverviewCard(
             ) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = title
+                    contentDescription = label
                 )
                 Text(
-                    text = "Today's $title",
+                    text = label,
                     style = MaterialTheme.typography.labelMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -73,7 +76,7 @@ fun OverviewCard(
                         maxLines = 1,
                     )
                     Text(
-                        text = title,
+                        text = unit,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -89,7 +92,12 @@ fun OverviewCard(
 @Composable
 private fun OverviewCardPreview() {
     JuggleTheme() {
-        OverviewCard(icon = MaterialSymbols.Outlined.Emoji_food_beverage, title = "Coffees", count=10)
+        OverviewCard(
+            icon = MaterialSymbols.Outlined.Emoji_food_beverage,
+            label = "Coffees",
+            unit = "Coffees",
+            count = 10
+        )
     }
 }
 
@@ -97,6 +105,11 @@ private fun OverviewCardPreview() {
 @Composable
 private fun OverviewCardPreviewDark() {
     JuggleTheme(darkTheme = true) {
-        OverviewCard(icon = MaterialSymbols.Outlined.Emoji_food_beverage, title = "Coffees", count=10)
+        OverviewCard(
+            icon = MaterialSymbols.Outlined.Emoji_food_beverage,
+            label = "Coffees",
+            unit = "Coffees",
+            count = 10
+        )
     }
 }

@@ -9,6 +9,7 @@ import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.Task
+import com.team12kotlin.juggle.ui.dto.TaskCreateRequest
 import com.team12kotlin.juggle.ui.dto.TaskUpdateRequest
 import com.team12kotlin.juggle.ui.tasks.create.AssignableMember
 import com.team12kotlin.juggle.ui.tasks.create.RelatedTask
@@ -96,6 +97,50 @@ class EditTaskViewModel(
         val id = taskId
         if (id == null) {
             _uiState.update { it.copy(errorMessage = "Missing task id") }
+            return
+        }
+
+        if (id < 0) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                val pending = Dependencies.pendingTaskStore.find(id)
+                if (pending == null) {
+                    _uiState.update { it.copy(isLoading = false) }
+                    return@launch
+                }
+                val groups = runCatching { groupRepository.getGroups() }.getOrDefault(emptyList())
+                val projects = runCatching {
+                    projectRepository.getProjects(pending.request.groupId)
+                }.getOrDefault(emptyList())
+                val photo = pending.photoPath?.let { Dependencies.pendingTaskStore.photo(it) }
+                val related = pending.request.relatedTaskIds.map { relatedId ->
+                    val task = runCatching { repository.getTask(relatedId) }.getOrNull()
+                    RelatedTask(
+                        task = task ?: Task(id = relatedId, title = ""),
+                        dueLabel = task?.let { taskDue(it.deadline)?.text }.orEmpty(),
+                        selected = true
+                    )
+                }
+                val base = stateForTask(
+                    TaskEditData(
+                        task = pending.toTask(),
+                        groups = groups,
+                        groupId = pending.request.groupId,
+                        projects = projects,
+                        relatedTasks = related,
+                        photo = photo
+                    )
+                )
+                val selectedIds = pending.request.assigneeIds.toSet()
+                val loaded = base.copy(
+                    assignedMembers = base.assignedMembers.map {
+                        it.copy(selected = it.userId in selectedIds)
+                    },
+                    relatedTasks = related
+                )
+                loadedState = loaded
+                _uiState.value = loaded
+            }
             return
         }
 
@@ -321,6 +366,45 @@ class EditTaskViewModel(
         val id = taskId ?: return
         val state = _uiState.value
         if (state.title.isBlank()) return
+
+        if (id < 0) {
+            viewModelScope.launch {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+                runCatching {
+                    Dependencies.pendingTaskStore.update(
+                        taskId = id,
+                        request = TaskCreateRequest(
+                            title = state.title,
+                            taskType = state.taskType ?: "",
+                            description = state.notes,
+                            isPriority = state.isPriority,
+                            needsHelp = state.needsHelp,
+                            deadline = toIsoDateTime(state.deadline, state.time) ?: "",
+                            projectId = state.selectedProjectId,
+                            groupId = state.selectedGroupId ?: 0,
+                            assigneeIds = state.assignedMembers
+                                .filter { it.selected }
+                                .map { it.userId },
+                            relatedTaskIds = state.relatedTasks
+                                .filter { it.selected }
+                                .map { it.task.id }
+                        ),
+                        photo = state.evidenceBytes.takeIf { state.evidenceDirty }
+                    )
+                }
+                    .onSuccess {
+                        _uiState.update {
+                            it.copy(isLoading = false, savedSuccessfully = true)
+                        }
+                    }
+                    .onFailure { error ->
+                        _uiState.update {
+                            it.copy(isLoading = false, errorMessage = error.toUserMessage())
+                        }
+                    }
+            }
+            return
+        }
 
         val assigneeIds: MutableList<String> = mutableListOf()
         for (member in state.assignedMembers) {

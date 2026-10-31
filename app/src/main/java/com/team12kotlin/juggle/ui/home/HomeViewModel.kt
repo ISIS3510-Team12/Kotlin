@@ -3,6 +3,7 @@ package com.team12kotlin.juggle.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
+import com.team12kotlin.juggle.data.local.UserCache
 import com.team12kotlin.juggle.data.repository.AuthRepository
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.NotificationRepository
@@ -60,7 +61,11 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val firstGroupId: Int? = null,
     val dataLoaded: Boolean = false,
-    val nextTask: NextTaskUiState = NextTaskUiState.Loading
+    val tasksLoaded: Boolean = false,
+    val notificationsLoaded: Boolean = false,
+    val urgentLoaded: Boolean = false,
+    val nextTask: NextTaskUiState = NextTaskUiState.Loading,
+    val urgentCount: Int = 0
 ) {
     val taskCount: Int get() = upcomingTasks.size
     val notificationCount: Int get() = notifications.size
@@ -77,6 +82,12 @@ class HomeViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(user = currentFirebaseUser(), isLoading = true))
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            Dependencies.pendingTaskStore.synced.collect { load() }
+        }
+    }
 
     private var hasLoaded = false
     private var nextTaskJob: Job? = null
@@ -107,51 +118,66 @@ class HomeViewModel : ViewModel() {
     }
 
     fun load() {
-        // Separate from the calls below so a failure here never affects the rest of Home
         loadNextTask()
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
 
-            runCatching {
-                // The four calls are independent
-                coroutineScope {
-                    val user = async { userRepository.getCurrentUser() }
-                    val tasks = async {
+            coroutineScope {
+                val userResult = async { runCatching { userRepository.getCurrentUser() } }
+                val tasksResult = async {
+                    runCatching {
                         taskRepository.getAllTasks(dueWithinDays = UPCOMING_DAYS, mine = true)
                     }
-                    val notifications = async { notificationRepository.getNotifications() }
-                    val groups = async { groupRepository.getGroups() }
-                    Loaded(
-                        user = user.await(),
-                        tasks = tasks.await(),
-                        notifications = notifications.await(),
-                        firstGroupId = groups.await().firstOrNull()?.id
+                }
+                val notificationsResult = async { runCatching { notificationRepository.getNotifications() } }
+                val groupsResult = async { runCatching { groupRepository.getGroups() } }
+                val urgentResult = async {
+                    runCatching { taskRepository.getAllTasks(priority = true) }
+                }
+
+                val user = userResult.await()
+                val tasks = tasksResult.await()
+                val notifications = notificationsResult.await()
+                val groups = groupsResult.await()
+                val urgent = urgentResult.await()
+
+                val realError = listOf(tasks, notifications, groups, urgent, user)
+                    .firstNotNullOfOrNull { it.exceptionOrNull()?.toUserMessage() }
+
+                hasLoaded = true
+                user.getOrNull()?.let {
+                    UserCache.save(firstName = it.firstName, displayName = it.displayName)
+                }
+
+                _uiState.update { state ->
+                    state.copy(
+                        user = user.getOrNull() ?: state.user,
+                        upcomingTasks = tasks.getOrDefault(state.upcomingTasks),
+                        notifications = notifications.getOrNull()
+                            ?.map { item -> item.toNotification() }
+                            ?: state.notifications,
+                        firstGroupId = groups.getOrNull()?.firstOrNull()?.id ?: state.firstGroupId,
+                        isLoading = false,
+                        errorMessage = realError,
+                        dataLoaded = tasks.isSuccess,
+                        tasksLoaded = tasks.isSuccess,
+                        notificationsLoaded = notifications.isSuccess,
+                        urgentLoaded = urgent.isSuccess,
+                        urgentCount = urgent.getOrNull()?.size ?: state.urgentCount
                     )
                 }
             }
-                .onSuccess { loaded ->
-                    hasLoaded = true
-                    _uiState.update {
-                        it.copy(
-                            user = loaded.user,
-                            upcomingTasks = loaded.tasks,
-                            notifications = loaded.notifications.map { item -> item.toNotification() },
-                            firstGroupId = loaded.firstGroupId,
-                            isLoading = false,
-                            dataLoaded = true
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    if (error is CancellationException) throw error
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
-                }
         }
     }
 
     private fun currentFirebaseUser(): User {
-        val current = authRepository.currentUser ?: return User(userId = "", firstName = "")
+        val current = authRepository.currentUser
+        val cachedName = UserCache.firstName()
+        if (current == null) {
+            return User(userId = "", firstName = cachedName)
+        }
         val firstName = current.displayName?.trim()?.substringBefore(' ').orEmpty()
+            .ifBlank { cachedName }
         return User(userId = current.uid, firstName = firstName)
     }
 
@@ -159,7 +185,8 @@ class HomeViewModel : ViewModel() {
         val user: User,
         val tasks: List<Task>,
         val notifications: List<TaskNotification>,
-        val firstGroupId: Int?
+        val firstGroupId: Int?,
+        val urgent: List<Task>
     )
 
     private companion object {

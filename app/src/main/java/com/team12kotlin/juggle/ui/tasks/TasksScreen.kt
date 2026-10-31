@@ -155,14 +155,14 @@ fun TasksScreen(
                         ErrorCard(
                             message = message,
                             onRetry = viewModel::loadGroups,
-                            modifier = Modifier.padding(horizontal = 10.dp)
+                            modifier = Modifier.padding(horizontal = 18.dp)
                         )
                     }
                     if (uiState.selectedGroupId != null) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 10.dp),
+                                .padding(horizontal = 18.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -254,7 +254,7 @@ private fun TasksSection(
     Column(modifier = modifier) {
         Text(
             text = title,
-            modifier = Modifier.padding(horizontal = 10.dp),
+            modifier = Modifier.padding(horizontal = 18.dp),
             style = MaterialTheme.typography.headlineMedium
         )
         if (tasks.isEmpty()) {
@@ -262,7 +262,7 @@ private fun TasksSection(
                 text = emptyMessage,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp)
             )
         }
         tasks.forEach { task ->

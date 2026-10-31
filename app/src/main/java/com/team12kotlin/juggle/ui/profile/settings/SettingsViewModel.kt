@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.local.LastSync
+import com.team12kotlin.juggle.data.local.UserCache
 import com.team12kotlin.juggle.reminders.GeofenceManager
 import com.team12kotlin.juggle.reminders.ScheduledReminderScheduler
 import com.team12kotlin.juggle.reminders.ScheduledReminderStore
@@ -93,8 +94,14 @@ class SettingsViewModel(
         ScheduledReminderScheduler.cancel(context)
         reminderStore.clear()
         LastSync.clear()
-        viewModelScope.launch { GeofenceManager.clear(context) }
-        authRepository.signOut()
-        onSignedOut()
+        UserCache.clear()
+        viewModelScope.launch {
+            GeofenceManager.clear(context)
+            Dependencies.evidenceCache.clear()
+            Dependencies.pendingTaskStore.clear()
+            Dependencies.clearCachedData()
+            authRepository.signOut()
+            onSignedOut()
+        }
     }
 }

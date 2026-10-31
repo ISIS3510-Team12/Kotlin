@@ -1,6 +1,9 @@
 package com.team12kotlin.juggle.data.repository
 
 import com.team12kotlin.juggle.data.local.CacheResult
+import com.team12kotlin.juggle.data.local.EvidenceCache
+import com.team12kotlin.juggle.data.local.PendingTask
+import com.team12kotlin.juggle.data.local.PendingTaskStore
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.dao.CachedTaskDao
 import com.team12kotlin.juggle.data.local.mappers.TaskCacheMapper
@@ -28,6 +31,8 @@ class TaskRepository(
     private val taskDao: CachedTaskDao,
     private val mapper: TaskCacheMapper,
     private val cache: NetworkFirstCache,
+    private val evidenceCache: EvidenceCache,
+    private val pendingTaskStore: PendingTaskStore,
     private val userId: String
 ) {
     suspend fun getTasks(): List<Task> =
@@ -73,9 +78,11 @@ class TaskRepository(
                 )
             },
             readLocal = {
-                taskDao.getByGroup(userId, groupId).mapNotNull { mapper.toDomainOrNull(it) }
+                taskDao.getByGroup(userId, groupId)
+                    .mapNotNull { mapper.toDomainOrNull(it) }
+                    .filterNot { it.isOwn(userId) }
             }
-        )
+        ).withPending(pendingTaskStore.pendingForGroup(groupId).map { it.toTask() })
     }
 
     suspend fun getAllTasks(
@@ -118,25 +125,47 @@ class TaskRepository(
 
                 }
             }
-        )
+        ).withPending(pendingTaskStore.all().map { it.toTask() })
     }
 
     suspend fun getTodaySummary(start: String, end: String): TaskTodaySummary =
         api.getTodaySummary(start, end)
 
     suspend fun getTask(taskId: Int): Task {
-        
-        return try {
+        val task = try {
             api.getTask(taskId)
         } catch (e: IOException) {
-            taskDao.getById(userId, taskId).let { mapper.toDomainOrNull(it) } ?:
+            taskDao.getById(userId, taskId)?.let { mapper.toDomainOrNull(it) } ?:
             throw e
+        }
+        if (!task.hasPhoto) {
+            withContext(Dispatchers.IO) { evidenceCache.remove(taskId) }
+        }
+        return task
+    }
+
+    suspend fun createTask(
+        request: TaskCreateRequest,
+        evidence: ByteArray? = null
+    ): Task =
+        try {
+            api.createTask(request).also { saveOne(userId, it) }
+        } catch (e: IOException) {
+            val pending = pendingTaskStore.enqueue(userId, request, evidence)
+            pending.toTask()
+        }
+
+    suspend fun syncPendingTask(pending: PendingTask) {
+        val task = api.createTask(pending.request)
+        saveOne(userId, task)
+        pending.photoPath?.let { path ->
+            pendingTaskStore.photo(path)?.let { bytes ->
+                runCatching { uploadTaskPhoto(task.id, bytes, "image/jpeg") }
+            }
         }
     }
 
-    suspend fun createTask(request: TaskCreateRequest): Task =
-        api.createTask(request)
-            .also { saveOne(userId, it) }
+    private fun PendingTask.toTask(): Task = toTask()
 
     suspend fun updateTask(taskId: Int, request: TaskUpdateRequest): Task =
         api.updateTask(taskId, request)
@@ -149,17 +178,21 @@ class TaskRepository(
     suspend fun deleteTask(taskId: Int) {
         api.deleteTask(taskId)
         taskDao.deleteTask(userId, taskId)
+        withContext(Dispatchers.IO) { evidenceCache.remove(taskId) }
     }
 
     suspend fun uploadTaskPhoto(taskId: Int, content: ByteArray, mimeType: String) {
         val body = content.toRequestBody(mimeType.toMediaTypeOrNull())
         val part = MultipartBody.Part.createFormData("file", "evidence", body)
         api.uploadTaskPhoto(taskId, part)
+        withContext(Dispatchers.IO) { evidenceCache.put(taskId, content) }
         refreshTask(taskId)
     }
 
     suspend fun getTaskPhoto(taskId: Int): ByteArray? = withContext(Dispatchers.IO) {
-        runCatching { api.getTaskPhoto(taskId).bytes() }.getOrNull()
+        runCatching { api.getTaskPhoto(taskId).bytes() }
+            .onSuccess { evidenceCache.put(taskId, it) }
+            .getOrElse { evidenceCache.get(taskId) }
     }
 
     // --- Reminders -------------------------------------------------------
@@ -169,7 +202,7 @@ class TaskRepository(
             api.getReminders(taskId)
         } catch (e: IOException) {
             val cachedTask = taskDao.getById(userId, taskId)
-                .let { mapper.toDomainOrNull(it) }
+                ?.let { mapper.toDomainOrNull(it) }
             cachedTask?.reminders ?: throw e
         }
 
@@ -202,6 +235,16 @@ class TaskRepository(
 
     private suspend fun getLocalByGroup(userId: String, groupId: Int) =
         taskDao.getByGroup(userId, groupId).mapNotNull { mapper.toDomainOrNull(it) }
+
+    private suspend fun CacheResult<List<Task>>.withPending(
+        pending: List<Task>
+    ): CacheResult<List<Task>> {
+        if (pending.isEmpty()) return this
+        return when (this) {
+            is CacheResult.Fresh -> CacheResult.Fresh(data + pending)
+            is CacheResult.Stale -> CacheResult.Stale(data + pending, lastSyncedAt)
+        }
+    }
 
     private fun Task.isOwn(userId: String): Boolean =
        assignees.any { it.userId == userId }   // ajusta al criterio del servidor

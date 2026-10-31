@@ -139,12 +139,21 @@ internal fun ProjectDetailContent(
                 }
 
                 item {
-                    StatSummary(
-                        label = "Current pace",
-                        value = uiState.prediction
-                            ?.let { "${it.paceTasksPerDay} completed tasks per day" }
-                            .orEmpty()
-                    )
+                    Column {
+                        StatSummary(
+                            label = "Current pace",
+                            value = uiState.prediction
+                                ?.let { "${it.paceTasksPerDay} completed tasks per day" }
+                                .orEmpty()
+                        )
+                        if (uiState.prediction == null && rememberIsOnline() == false) {
+                            Text(
+                                text = "Pace prediction needs a connection",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
 
                 if (uiState.showPaceWarning) {

@@ -15,7 +15,8 @@ data class ProfileInformationUiState(
     val lastName: String = "",
     val email: String = "",
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val loaded: Boolean = false
 )
 
 class ProfileInformationViewModel : ViewModel() {
@@ -40,7 +41,8 @@ class ProfileInformationViewModel : ViewModel() {
                             lastName = user.lastName,
                             email = user.email,
                             isLoading = false,
-                            errorMessage = null
+                            errorMessage = null,
+                            loaded = true
                         )
                     }
                 }

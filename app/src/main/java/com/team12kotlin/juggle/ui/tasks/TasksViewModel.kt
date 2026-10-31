@@ -61,6 +61,9 @@ class TasksViewModel(
 
     init {
         loadGroups()
+        viewModelScope.launch {
+            Dependencies.pendingTaskStore.synced.collect { loadGroups() }
+        }
     }
 
     fun refreshCurrentGroup() {
