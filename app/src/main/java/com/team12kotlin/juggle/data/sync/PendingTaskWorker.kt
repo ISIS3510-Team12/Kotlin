@@ -12,9 +12,10 @@ class PendingTaskWorker(
 
     override suspend fun doWork(): Result {
         val store = Dependencies.pendingTaskStore
-        val repository = Dependencies.taskRepository
-        val pending = store.all()
+        val currentUserId = Dependencies.authRepository.currentUser?.uid ?: return Result.success()
+        val pending = store.all().filter { it.userId == currentUserId || it.userId.isEmpty() }
         if (pending.isEmpty()) return Result.success()
+        val repository = Dependencies.taskRepository
 
         var failed = false
         for (task in pending) {

@@ -113,22 +113,33 @@ class EditTaskViewModel(
                     projectRepository.getProjects(pending.request.groupId)
                 }.getOrDefault(emptyList())
                 val photo = pending.photoPath?.let { Dependencies.pendingTaskStore.photo(it) }
+                val related = pending.request.relatedTaskIds.map { relatedId ->
+                    val task = runCatching { repository.getTask(relatedId) }.getOrNull()
+                    RelatedTask(
+                        task = task ?: Task(id = relatedId, title = ""),
+                        dueLabel = task?.let { taskDue(it.deadline)?.text }.orEmpty(),
+                        selected = true
+                    )
+                }
                 val base = stateForTask(
                     TaskEditData(
                         task = pending.toTask(),
                         groups = groups,
                         groupId = pending.request.groupId,
                         projects = projects,
-                        relatedTasks = emptyList(),
+                        relatedTasks = related,
                         photo = photo
                     )
                 )
                 val selectedIds = pending.request.assigneeIds.toSet()
-                _uiState.value = base.copy(
+                val loaded = base.copy(
                     assignedMembers = base.assignedMembers.map {
                         it.copy(selected = it.userId in selectedIds)
-                    }
+                    },
+                    relatedTasks = related
                 )
+                loadedState = loaded
+                _uiState.value = loaded
             }
             return
         }

@@ -25,7 +25,8 @@ data class PendingTask(
     val taskId: Int,
     val request: TaskCreateRequest,
     val photoPath: String? = null,
-    val createdAt: Long = 0L
+    val createdAt: Long = 0L,
+    val userId: String = ""
 ) {
     fun toTask(): com.team12kotlin.juggle.ui.dto.Task =
         com.team12kotlin.juggle.ui.dto.Task(
@@ -64,12 +65,17 @@ class PendingTaskStore(private val context: Context) {
     suspend fun pendingForGroup(groupId: Int): List<PendingTask> =
         all().filter { it.request.groupId == groupId }
 
-    suspend fun enqueue(request: TaskCreateRequest, photo: ByteArray?): PendingTask {
+    suspend fun enqueue(
+        userId: String,
+        request: TaskCreateRequest,
+        photo: ByteArray?
+    ): PendingTask {
         val pending = PendingTask(
             taskId = nextTemporaryId(),
             request = request,
             photoPath = photo?.let { savePhoto(it) },
-            createdAt = System.currentTimeMillis()
+            createdAt = System.currentTimeMillis(),
+            userId = userId
         )
         mutex.withLock { write(read() + pending) }
         schedule()

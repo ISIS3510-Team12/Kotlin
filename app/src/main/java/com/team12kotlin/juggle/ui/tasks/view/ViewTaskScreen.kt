@@ -131,6 +131,12 @@ fun ViewTaskScreen(
             ) {
                 OfflineActionNotice(isOffline = isOffline)
 
+                if (uiState.isPending) {
+                    TextButton(onClick = { onEditTask(task.id) }) {
+                        Text("Edit task")
+                    }
+                }
+
                 // Title + description
                 Text(
                     text = task.title,

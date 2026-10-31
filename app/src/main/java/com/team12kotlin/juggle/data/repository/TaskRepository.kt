@@ -151,7 +151,7 @@ class TaskRepository(
         try {
             api.createTask(request).also { saveOne(userId, it) }
         } catch (e: IOException) {
-            val pending = pendingTaskStore.enqueue(request, evidence)
+            val pending = pendingTaskStore.enqueue(userId, request, evidence)
             pending.toTask()
         }
 

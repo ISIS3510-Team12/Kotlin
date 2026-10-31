@@ -103,6 +103,10 @@ object Dependencies {
         database.cachedMetadataDao().deleteAllForUser(user)
         profileCache.clear()
         notificationsCache.clear()
+        appContext.getSharedPreferences("calendar_window", android.content.Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
     }
 
     private val networkFirstCache: NetworkFirstCache by lazy {
@@ -114,36 +118,54 @@ object Dependencies {
     private val taskCacheMapper by lazy { TaskCacheMapper(cacheConverter) }
 
     val authRepository: AuthRepository by lazy { AuthRepository(firebaseAuth) }
-    val taskRepository: TaskRepository by lazy {
-        TaskRepository(
-            api,
-            database.cachedTaskDao(),
-            taskCacheMapper,
-            networkFirstCache,
-            evidenceCache,
-            pendingTaskStore,
-            authRepository.currentUserId()
-        )
-    }
-    val groupRepository: GroupRepository by lazy {
-        GroupRepository(
-            api,
-            database.cachedGroupDao(),
-            database.cachedProjectDao(),
-            database.cachedTaskDao(),
-            groupCacheMapper,
-            networkFirstCache,
-            authRepository.currentUserId()
-            )
-    }
-    val projectRepository: ProjectRepository by lazy {
-        ProjectRepository(
-            api,
-            database.cachedProjectDao(),
-            projectCacheMapper,
-            networkFirstCache,
-            authRepository.currentUserId()
-        )
+
+    @Volatile
+    private var taskRepositoryInstance: TaskRepository? = null
+    val taskRepository: TaskRepository
+        get() = taskRepositoryInstance ?: synchronized(this) {
+            taskRepositoryInstance ?: TaskRepository(
+                api,
+                database.cachedTaskDao(),
+                taskCacheMapper,
+                networkFirstCache,
+                evidenceCache,
+                pendingTaskStore,
+                authRepository.currentUserId()
+            ).also { taskRepositoryInstance = it }
+        }
+
+    @Volatile
+    private var groupRepositoryInstance: GroupRepository? = null
+    val groupRepository: GroupRepository
+        get() = groupRepositoryInstance ?: synchronized(this) {
+            groupRepositoryInstance ?: GroupRepository(
+                api,
+                database.cachedGroupDao(),
+                database.cachedProjectDao(),
+                database.cachedTaskDao(),
+                groupCacheMapper,
+                networkFirstCache,
+                authRepository.currentUserId()
+            ).also { groupRepositoryInstance = it }
+        }
+
+    @Volatile
+    private var projectRepositoryInstance: ProjectRepository? = null
+    val projectRepository: ProjectRepository
+        get() = projectRepositoryInstance ?: synchronized(this) {
+            projectRepositoryInstance ?: ProjectRepository(
+                api,
+                database.cachedProjectDao(),
+                projectCacheMapper,
+                networkFirstCache,
+                authRepository.currentUserId()
+            ).also { projectRepositoryInstance = it }
+        }
+
+    fun resetSessionScopedRepositories() {
+        taskRepositoryInstance = null
+        groupRepositoryInstance = null
+        projectRepositoryInstance = null
     }
     val userRepository: UserRepository by lazy { UserRepository(api, profileCache) }
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
