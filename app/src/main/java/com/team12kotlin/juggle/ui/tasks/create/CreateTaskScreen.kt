@@ -22,7 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import android.widget.Toast
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,8 +54,18 @@ fun CreateTaskScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.CreateTask, uiState.isLoading)
 
+    val context = LocalContext.current
     LaunchedEffect(uiState.createdTaskId) {
-        uiState.createdTaskId?.let(onTaskCreated)
+        uiState.createdTaskId?.let { taskId ->
+            if (taskId < 0) {
+                Toast.makeText(
+                    context,
+                    "Saved. Your task will upload when you're back online.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            onTaskCreated(taskId)
+        }
     }
 
     ShakeToReset(
