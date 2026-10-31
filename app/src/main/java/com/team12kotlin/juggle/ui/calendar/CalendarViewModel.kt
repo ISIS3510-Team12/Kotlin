@@ -20,7 +20,8 @@ data class CalendarUiState(
     val selectedDate: LocalDate = LocalDate.now(),
     val tasksByDate: Map<LocalDate, List<Task>> = emptyMap(),
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val dayNotLoaded: Boolean = false
 ) {
     val tasksForSelectedDate: List<Task>
         get() = tasksByDate[selectedDate].orEmpty()
@@ -37,16 +38,23 @@ class CalendarViewModel(
     )
     val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
 
+    private val rangePrefs = Dependencies.appContext
+        .getSharedPreferences("calendar_window", android.content.Context.MODE_PRIVATE)
+
     // Rango actualmente en caché (null = nada cargado aún)
-    private var loadedStart: LocalDate? = null
-    private var loadedEnd: LocalDate? = null
+    private var loadedStart: LocalDate? = rangePrefs.getLong("start", 0L)
+        ?.takeIf { it > 0L }
+        ?.let { LocalDate.ofEpochDay(it) }
+    private var loadedEnd: LocalDate? = rangePrefs.getLong("end", 0L)
+        ?.takeIf { it > 0L }
+        ?.let { LocalDate.ofEpochDay(it) }
 
     init {
         fetchTasksAround(today)
     }
 
     fun onDateSelected(date: LocalDate) {
-        _uiState.update { it.copy(selectedDate = date) }
+        _uiState.update { it.copy(selectedDate = date, dayNotLoaded = false) }
         // Si el día cae fuera de la ventana cargada, refrescar
         val start = loadedStart
         val end = loadedEnd
@@ -87,7 +95,16 @@ class CalendarViewModel(
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(isLoading = false, errorMessage = e.toUserMessage())
+                    val selected = it.selectedDate
+                    val start = loadedStart
+                    val end = loadedEnd
+                    val outsideWindow =
+                        start == null || end == null || selected < start || selected > end
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = e.toUserMessage(),
+                        dayNotLoaded = outsideWindow
+                    )
                 }
             }
         }

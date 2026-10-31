@@ -90,6 +90,13 @@ private fun ProfileInformationContent(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                if (!uiState.loaded) {
+                    Text(
+                        text = "No saved profile. Reconnect to load it.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 TextMonogram(
                     text = uiState.firstName.take(1).uppercase(),
                     size = 56.dp,

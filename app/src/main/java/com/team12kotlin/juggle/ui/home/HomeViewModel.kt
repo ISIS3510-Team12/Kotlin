@@ -61,6 +61,9 @@ data class HomeUiState(
     val errorMessage: String? = null,
     val firstGroupId: Int? = null,
     val dataLoaded: Boolean = false,
+    val tasksLoaded: Boolean = false,
+    val notificationsLoaded: Boolean = false,
+    val urgentLoaded: Boolean = false,
     val nextTask: NextTaskUiState = NextTaskUiState.Loading,
     val urgentCount: Int = 0
 ) {
@@ -115,52 +118,55 @@ class HomeViewModel : ViewModel() {
     }
 
     fun load() {
-        // Separate from the calls below so a failure here never affects the rest of Home
         loadNextTask()
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = !hasLoaded, errorMessage = null) }
 
-            runCatching {
-                // The four calls are independent
-                coroutineScope {
-                    val user = async { userRepository.getCurrentUser() }
-                    val tasks = async {
+            coroutineScope {
+                val userResult = async { runCatching { userRepository.getCurrentUser() } }
+                val tasksResult = async {
+                    runCatching {
                         taskRepository.getAllTasks(dueWithinDays = UPCOMING_DAYS, mine = true)
                     }
-                    val notifications = async { notificationRepository.getNotifications() }
-                    val groups = async { groupRepository.getGroups() }
-                    val urgent = async { taskRepository.getAllTasks(priority = true) }
-                    Loaded(
-                        user = user.await(),
-                        tasks = tasks.await(),
-                        notifications = notifications.await(),
-                        firstGroupId = groups.await().firstOrNull()?.id,
-                        urgent = urgent.await()
+                }
+                val notificationsResult = async { runCatching { notificationRepository.getNotifications() } }
+                val groupsResult = async { runCatching { groupRepository.getGroups() } }
+                val urgentResult = async {
+                    runCatching { taskRepository.getAllTasks(priority = true) }
+                }
+
+                val user = userResult.await()
+                val tasks = tasksResult.await()
+                val notifications = notificationsResult.await()
+                val groups = groupsResult.await()
+                val urgent = urgentResult.await()
+
+                val realError = listOf(tasks, notifications, groups, urgent, user)
+                    .firstNotNullOfOrNull { it.exceptionOrNull()?.toUserMessage() }
+
+                hasLoaded = true
+                user.getOrNull()?.let {
+                    UserCache.save(firstName = it.firstName, displayName = it.displayName)
+                }
+
+                _uiState.update { state ->
+                    state.copy(
+                        user = user.getOrNull() ?: state.user,
+                        upcomingTasks = tasks.getOrDefault(state.upcomingTasks),
+                        notifications = notifications.getOrNull()
+                            ?.map { item -> item.toNotification() }
+                            ?: state.notifications,
+                        firstGroupId = groups.getOrNull()?.firstOrNull()?.id ?: state.firstGroupId,
+                        isLoading = false,
+                        errorMessage = realError,
+                        dataLoaded = tasks.isSuccess,
+                        tasksLoaded = tasks.isSuccess,
+                        notificationsLoaded = notifications.isSuccess,
+                        urgentLoaded = urgent.isSuccess,
+                        urgentCount = urgent.getOrNull()?.size ?: state.urgentCount
                     )
                 }
             }
-                .onSuccess { loaded ->
-                    hasLoaded = true
-                    UserCache.save(
-                        firstName = loaded.user.firstName,
-                        displayName = loaded.user.displayName
-                    )
-                    _uiState.update {
-                        it.copy(
-                            user = loaded.user,
-                            upcomingTasks = loaded.tasks,
-                            notifications = loaded.notifications.map { item -> item.toNotification() },
-                            firstGroupId = loaded.firstGroupId,
-                            isLoading = false,
-                            dataLoaded = true,
-                            urgentCount = loaded.urgent.size
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    if (error is CancellationException) throw error
-                    _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
-                }
         }
     }
 

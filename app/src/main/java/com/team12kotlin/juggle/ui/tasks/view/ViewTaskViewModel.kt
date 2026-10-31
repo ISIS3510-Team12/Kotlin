@@ -32,7 +32,8 @@ data class ViewTaskUiState(
     val evidenceBytes: ByteArray? = null,
     val isFabMenuExpanded: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isPending: Boolean = false
 )
 
 class ViewTaskViewModel(
@@ -57,6 +58,26 @@ class ViewTaskViewModel(
     fun loadTask() {
         val id = taskId
         if (id == null) {
+            return
+        }
+        if (id < 0) {
+            viewModelScope.launch {
+                val pending = Dependencies.pendingTaskStore.find(id)
+                if (pending == null) {
+                    _uiState.update { it.copy(isLoading = false) }
+                    return@launch
+                }
+                val photo = pending.photoPath?.let { Dependencies.pendingTaskStore.photo(it) }
+                hasLoaded = true
+                _uiState.update {
+                    it.copy(
+                        task = pending.toTask(),
+                        evidenceBytes = photo,
+                        isLoading = false,
+                        isPending = true
+                    )
+                }
+            }
             return
         }
         viewModelScope.launch {

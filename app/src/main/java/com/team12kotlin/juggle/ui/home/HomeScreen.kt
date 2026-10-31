@@ -175,7 +175,7 @@ fun HomeScreen (
                                         icon = MaterialSymbols.OutlinedFilled.Assignment_late,
                                         label = "Urgent Tasks",
                                         unit = "Tasks",
-                                        count = uiState.urgentCount.takeIf { uiState.dataLoaded },
+                                        count = uiState.urgentCount.takeIf { uiState.urgentLoaded },
                                         modifier = Modifier.weight(1f),
                                         onClick = onUrgentTasksClick,
                                     )
@@ -183,7 +183,7 @@ fun HomeScreen (
                                         icon = MaterialSymbols.OutlinedFilled.Circle_notifications,
                                         label = "Today's Notifications",
                                         unit = "Notifications",
-                                        count = uiState.notificationCount.takeIf { uiState.dataLoaded },
+                                        count = uiState.notificationCount.takeIf { uiState.notificationsLoaded },
                                         modifier = Modifier.weight(1f),
                                         onClick = onNotificationsClick,
                                     )
@@ -248,7 +248,7 @@ fun HomeScreen (
                                 onClick = { onTaskClick(task) }
                             )
                         }
-                        if (uiState.upcomingTasks.isEmpty() && uiState.dataLoaded) {
+                        if (uiState.upcomingTasks.isEmpty() && uiState.tasksLoaded) {
                             item {
                                 Text(
                                     text = "No upcoming tasks",
@@ -267,7 +267,7 @@ fun HomeScreen (
                                 onClick = { onNotificationClick(notification) }
                             )
                         }
-                        if (uiState.notifications.isEmpty() && uiState.dataLoaded) {
+                        if (uiState.notifications.isEmpty() && uiState.notificationsLoaded) {
                             item {
                                 Text(
                                     text = "There are no notifications today!",

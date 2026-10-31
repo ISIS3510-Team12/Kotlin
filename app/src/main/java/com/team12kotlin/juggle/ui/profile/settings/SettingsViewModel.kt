@@ -95,10 +95,13 @@ class SettingsViewModel(
         reminderStore.clear()
         LastSync.clear()
         UserCache.clear()
-        viewModelScope.launch { Dependencies.evidenceCache.clear() }
-        viewModelScope.launch { Dependencies.pendingTaskStore.clear() }
-        viewModelScope.launch { GeofenceManager.clear(context) }
-        authRepository.signOut()
-        onSignedOut()
+        viewModelScope.launch {
+            GeofenceManager.clear(context)
+            Dependencies.evidenceCache.clear()
+            Dependencies.pendingTaskStore.clear()
+            Dependencies.clearCachedData()
+            authRepository.signOut()
+            onSignedOut()
+        }
     }
 }

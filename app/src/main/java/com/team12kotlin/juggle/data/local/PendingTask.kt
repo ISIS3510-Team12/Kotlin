@@ -26,7 +26,21 @@ data class PendingTask(
     val request: TaskCreateRequest,
     val photoPath: String? = null,
     val createdAt: Long = 0L
-)
+) {
+    fun toTask(): com.team12kotlin.juggle.ui.dto.Task =
+        com.team12kotlin.juggle.ui.dto.Task(
+            id = taskId,
+            title = request.title,
+            taskType = request.taskType,
+            status = com.team12kotlin.juggle.ui.dto.TaskStatus.NOT_STARTED,
+            isPriority = request.isPriority,
+            needsHelp = request.needsHelp,
+            deadline = request.deadline,
+            description = request.description.orEmpty(),
+            projectId = request.projectId,
+            groupId = request.groupId
+        )
+}
 
 class PendingTaskStore(private val context: Context) {
 
@@ -60,6 +74,26 @@ class PendingTaskStore(private val context: Context) {
         mutex.withLock { write(read() + pending) }
         schedule()
         return pending
+    }
+
+    suspend fun find(taskId: Int): PendingTask? = all().firstOrNull { it.taskId == taskId }
+
+    suspend fun update(taskId: Int, request: TaskCreateRequest, photo: ByteArray?) {
+        mutex.withLock {
+            write(
+                read().map {
+                    if (it.taskId == taskId) {
+                        it.copy(
+                            request = request,
+                            photoPath = photo?.let { bytes -> savePhoto(bytes) } ?: it.photoPath
+                        )
+                    } else {
+                        it
+                    }
+                }
+            )
+        }
+        schedule()
     }
 
     suspend fun remove(taskId: Int) {

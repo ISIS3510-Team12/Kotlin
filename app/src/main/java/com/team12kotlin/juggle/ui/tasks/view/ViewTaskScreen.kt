@@ -165,7 +165,7 @@ fun ViewTaskScreen(
                 ScheduledCard(
                     deadline = task.deadline ?: "No deadline set",
                     reminder = task.reminders.firstOrNull(),
-                    isOffline = isOffline,
+                    isOffline = isOffline || uiState.isPending,
                     onReminderToggle = viewModel::onReminderToggle,
                     onEditClick = { onEditTask(task.id) }
                 )
@@ -186,7 +186,7 @@ fun ViewTaskScreen(
                     )
                     TextButton(
                         onClick = { onEditTask(task.id) },
-                        enabled = !isOffline,
+                        enabled = !isOffline && !uiState.isPending,
                         contentPadding = PaddingValues(horizontal = 12.dp)
                     ) {
                         Text("EDIT")
@@ -238,7 +238,7 @@ fun ViewTaskScreen(
             }
         }
 
-        if (!isOffline) {
+        if (!isOffline && !uiState.isPending) {
             TaskActionsFabMenu(
                 expanded = uiState.isFabMenuExpanded,
                 onToggle = viewModel::onFabMenuToggle,

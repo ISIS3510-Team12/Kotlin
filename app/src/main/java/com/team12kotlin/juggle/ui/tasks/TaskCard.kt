@@ -35,7 +35,7 @@ fun TaskCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp, vertical = 10.dp),
-        onClick = { if (task.id > 0) onClick() }
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
@@ -50,6 +50,13 @@ fun TaskCard(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                if (task.id < 0) {
+                    Text(
+                        text = "Waiting to upload",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 if (task.needsHelp) {
                     Text(
                         text = "Needs Help.",

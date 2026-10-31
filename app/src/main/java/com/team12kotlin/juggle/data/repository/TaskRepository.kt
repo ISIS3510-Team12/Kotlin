@@ -165,19 +165,7 @@ class TaskRepository(
         }
     }
 
-    private fun PendingTask.toTask(): Task =
-        Task(
-            id = taskId,
-            title = request.title,
-            taskType = request.taskType,
-            status = TaskStatus.NOT_STARTED,
-            isPriority = request.isPriority,
-            needsHelp = request.needsHelp,
-            deadline = request.deadline,
-            description = request.description.orEmpty(),
-            projectId = request.projectId,
-            groupId = request.groupId
-        )
+    private fun PendingTask.toTask(): Task = toTask()
 
     suspend fun updateTask(taskId: Int, request: TaskUpdateRequest): Task =
         api.updateTask(taskId, request)

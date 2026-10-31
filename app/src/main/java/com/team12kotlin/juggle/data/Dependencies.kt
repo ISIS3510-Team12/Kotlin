@@ -7,7 +7,9 @@ import com.team12kotlin.juggle.BuildConfig
 import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.local.EvidenceCache
+import com.team12kotlin.juggle.data.local.NotificationsCache
 import com.team12kotlin.juggle.data.local.PendingTaskStore
+import com.team12kotlin.juggle.data.local.ProfileCache
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
 import com.team12kotlin.juggle.data.local.mappers.GroupCacheMapper
 import com.team12kotlin.juggle.data.local.mappers.ProjectCacheMapper
@@ -89,7 +91,19 @@ object Dependencies {
     }
 
     val evidenceCache: EvidenceCache by lazy { EvidenceCache(appContext) }
+    private val profileCache: ProfileCache by lazy { ProfileCache(appContext) }
+    private val notificationsCache: NotificationsCache by lazy { NotificationsCache(appContext) }
     val pendingTaskStore: PendingTaskStore by lazy { PendingTaskStore(appContext) }
+
+    suspend fun clearCachedData() {
+        val user = authRepository.currentUser?.uid ?: return
+        database.cachedTaskDao().deleteAllForUser(user)
+        database.cachedGroupDao().deleteForUser(user)
+        database.cachedProjectDao().deleteAllForUser(user)
+        database.cachedMetadataDao().deleteAllForUser(user)
+        profileCache.clear()
+        notificationsCache.clear()
+    }
 
     private val networkFirstCache: NetworkFirstCache by lazy {
         NetworkFirstCache(database, database.cachedMetadataDao())
@@ -131,9 +145,11 @@ object Dependencies {
             authRepository.currentUserId()
         )
     }
-    val userRepository: UserRepository by lazy { UserRepository(api) }
+    val userRepository: UserRepository by lazy { UserRepository(api, profileCache) }
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
-    val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
+    val notificationRepository: NotificationRepository by lazy {
+        NotificationRepository(api, notificationsCache)
+    }
     val telemetryRepository: TelemetryRepository by lazy { TelemetryRepository(api) }
     val smartRepository: SmartRepository by lazy { SmartRepository(api) }
     val shakeEffectStore: ShakeEffectStore by lazy { ShakeEffectStore(appContext) }
