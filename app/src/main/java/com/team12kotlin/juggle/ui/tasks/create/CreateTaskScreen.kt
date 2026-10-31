@@ -36,6 +36,7 @@ import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.components.ShakeToReset
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
@@ -54,6 +55,11 @@ fun CreateTaskScreen(
     LaunchedEffect(uiState.createdTaskId) {
         uiState.createdTaskId?.let(onTaskCreated)
     }
+
+    ShakeToReset(
+        enabled = !uiState.isLoading,
+        onReset = viewModel::onResetForm
+    )
 
     CreateTaskContent(
         modifier = modifier,

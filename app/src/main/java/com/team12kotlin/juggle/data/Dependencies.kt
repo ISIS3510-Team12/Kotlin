@@ -21,6 +21,7 @@ import com.team12kotlin.juggle.data.repository.SmartRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
+import com.team12kotlin.juggle.sensors.ShakeEffectStore
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -128,6 +129,7 @@ object Dependencies {
     val notificationRepository: NotificationRepository by lazy { NotificationRepository(api) }
     val telemetryRepository: TelemetryRepository by lazy { TelemetryRepository(api) }
     val smartRepository: SmartRepository by lazy { SmartRepository(api) }
+    val shakeEffectStore: ShakeEffectStore by lazy { ShakeEffectStore(appContext) }
 
     val cacheConverter: CacheConverter by lazy {
         CacheConverter(cacheJson)

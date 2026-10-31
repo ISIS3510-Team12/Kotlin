@@ -72,6 +72,13 @@ class CreateProjectViewModel(
         _uiState.update { it.copy(deadline = value) }
     }
 
+    fun onResetForm() {
+        if (_uiState.value.isSaving) return
+        _uiState.update {
+            it.copy(name = "", description = "", deadline = "", errorMessage = null)
+        }
+    }
+
     fun onCreateProject() {
         val state = _uiState.value
         if (!state.canCreate) return

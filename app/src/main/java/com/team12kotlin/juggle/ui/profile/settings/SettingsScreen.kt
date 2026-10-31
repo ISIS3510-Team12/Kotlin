@@ -1,7 +1,6 @@
 package com.team12kotlin.juggle.ui.profile.settings
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,9 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,7 +22,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,7 +43,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Chevron_right
 import com.composables.icons.materialsymbols.outlined.Edit
-import com.composables.icons.materialsymbols.outlined.Schedule
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @Composable
@@ -68,6 +63,7 @@ fun SettingsScreen(
         goBack = goBack,
         onThemeClick = viewModel::onThemeClick,
         onSoundAndVibrationChange = viewModel::onSoundAndVibrationChange,
+        onShakeChange = viewModel::onShakeChange,
         onDailyRemindersChange = viewModel::onDailyRemindersChange,
         onDailyReminderTimeChange = viewModel::onDailyReminderTimeChange,
         onLocationRemindersClick = onLocationRemindersClick,
@@ -78,7 +74,6 @@ fun SettingsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsContent(
     uiState: SettingsUiState,
@@ -86,6 +81,7 @@ private fun SettingsContent(
     goBack: () -> Unit = {},
     onThemeClick: () -> Unit = {},
     onSoundAndVibrationChange: (Boolean) -> Unit = {},
+    onShakeChange: (Boolean) -> Unit = {},
     onDailyRemindersChange: (Boolean) -> Unit = {},
     onDailyReminderTimeChange: (Int, Int) -> Unit = {_,_ -> },
     onLocationRemindersClick: () -> Unit = {},
@@ -126,6 +122,16 @@ private fun SettingsContent(
                         Switch(
                             checked = uiState.soundAndVibrationEnabled,
                             onCheckedChange = onSoundAndVibrationChange
+                        )
+                    }
+                    SettingsItem(
+                        title = "Shake detector enabled",
+                        supportingText = "Shake phone to reset fields on forms",
+                        onClick = { onShakeChange(!uiState.shakeEnabled) }
+                    ) {
+                        Switch(
+                            checked = uiState.shakeEnabled,
+                            onCheckedChange = onShakeChange
                         )
                     }
                     SettingsItem(

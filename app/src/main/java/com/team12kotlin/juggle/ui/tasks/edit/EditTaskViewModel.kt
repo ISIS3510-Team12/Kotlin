@@ -85,6 +85,9 @@ class EditTaskViewModel(
     )
     val uiState: StateFlow<EditTaskUiState> = _uiState.asStateFlow()
 
+    // The task as it was loaded, restored when the form is reset
+    private var loadedState: EditTaskUiState? = null
+
     init {
         loadTask()
     }
@@ -125,7 +128,9 @@ class EditTaskViewModel(
                 }
             }
                 .onSuccess { data ->
-                    _uiState.value = stateForTask(data)
+                    val state = stateForTask(data)
+                    loadedState = state
+                    _uiState.value = state
                 }
                 .onFailure { error ->
                     if (error is CancellationException) throw error
@@ -294,6 +299,13 @@ class EditTaskViewModel(
                 }
             )
         }
+    }
+
+    /** Puts the form back to the task as it was loaded and drops the pending changes. */
+    fun onResetForm() {
+        val loaded = loadedState ?: return
+        if (_uiState.value.isLoading) return
+        _uiState.value = loaded
     }
 
     private suspend fun uploadEvidence(taskId: Int) {

@@ -28,6 +28,7 @@ import com.team12kotlin.juggle.ui.components.GoogleSignInButton
 import com.team12kotlin.juggle.ui.components.OrDivider
 import com.team12kotlin.juggle.ui.components.PasswordField
 import com.team12kotlin.juggle.ui.components.PillButton
+import com.team12kotlin.juggle.ui.components.ShakeToReset
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
@@ -57,6 +58,11 @@ fun SignInScreen(
             viewModel.onNavigatedToSuccess()
         }
     }
+
+    ShakeToReset(
+        enabled = !uiState.isSubmitting && !googleSignIn.isLoading,
+        onReset = viewModel::onResetForm
+    )
 
     Scaffold(
         modifier = modifier,

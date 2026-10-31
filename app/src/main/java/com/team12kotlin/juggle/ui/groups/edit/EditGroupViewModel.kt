@@ -55,6 +55,10 @@ class EditGroupViewModel(
     private var loadedGroupId: Int? = null
     private var hasLoaded = false
 
+    // Last saved name and description, restored when the form is reset
+    private var savedName: String? = null
+    private var savedDescription: String = ""
+
     fun load(groupId: Int) {
         if (loadedGroupId == groupId) return
         loadedGroupId = groupId
@@ -70,6 +74,8 @@ class EditGroupViewModel(
             }
                 .onSuccess { (group, users) ->
                     hasLoaded = true
+                    savedName = group.name
+                    savedDescription = group.description
                     // The back only lets members be added (leaving is per-user), so only non-members are offered.
                     val memberIds = group.users.map { it.userId }.toSet()
                     _uiState.update {
@@ -131,6 +137,21 @@ class EditGroupViewModel(
         }
     }
 
+    /** Puts the name and description back to what is saved and drops the pending changes. */
+    fun onResetForm() {
+        val name = savedName ?: return
+        if (_uiState.value.isLoading) return
+        _uiState.update {
+            it.copy(
+                name = name,
+                description = savedDescription,
+                query = "",
+                selectedIds = emptySet(),
+                errorMessage = null
+            )
+        }
+    }
+
     fun onSaveGroup() {
         val state = _uiState.value
         if (!state.canSave) return
@@ -142,6 +163,8 @@ class EditGroupViewModel(
                 _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
                 return@launch
             }
+            savedName = state.name.trim()
+            savedDescription = state.description.trim()
             val failed = state.candidates
                 .filter { it.userId in state.selectedIds }
                 .filter { user -> runCatching { groupRepository.addMember(state.groupId, user.email) }.isFailure }

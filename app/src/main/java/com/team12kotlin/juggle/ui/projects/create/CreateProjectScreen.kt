@@ -28,6 +28,7 @@ import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.components.ShakeToReset
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -46,6 +47,11 @@ fun CreateProjectScreen(
     LaunchedEffect(uiState.createdProjectId) {
         uiState.createdProjectId?.let(onProjectCreated)
     }
+
+    ShakeToReset(
+        enabled = !uiState.isSaving,
+        onReset = viewModel::onResetForm
+    )
 
     CreateProjectContent(
         modifier = modifier,

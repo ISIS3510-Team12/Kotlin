@@ -75,6 +75,11 @@ class SignUpViewModel(
         }
     }
 
+    fun onResetForm() {
+        if (_uiState.value.isSubmitting) return
+        _uiState.value = SignUpUiState()
+    }
+
     fun onSignUpSubmit() {
         val state = _uiState.value
         if (state.isSubmitting) return

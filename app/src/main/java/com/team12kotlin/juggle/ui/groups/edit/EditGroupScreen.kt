@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -27,6 +28,9 @@ import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -47,6 +51,7 @@ import com.team12kotlin.juggle.ui.components.MemberSelectorItem
 import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.TextMonogram
 import com.team12kotlin.juggle.ui.components.OfflineActionNotice
+import com.team12kotlin.juggle.ui.components.ShakeToReset
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -69,8 +74,19 @@ fun EditGroupScreen(
         if (uiState.saved) goBack()
     }
 
+    // The search box keeps its own text, so it is cleared with this key
+    var searchResetKey by remember { mutableIntStateOf(0) }
+    ShakeToReset(
+        enabled = !uiState.isLoading,
+        onReset = {
+            viewModel.onResetForm()
+            searchResetKey++
+        }
+    )
+
     EditGroupContent(
         modifier = modifier,
+        searchResetKey = searchResetKey,
         name = uiState.name,
         description = uiState.description,
         members = uiState.members,
@@ -98,6 +114,7 @@ private fun EditGroupContent(
     directory: List<User>,
     selectedIds: Set<String>,
     modifier: Modifier = Modifier,
+    searchResetKey: Int = 0,
     errorMessage: String? = null,
     canSave: Boolean = true,
     isLoading: Boolean = false,
@@ -112,6 +129,9 @@ private fun EditGroupContent(
     val isOffline = rememberIsOnline() == false
     val searchBarState = rememberSearchBarState()
     val searchTextFieldState = rememberTextFieldState()
+    LaunchedEffect(searchResetKey) {
+        if (searchResetKey > 0) searchTextFieldState.clearText()
+    }
 
     Scaffold(
         modifier = modifier,
