@@ -15,6 +15,7 @@ import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.toIsoDateTime
 import com.team12kotlin.juggle.ui.utils.toUserMessage
+import com.team12kotlin.juggle.utils.FormDraftCache
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,10 +94,31 @@ class CreateTaskViewModel(
     private val navGroupId: Int? =
         savedStateHandle.get<Int>("groupId")?.takeIf { it > 0 }
 
+    private val draftKey = "create_task_${navGroupId ?: 0}"
+    private val formDraftCache: FormDraftCache = Dependencies.formDraftCache
+
     private val taskTypeOptions: List<String> =
         listOf("Coding", "Design", "Research", "Writing", "Meeting")
 
-    private val _uiState = MutableStateFlow(CreateTaskUiState(taskTypeOptions = taskTypeOptions, isLoading = true))
+    private val initialDraft: CreateTaskDraft? = formDraftCache.get(draftKey)
+
+    private val _uiState = MutableStateFlow(
+        CreateTaskUiState(
+            taskTypeOptions = taskTypeOptions,
+            isLoading = true,
+            title = initialDraft?.title ?: "",
+            taskType = initialDraft?.taskType,
+            deadline = initialDraft?.deadline ?: "",
+            time = initialDraft?.time ?: "",
+            isPriority = initialDraft?.isPriority ?: false,
+            needsHelp = initialDraft?.needsHelp ?: false,
+            notes = initialDraft?.notes ?: "",
+            evidenceBytes = initialDraft?.evidenceBytes,
+            evidenceMimeType = initialDraft?.evidenceMimeType,
+            evidenceDirty = initialDraft?.evidenceDirty ?: false,
+            relatedQuery = initialDraft?.relatedQuery ?: ""
+        )
+    )
     val uiState: StateFlow<CreateTaskUiState> = _uiState.asStateFlow()
 
     init {
@@ -109,14 +131,15 @@ class CreateTaskViewModel(
 
             runCatching { groupRepository.getGroups() }
                 .onSuccess { groups ->
+                    val groupId = navGroupId ?: initialDraft?.selectedGroupId
                     _uiState.update {
                         it.copy(
                             groups = groups,
-                            selectedGroupId = navGroupId,
+                            selectedGroupId = groupId,
                             isLoading = false
                         )
                     }
-                    loadGroupData(navGroupId)
+                    loadGroupData(groupId)
                 }
                 .onFailure { error ->
                     _uiState.update { it.copy(isLoading = false, errorMessage = error.toUserMessage()) }
@@ -127,8 +150,15 @@ class CreateTaskViewModel(
     fun onGroupSelected(groupName: String) {
         val group = _uiState.value.groups.firstOrNull { it.name == groupName }
         _uiState.update {
-            it.copy(selectedGroupId = group?.id, selectedProjectId = null)
+            it.copy(
+                selectedGroupId = group?.id,
+                selectedProjectId = null,
+                assignedMembers = emptyList(),
+                relatedTasks = emptyList()
+            )
         }
+        formDraftCache.clear(draftKey)
+        saveDraft()
         loadGroupData(group?.id)
     }
 
@@ -155,28 +185,34 @@ class CreateTaskViewModel(
                 }
             }
                 .onSuccess { (group, projects, allTasks) ->
-                    val members: MutableList<AssignableMember> = mutableListOf()
-                    for (user in group.users) {
-                        members.add(AssignableMember(name = user.firstName, userId = user.userId))
+                    val draft = formDraftCache.get<CreateTaskDraft>(draftKey)
+                        ?.takeIf { it.selectedGroupId == groupId }
+
+                    val members = group.users.map {
+                        AssignableMember(
+                            name = it.firstName,
+                            userId = it.userId,
+                            selected = it.userId in (draft?.selectedMemberIds ?: emptySet())
+                        )
                     }
 
-                    val related: MutableList<RelatedTask> = mutableListOf()
-                    for (task in allTasks) {
-                        if (task.groupId == groupId && task.id > 0) {
-                            related.add(
-                                RelatedTask(
-                                    task = task,
-                                    dueLabel = taskDue(task.deadline)?.text.orEmpty()
-                                )
+                    val related = allTasks
+                        .filter { it.groupId == groupId && it.id > 0 }
+                        .map {
+                            RelatedTask(
+                                task = it,
+                                dueLabel = taskDue(it.deadline)?.text.orEmpty(),
+                                selected = it.id in (draft?.selectedRelatedTaskIds ?: emptySet())
                             )
                         }
-                    }
 
                     _uiState.update {
                         it.copy(
                             projects = projects,
                             assignedMembers = members,
-                            relatedTasks = related
+                            relatedTasks = related,
+                            selectedProjectId = (draft?.selectedProjectId ?: it.selectedProjectId)
+                                ?.takeIf { id -> projects.any { p -> p.id == id } }
                         )
                     }
                 }
@@ -186,17 +222,59 @@ class CreateTaskViewModel(
         }
     }
 
+    private fun saveDraft() {
+        val s = _uiState.value
+        val previous = formDraftCache.get<CreateTaskDraft>(draftKey)
+            ?.takeIf { it.selectedGroupId == s.selectedGroupId }
+
+        // While members/related tasks are still loading, keep the previously saved ids
+        val memberIds = if (s.assignedMembers.isEmpty()) {
+            previous?.selectedMemberIds ?: emptySet()
+        } else {
+            s.assignedMembers.filter { it.selected }.map { it.userId }.toSet()
+        }
+        val relatedIds = if (s.relatedTasks.isEmpty()) {
+            previous?.selectedRelatedTaskIds ?: emptySet()
+        } else {
+            s.relatedTasks.filter { it.selected }.map { it.task.id }.toSet()
+        }
+
+        formDraftCache.put(
+            draftKey,
+            CreateTaskDraft(
+                selectedGroupId = s.selectedGroupId,
+                title = s.title,
+                taskType = s.taskType,
+                selectedProjectId = s.selectedProjectId,
+                selectedMemberIds = memberIds,
+                deadline = s.deadline,
+                time = s.time,
+                isPriority = s.isPriority,
+                needsHelp = s.needsHelp,
+                notes = s.notes,
+                evidenceBytes = s.evidenceBytes,
+                evidenceMimeType = s.evidenceMimeType,
+                evidenceDirty = s.evidenceDirty,
+                selectedRelatedTaskIds = relatedIds,
+                relatedQuery = s.relatedQuery
+            )
+        )
+    }
+
     fun onTitleChange(title: String) {
         _uiState.update { it.copy(title = title.take(TaskFieldLimits.TITLE_MAX_LENGTH)) }
+        saveDraft()
     }
 
     fun onTaskTypeSelected(taskType: String) {
         _uiState.update { it.copy(taskType = taskType) }
+        saveDraft()
     }
 
     fun onProjectSelected(projectName: String) {
         val project = _uiState.value.projects.firstOrNull { it.name == projectName }
         _uiState.update { it.copy(selectedProjectId = project?.id) }
+        saveDraft()
     }
 
     fun onMemberToggled(member: AssignableMember) {
@@ -211,36 +289,44 @@ class CreateTaskViewModel(
                 }
             )
         }
+        saveDraft()
     }
 
     fun onDeadlineChange(deadline: String) {
         _uiState.update { it.copy(deadline = deadline) }
+        saveDraft()
     }
 
     fun onTimeChange(time: String) {
         _uiState.update { it.copy(time = time) }
+        saveDraft()
     }
 
     fun onPriorityChange(isPriority: Boolean) {
         _uiState.update { it.copy(isPriority = isPriority) }
+        saveDraft()
     }
 
     fun onNeedsHelpChange(needsHelp: Boolean) {
         _uiState.update { it.copy(needsHelp = needsHelp) }
+        saveDraft()
     }
 
     fun onNotesChange(notes: String) {
         _uiState.update { it.copy(notes = notes.take(TaskFieldLimits.NOTES_MAX_LENGTH)) }
+        saveDraft()
     }
 
     fun onEvidenceTaken(bytes: ByteArray, mimeType: String) {
         _uiState.update {
             it.copy(evidenceBytes = bytes, evidenceMimeType = mimeType, evidenceDirty = true)
         }
+        saveDraft()
     }
 
     fun onRelatedQueryChange(query: String) {
         _uiState.update { it.copy(relatedQuery = query) }
+        saveDraft()
     }
 
     fun onRelatedTaskToggled(relatedTask: RelatedTask) {
@@ -251,6 +337,7 @@ class CreateTaskViewModel(
                 }
             )
         }
+        saveDraft()
     }
 
     /** Goes back to a freshly opened form, keeping the groups already loaded. */
@@ -264,6 +351,7 @@ class CreateTaskViewModel(
             )
         }
         loadGroupData(navGroupId)
+        formDraftCache.clear(draftKey)
     }
 
     private suspend fun uploadEvidence(taskId: Int) {
@@ -321,6 +409,7 @@ class CreateTaskViewModel(
                 )
             }
                 .onSuccess { task ->
+                    formDraftCache.clear(draftKey)
                     if (task.id > 0) uploadEvidence(task.id)
                     _uiState.update { it.copy(isLoading = false, createdTaskId = task.id) }
                 }
