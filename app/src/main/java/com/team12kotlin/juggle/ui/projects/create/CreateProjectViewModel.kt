@@ -10,6 +10,7 @@ import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
 import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
 import com.team12kotlin.juggle.utils.toIsoDateTime
 import com.team12kotlin.juggle.ui.utils.toUserMessage
+import com.team12kotlin.juggle.utils.FormDraftCache
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,10 +28,10 @@ data class CreateProjectUiState(
 ) {
     val canCreate: Boolean
         get() = name.isNotBlank() &&
-            description.isNotBlank() &&
-            deadline.isNotBlank() &&
-            groupId != null &&
-            !isSaving
+                description.isNotBlank() &&
+                deadline.isNotBlank() &&
+                groupId != null &&
+                !isSaving
 }
 
 class CreateProjectViewModel(
@@ -39,10 +40,21 @@ class CreateProjectViewModel(
 
     private val projectRepository: ProjectRepository = Dependencies.projectRepository
     private val groupRepository: GroupRepository = Dependencies.groupRepository
+    private val formDraftCache: FormDraftCache = Dependencies.formDraftCache
 
     private val navGroupId: Int? = savedStateHandle.get<Int>("groupId")?.takeIf { it > 0 }
+    private val draftKey = "create_project_${navGroupId ?: 0}"
 
-    private val _uiState = MutableStateFlow(CreateProjectUiState(groupId = navGroupId))
+    private val _uiState = MutableStateFlow(
+        formDraftCache.get<CreateProjectDraft>(draftKey).let { draft ->
+            CreateProjectUiState(
+                name = draft?.name ?: "",
+                description = draft?.description ?: "",
+                deadline = draft?.deadline ?: "",
+                groupId = navGroupId
+            )
+        }
+    )
     val uiState: StateFlow<CreateProjectUiState> = _uiState.asStateFlow()
 
     init {
@@ -62,18 +74,31 @@ class CreateProjectViewModel(
         }
     }
 
+    private fun saveDraft() {
+        val s = _uiState.value
+        formDraftCache.put(
+            draftKey, CreateProjectDraft(
+                s.name,
+                s.description,
+                s.deadline,
+            ))
+    }
+
     fun onNameChange(value: String) {
         _uiState.update { it.copy(name = value.take(ProjectFieldLimits.NAME_MAX_LENGTH)) }
+        saveDraft()
     }
 
     fun onDescriptionChange(value: String) {
         _uiState.update {
             it.copy(description = value.take(ProjectFieldLimits.DESCRIPTION_MAX_LENGTH))
         }
+        saveDraft()
     }
 
     fun onDeadlineChange(value: String) {
         _uiState.update { it.copy(deadline = value) }
+        saveDraft()
     }
 
     fun onResetForm() {
@@ -81,6 +106,7 @@ class CreateProjectViewModel(
         _uiState.update {
             it.copy(name = "", description = "", deadline = "", errorMessage = null)
         }
+        formDraftCache.clear(draftKey)
     }
 
     fun onCreateProject() {
@@ -106,6 +132,7 @@ class CreateProjectViewModel(
                 )
             }
                 .onSuccess { project ->
+                    formDraftCache.clear(draftKey)
                     _uiState.update { it.copy(isSaving = false, createdProjectId = project.id) }
                 }
                 .onFailure { error ->
