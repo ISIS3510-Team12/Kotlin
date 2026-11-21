@@ -118,6 +118,14 @@ enum class NavigationDestination(
         contentDescription = "Project Detail",
         icon = MaterialSymbols.OutlinedFilled.Groups,
     ),
+
+    EditProject(
+        route = "projects/{projectId}/edit",
+        label = "Edit project",
+        contentDescription = "Edit project",
+        icon = MaterialSymbols.OutlinedFilled.Groups,
+    ),
+
     Calendar(
         route = "calendar",
         label = "Calendar",
