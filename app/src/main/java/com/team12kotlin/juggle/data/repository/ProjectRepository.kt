@@ -8,6 +8,7 @@ import com.team12kotlin.juggle.data.remote.JuggleApi
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
+import com.team12kotlin.juggle.ui.dto.ProjectUpdateRequest
 import java.io.IOException
 
 class ProjectRepository(
@@ -48,6 +49,10 @@ class ProjectRepository(
 
     suspend fun createProject(request: ProjectCreateRequest): Project =
         api.createProject(request)
+            .also { saveOne(userId, it) }
+
+    suspend fun updateProject(projectId: Int, request: ProjectUpdateRequest): Project =
+        api.updateProject(projectId, request)
             .also { saveOne(userId, it) }
 
     suspend fun getDeadlinePrediction(projectId: Int): ProjectDeadlinePrediction =
