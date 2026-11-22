@@ -30,6 +30,7 @@ import com.team12kotlin.juggle.ui.components.SupportingTextWithCounter
 import com.team12kotlin.juggle.ui.components.OfflineActionNotice
 import com.team12kotlin.juggle.ui.components.ShakeToReset
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
+import com.team12kotlin.juggle.ui.projects.ProjectFormContent
 import com.team12kotlin.juggle.ui.tasks.create.DatePickerField
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
@@ -86,60 +87,17 @@ internal fun CreateProjectContent(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Create a new project",
-                style = MaterialTheme.typography.headlineMedium
+            ProjectFormContent(
+                title = "Create a new project",
+                subtitle = "Add the essentials now. You can update them later.",
+                nameValue = uiState.name,
+                onNameChange = onNameChange,
+                descriptionValue = uiState.description,
+                onDescriptionChange = onDescriptionChange,
+                deadlineValue = uiState.deadline,
+                onDeadlineChange = onDeadlineChange,
+                isOffline = isOffline
             )
-            Text(
-                text = "Add the essentials now. You can update them later.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                OutlinedTextField(
-                    value = uiState.name,
-                    onValueChange = onNameChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true,
-                    label = { Text("Project name") },
-                    placeholder = { Text("Enter project name") },
-                    supportingText = {
-                        SupportingTextWithCounter(
-                            text = "",
-                            length = uiState.name.length,
-                            maxLength = ProjectFieldLimits.NAME_MAX_LENGTH
-                        )
-                    }
-                )
-                OutlinedTextField(
-                    value = uiState.description,
-                    onValueChange = onDescriptionChange,
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Description") },
-                    placeholder = { Text("Describe the project") },
-                    supportingText = {
-                        SupportingTextWithCounter(
-                            text = "Required",
-                            length = uiState.description.length,
-                            maxLength = ProjectFieldLimits.DESCRIPTION_MAX_LENGTH
-                        )
-                    }
-                )
-                DatePickerField(
-                    value = uiState.deadline,
-                    onDateSelected = onDeadlineChange,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            OfflineActionNotice(isOffline = isOffline)
 
             Button(
                 onClick = onCreateClick,
