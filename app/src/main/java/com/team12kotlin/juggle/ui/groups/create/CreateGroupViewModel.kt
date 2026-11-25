@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
+import com.team12kotlin.juggle.utils.FormDraftCache
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
 import com.team12kotlin.juggle.ui.utils.toUserMessage
@@ -15,6 +16,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+private const val DRAFT_KEY = "create_group"
 
 data class CreateGroupUiState(
     val name: String = "",
@@ -44,10 +47,21 @@ data class CreateGroupUiState(
 
 class CreateGroupViewModel(
     private val groupRepository: GroupRepository = Dependencies.groupRepository,
-    private val userRepository: UserRepository = Dependencies.userRepository
+    private val userRepository: UserRepository = Dependencies.userRepository,
+    private val formDraftCache: FormDraftCache = Dependencies.formDraftCache,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(CreateGroupUiState(isLoading = true))
+    private val _uiState = MutableStateFlow(
+        formDraftCache.get<CreateGroupDraft>(DRAFT_KEY).let {draft ->
+            CreateGroupUiState(
+                name = draft?.name ?: "",
+                description = draft?.description ?: "",
+                query = draft?.query ?: "",
+                selectedIds = draft?.selectedIds ?: emptySet(),
+                isLoading = true
+            )
+        }
+    )
     val uiState: StateFlow<CreateGroupUiState> = _uiState.asStateFlow()
 
     init {
@@ -74,18 +88,31 @@ class CreateGroupViewModel(
         }
     }
 
+    private fun saveDraft() {
+        val s = _uiState.value
+        formDraftCache.put(DRAFT_KEY, CreateGroupDraft(
+            s.name,
+            s.description,
+            s.query,
+            s.selectedIds
+        ))
+    }
+
     fun onNameChange(name: String) {
         _uiState.update { it.copy(name = name.take(GroupFieldLimits.NAME_MAX_LENGTH)) }
+        saveDraft()
     }
 
     fun onDescriptionChange(description: String) {
         _uiState.update {
             it.copy(description = description.take(GroupFieldLimits.DESCRIPTION_MAX_LENGTH))
         }
+        saveDraft()
     }
 
     fun onSearch(query: String) {
         _uiState.update { it.copy(query = query) }
+        saveDraft()
     }
 
     fun onToggleMember(user: User) {
@@ -93,6 +120,7 @@ class CreateGroupViewModel(
             val ids = if (user.userId in it.selectedIds) it.selectedIds - user.userId else it.selectedIds + user.userId
             it.copy(selectedIds = ids)
         }
+        saveDraft()
     }
 
     /** Clears what the user entered and keeps the members already loaded. */
@@ -108,6 +136,7 @@ class CreateGroupViewModel(
                 notice = null
             )
         }
+        formDraftCache.clear(DRAFT_KEY)
     }
 
     fun onCreateGroup() {
@@ -122,6 +151,8 @@ class CreateGroupViewModel(
                 return@launch
             }
             // The group already exists at this point, so member failures are reported but not rolled back.
+            formDraftCache.clear(DRAFT_KEY)
+
             val failed = state.availableMembers
                 .filter { it.userId in state.selectedIds }
                 .filter { member -> runCatching { groupRepository.addMember(group.id, member.email) }.isFailure }
