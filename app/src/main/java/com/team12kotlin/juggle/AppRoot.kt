@@ -48,6 +48,7 @@ import com.team12kotlin.juggle.ui.profile.information.ProfileInformationScreen
 import com.team12kotlin.juggle.ui.profile.notifications.NotificationsScreen
 import com.team12kotlin.juggle.ui.profile.settings.SettingsScreen
 import com.team12kotlin.juggle.ui.profile.settings.location.LocationRemindersScreen
+import com.team12kotlin.juggle.ui.projects.edit.EditProjectScreen
 import com.team12kotlin.juggle.ui.tasks.TasksScreen
 import com.team12kotlin.juggle.ui.tasks.allTasks.AllTasksScreen
 import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
@@ -385,11 +386,26 @@ fun AppRoot(
                                 launchSingleTop = true
                             }
                         },
+                        onEditProjectClick = {projectId ->
+                            navController.navigate("projects/$projectId/edit")
+                        },
                         onAddTaskClick = {
                             navController.navigate(NavigationDestination.CreateTask.route) {
                                 launchSingleTop = true
                             }
                         }
+                    )
+                }
+                composable(
+                    route = NavigationDestination.EditProject.route,
+                    arguments = listOf(navArgument("projectId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val projectId = backStackEntry.arguments?.getInt("projectId") ?: 0
+                    EditProjectScreen(
+                        projectId = projectId,
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onProjectSaved = { navController.popBackStack()  }
                     )
                 }
                 composable(NavigationDestination.Calendar.route) {

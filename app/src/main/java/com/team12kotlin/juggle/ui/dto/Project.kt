@@ -14,15 +14,6 @@ data class Project(
 )
 
 @Serializable
-data class ProjectCreateRequest(
-    val name: String,
-    val description: String = "",
-    val deadline: String,
-    @SerialName("group_id")
-    val groupId: Int
-)
-
-@Serializable
 data class ProjectDeadlinePrediction(
     @SerialName("project_id")
     val projectId: Int = 0,

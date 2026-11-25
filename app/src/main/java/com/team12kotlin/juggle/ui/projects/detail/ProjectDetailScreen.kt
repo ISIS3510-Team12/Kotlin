@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -15,9 +16,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,6 +33,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.composables.icons.materialsymbols.MaterialSymbols
+import com.composables.icons.materialsymbols.outlinedfilled.Edit
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
@@ -53,11 +58,13 @@ fun ProjectDetailScreen(
     viewModel: ProjectDetailViewModel = viewModel(),
     onBackClick: () -> Unit = {},
     onTaskClick: (Int) -> Unit = {},
+    onEditProjectClick: (Int) -> Unit = {},
     onAddTaskClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.ProjectDetail, uiState.isLoading)
     val isOnline = rememberIsOnline()
+    val isOffline = isOnline == false
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::load)
 
     LifecycleResumeEffect(Unit) {
@@ -67,10 +74,12 @@ fun ProjectDetailScreen(
 
     ProjectDetailContent(
         modifier = modifier,
+        isOffline = isOffline,
         uiState = uiState,
         onBackClick = onBackClick,
         onTaskClick = onTaskClick,
         onFilterSelected = viewModel::onFilterSelected,
+        onEditProjectClick = onEditProjectClick,
         onRetry = viewModel::load,
     )
 }
@@ -80,9 +89,11 @@ fun ProjectDetailScreen(
 internal fun ProjectDetailContent(
     uiState: ProjectDetailUiState,
     modifier: Modifier = Modifier,
+    isOffline: Boolean = false,
     onBackClick: () -> Unit = {},
     onTaskClick: (Int) -> Unit = {},
     onFilterSelected: (ProjectTaskFilter) -> Unit = {},
+    onEditProjectClick: (Int) -> Unit = {},
     onRetry: () -> Unit = {},
 ) {
     Scaffold(
@@ -113,12 +124,32 @@ internal fun ProjectDetailContent(
                 }
                 item {
                     Column {
-                        Text(
-                            text = uiState.project?.name.orEmpty(),
-                            style = MaterialTheme.typography.headlineLarge,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = uiState.project?.name.orEmpty(),
+                                style = MaterialTheme.typography.headlineLarge,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            TextButton(
+                                onClick = {
+                                    onEditProjectClick(uiState.project?.id ?: 0)
+                                },
+                                enabled = !isOffline
+
+                                ) {
+                                Icon(
+                                    imageVector = MaterialSymbols.OutlinedFilled.Edit,
+                                    contentDescription = "Edit project"
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Edit project")
+                            }
+                        }
                         Text(
                             text = uiState.project?.description.orEmpty(),
                             style = MaterialTheme.typography.bodyMedium,

@@ -8,6 +8,7 @@ import com.team12kotlin.juggle.ui.dto.NextTaskResponse
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
+import com.team12kotlin.juggle.ui.dto.ProjectUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.dto.ReminderRequest
 import com.team12kotlin.juggle.ui.dto.ReminderUpdateRequest
@@ -169,6 +170,12 @@ interface JuggleApi {
     suspend fun getDeadlinePrediction(
         @Path("project_id") projectId: Int
     ): ProjectDeadlinePrediction
+
+    @PATCH("/projects/{project_id}")
+    suspend fun updateProject(
+        @Path("project_id") projectId: Int,
+        @Body body: ProjectUpdateRequest
+    ): Project
 
     @GET("/smart/next-task")
     suspend fun getNextTask(): NextTaskResponse
