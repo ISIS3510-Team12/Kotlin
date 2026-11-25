@@ -27,6 +27,7 @@ import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.sensors.ShakeEffectStore
+import com.team12kotlin.juggle.utils.FormDraftCache
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -181,4 +182,6 @@ object Dependencies {
     val cacheConverter: CacheConverter by lazy {
         CacheConverter(cacheJson)
     }
+
+    val formDraftCache: FormDraftCache = FormDraftCache()
 }
