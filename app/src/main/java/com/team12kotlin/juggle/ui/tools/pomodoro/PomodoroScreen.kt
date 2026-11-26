@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -209,28 +210,37 @@ internal fun PomodoroScreenContent(
             Column(
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(
-                        contentColor = MaterialTheme.colorScheme.primary,
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
-                    )
-                ) {
-                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                        PomodoroSettingsCard(
-                            phase = "Focus",
-                            minuteValue = uiState.focusMinutes,
-                            onChange = onUpdateFocusMinutes
-                        )
-                        PomodoroSettingsCard(
-                            phase = "Break",
-                            minuteValue = uiState.breakMinutes,
-                            onChange = onUpdateBreakMinutes
-                        )
-                    }
-                }
+                SettingsSection(
+                    uiState= uiState,
+                    onFocus = onUpdateFocusMinutes,
+                    onBreak = onUpdateBreakMinutes
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun SettingsSection(
+    uiState: PomodoroUiState,
+    onFocus: (Int) -> Unit,
+    onBreak: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .widthIn(max = 480.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            contentColor = MaterialTheme.colorScheme.primary,
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
+        Column(Modifier.padding(vertical = 4.dp)) {
+            PomodoroSettingsCard("Focus", uiState.focusMinutes, onFocus)
+            PomodoroSettingsCard("Break", uiState.breakMinutes, onBreak)
         }
     }
 }
