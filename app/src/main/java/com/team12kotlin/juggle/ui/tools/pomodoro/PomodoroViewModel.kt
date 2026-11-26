@@ -93,7 +93,9 @@ class PomodoroViewModel(
     fun reset() {
         timerJob?.cancel()
         val uiState = _uiState.value
-        if (uiState.phase == PomodoroPhase.FINISHED) {
+        if (uiState.phase == PomodoroPhase.FINISHED ||
+            (!uiState.isRunning && uiState.totalSeconds == uiState.remainingSeconds)
+            ) {
             cache.putCompletedSessions(0)
             _uiState.update { it.copy(
                 phase = PomodoroPhase.FOCUS,

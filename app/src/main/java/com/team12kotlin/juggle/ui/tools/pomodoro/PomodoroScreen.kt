@@ -41,6 +41,8 @@ import com.composables.icons.materialsymbols.outlinedfilled.Circle
 import com.composables.icons.materialsymbols.outlinedfilled.Remove
 import com.composables.icons.materialsymbols.outlinedfilled.Square
 import com.team12kotlin.juggle.ui.components.BackTopBar
+import com.team12kotlin.juggle.ui.telemetry.ScreenName
+import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
 @Composable
@@ -50,6 +52,7 @@ fun PomodoroScreen(
     onBackClick: () -> Unit = {}
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TrackScreenLoad(ScreenName.PomodoroTimer)
 
     PomodoroScreenContent(
         uiState=uiState,
@@ -85,7 +88,7 @@ internal fun PomodoroScreenContent(
         topBar = { BackTopBar(title = "Pomodoro Timer", onBack = onBackClick) }
     ) { innerPadding ->
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -125,7 +128,7 @@ internal fun PomodoroScreenContent(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Row(
-                        modifier = modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
                         for (session in 1..uiState.completedSessions) {

@@ -55,6 +55,7 @@ import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
 import com.team12kotlin.juggle.ui.tasks.edit.EditTaskScreen
 import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.ui.tools.pomodoro.PomodoroScreen
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 
 private const val GROUPS_NOTICE_KEY = "groupsNotice"
@@ -477,6 +478,13 @@ fun AppRoot(
                     LocationRemindersScreen(
                         modifier = Modifier.fillMaxSize(),
                         goBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable(NavigationDestination.PomodoroTimer.route) {
+                    PomodoroScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
 
