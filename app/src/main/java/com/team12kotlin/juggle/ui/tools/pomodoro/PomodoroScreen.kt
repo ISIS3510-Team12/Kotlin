@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,16 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Arrow_circle_down
 import com.composables.icons.materialsymbols.outlined.Play_arrow
-import com.composables.icons.materialsymbols.outlined.Present_to_all
-import com.composables.icons.materialsymbols.outlined.Reset_focus
-import com.composables.icons.materialsymbols.outlined.Reset_iso
-import com.composables.icons.materialsymbols.outlined.Reset_settings
-import com.composables.icons.materialsymbols.outlined.Reset_shadow
-import com.composables.icons.materialsymbols.outlined.Restart_alt
+import com.composables.icons.materialsymbols.outlined.Refresh
+import com.composables.icons.materialsymbols.outlined.Replay
 import com.composables.icons.materialsymbols.outlined.Skip_next
+import com.composables.icons.materialsymbols.outlinedfilled.Add
 import com.composables.icons.materialsymbols.outlinedfilled.Circle
+import com.composables.icons.materialsymbols.outlinedfilled.Remove
 import com.composables.icons.materialsymbols.outlinedfilled.Square
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -49,14 +47,19 @@ import com.team12kotlin.juggle.ui.theme.JuggleTheme
 fun PomodoroScreen(
     modifier: Modifier = Modifier,
     viewModel: PomodoroViewModel = viewModel(),
+    onBackClick: () -> Unit = {}
 ){
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     PomodoroScreenContent(
         uiState=uiState,
+        modifier = modifier,
         toggleTimer = viewModel::toggleTimer,
-        nextPhase = viewModel::onNextPhase,
         reset = viewModel::reset,
+        nextPhase = viewModel::onNextPhase,
+        onUpdateFocusMinutes = viewModel::updateFocusMinutes,
+        onUpdateBreakMinutes = viewModel::updateBreakMinutes,
+        onBackClick = onBackClick
     )
 }
 
@@ -67,14 +70,24 @@ internal fun PomodoroScreenContent(
     toggleTimer: () -> Unit = {},
     reset: () -> Unit = {},
     nextPhase: () -> Unit = {},
+    onUpdateFocusMinutes: (Int) -> Unit = {},
+    onUpdateBreakMinutes: (Int) -> Unit = {},
     onBackClick: () -> Unit = {}
 ){
+    val nextText = when {
+        uiState.phase == PomodoroPhase.FINISHED -> "Session complete!"
+        uiState.nextPhase == PomodoroPhase.FOCUS -> "Up next: ${uiState.nextPhaseMinutes} min focus"
+        uiState.nextPhase == PomodoroPhase.BREAK -> "Up next: ${uiState.nextPhaseMinutes} min break"
+        else -> "Up next: you're done!"
+    }
     Scaffold(
         modifier = modifier,
         topBar = { BackTopBar(title = "Pomodoro Timer", onBack = onBackClick) }
     ) { innerPadding ->
         Column(
-            modifier = modifier.fillMaxSize().padding(innerPadding),
+            modifier = modifier
+                .fillMaxSize()
+                .padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
@@ -131,7 +144,7 @@ internal fun PomodoroScreenContent(
                         }
                     }
                     Text(
-                        text = "Then 5 min short break",
+                        text = nextText,
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -150,7 +163,7 @@ internal fun PomodoroScreenContent(
                     )
                 ) {
                     Icon(
-                        imageVector = MaterialSymbols.Outlined.Restart_alt,
+                        imageVector = MaterialSymbols.Outlined.Replay,
                         contentDescription = "Reset timer button",
                     )
                 }
@@ -189,9 +202,95 @@ internal fun PomodoroScreenContent(
                 }
             }
             Spacer(Modifier.height(16.dp))
+
+            Column(
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 16.dp)
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        PomodoroSettingsCard(
+                            phase = "Focus",
+                            minuteValue = uiState.focusMinutes,
+                            onChange = onUpdateFocusMinutes
+                        )
+                        PomodoroSettingsCard(
+                            phase = "Break",
+                            minuteValue = uiState.breakMinutes,
+                            onChange = onUpdateBreakMinutes
+                        )
+                    }
+                }
+            }
         }
     }
+}
 
+@Composable
+fun PomodoroSettingsCard(
+    phase: String,
+    minuteValue: Int,
+    onChange: (Int)-> Unit = {},
+) {
+    Row(
+        modifier = Modifier.padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = phase,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 16.dp, end = 64.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = { onChange(if (minuteValue > 0) minuteValue - 1 else 0) },
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                contentPadding = PaddingValues(0.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Icon(
+                    imageVector = MaterialSymbols.OutlinedFilled.Remove,
+                    contentDescription = "Skip timer button",
+                )
+            }
+            Text(
+                text = minuteValue.toString(),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Button(
+                onClick = { onChange(if(minuteValue < 99) minuteValue + 1 else 99) },
+                modifier = Modifier.size(40.dp),
+                shape = CircleShape,
+                contentPadding = PaddingValues(0.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            ) {
+                Icon(
+                    imageVector = MaterialSymbols.OutlinedFilled.Add,
+                    contentDescription = "Skip timer button",
+                )
+            }
+        }
+    }
 }
 
 @Preview(showBackground = true, widthDp = 414, heightDp = 892)

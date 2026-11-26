@@ -12,6 +12,7 @@ import com.team12kotlin.juggle.data.local.NotificationsCache
 import com.team12kotlin.juggle.data.local.PendingTaskStore
 import com.team12kotlin.juggle.data.local.ProfileCache
 import com.team12kotlin.juggle.data.local.NetworkFirstCache
+import com.team12kotlin.juggle.data.local.PomodoroSettingsStore
 import com.team12kotlin.juggle.data.local.mappers.GroupCacheMapper
 import com.team12kotlin.juggle.data.local.mappers.ProjectCacheMapper
 import com.team12kotlin.juggle.data.local.mappers.TaskCacheMapper
@@ -27,7 +28,8 @@ import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.sensors.ShakeEffectStore
-import com.team12kotlin.juggle.utils.FormDraftCache
+import com.team12kotlin.juggle.data.local.cache_structs.FormDraftCache
+import com.team12kotlin.juggle.data.local.cache_structs.PomodoroSessionCache
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -96,7 +98,11 @@ object Dependencies {
     val evidenceCache: EvidenceCache by lazy { EvidenceCache(appContext) }
     private val profileCache: ProfileCache by lazy { ProfileCache(appContext) }
     private val notificationsCache: NotificationsCache by lazy { NotificationsCache(appContext) }
+
+    val formDraftCache: FormDraftCache = FormDraftCache()
     val pendingTaskStore: PendingTaskStore by lazy { PendingTaskStore(appContext) }
+    val pomodoroSettingsStore: PomodoroSettingsStore by lazy { PomodoroSettingsStore(appContext) }
+    val pomodoroSessionCache: PomodoroSessionCache = PomodoroSessionCache()
 
     suspend fun clearCachedData() {
         val user = authRepository.currentUser?.uid ?: return
@@ -183,5 +189,4 @@ object Dependencies {
         CacheConverter(cacheJson)
     }
 
-    val formDraftCache: FormDraftCache = FormDraftCache()
 }

@@ -15,7 +15,7 @@ import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 import com.team12kotlin.juggle.utils.taskDue
 import com.team12kotlin.juggle.utils.toIsoDateTime
 import com.team12kotlin.juggle.ui.utils.toUserMessage
-import com.team12kotlin.juggle.utils.FormDraftCache
+import com.team12kotlin.juggle.data.local.cache_structs.FormDraftCache
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
