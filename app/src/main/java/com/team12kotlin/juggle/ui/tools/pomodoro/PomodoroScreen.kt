@@ -331,7 +331,7 @@ fun PomodoroSettingsCard(
 
 @Preview(showBackground = true, widthDp = 414, heightDp = 892)
 @Composable
-private fun ProjectDetailContentPreview() {
+private fun PomodoroContentPreview() {
     JuggleTheme {
         PomodoroScreenContent(
             uiState = PomodoroUiState()
