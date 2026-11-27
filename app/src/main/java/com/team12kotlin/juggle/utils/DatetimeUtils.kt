@@ -1,12 +1,15 @@
 package com.team12kotlin.juggle.utils
 
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 
 private val DATE_UI: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
 private val TIME_UI: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
@@ -81,6 +84,22 @@ fun nextTaskMeta(groupName: String, dueAt: String?, now: LocalDateTime = LocalDa
     }
     return listOfNotNull(groupName.takeIf { it.isNotBlank() }, due).joinToString("  -  ")
 }
+
+private val LONG_DATE_UI: DateTimeFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
+
+// The day on this phone of a timestamp the backend sent in UTC.
+fun utcToLocalDay(timestamp: String): LocalDate? =
+    parseDeadline(timestamp)
+        ?.atOffset(ZoneOffset.UTC)
+        ?.atZoneSameInstant(ZoneId.systemDefault())
+        ?.toLocalDate()
+
+fun epochSecondsToLocalDay(seconds: Long): LocalDate =
+    Instant.ofEpochSecond(seconds).atZone(ZoneId.systemDefault()).toLocalDate()
+
+fun LocalDate.longLabel(): String = format(LONG_DATE_UI)
+
+fun LocalDate.shortLabel(): String = format(DUE_DATE_UI)
 
 fun parseDeadline(deadline: String): LocalDateTime? {
     return try {

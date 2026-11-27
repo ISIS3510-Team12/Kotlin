@@ -17,6 +17,7 @@ enum class ScreenName(val value: String) {
     CreateProject("create_project_kotlin"),
     ProjectDetail("project_detail_kotlin"),
     EditProject("edit_project_kotlin"),
+    ProjectGallery("project_gallery_kotlin"),
     Calendar("calendar_kotlin"),
     Profile("profile_kotlin"),
     ProfileInformation("profile_information_kotlin"),

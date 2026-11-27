@@ -8,6 +8,7 @@ import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
+import com.team12kotlin.juggle.ui.dto.ProjectPhoto
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.TaskStatus
 import com.team12kotlin.juggle.ui.utils.toUserMessage
@@ -31,6 +32,8 @@ data class ProjectDetailUiState(
     val project: Project? = null,
     val tasks: List<Task> = emptyList(),
     val prediction: ProjectDeadlinePrediction? = null,
+    // Newest first; null while unknown or unavailable.
+    val photos: List<ProjectPhoto>? = null,
     val selectedFilter: ProjectTaskFilter = ProjectTaskFilter.IN_PROGRESS,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
@@ -65,6 +68,7 @@ class ProjectDetailViewModel(
 
     fun load() {
         loadJob?.cancel()
+        loadPhotos()
         loadJob = viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
@@ -90,6 +94,13 @@ class ProjectDetailViewModel(
                     if (error is CancellationException) throw error
                     _uiState.update { it.copy(errorMessage = error.toUserMessage(), isLoading = false) }
                 }
+        }
+    }
+
+    private fun loadPhotos() {
+        viewModelScope.launch {
+            runCatching { Dependencies.projectPhotoRepository.getPhotos(projectId) }
+                .onSuccess { photos -> _uiState.update { it.copy(photos = photos) } }
         }
     }
 

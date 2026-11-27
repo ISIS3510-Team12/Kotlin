@@ -3,7 +3,8 @@ package com.team12kotlin.juggle.ui.calendar
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -251,7 +252,7 @@ private fun CalendarContent(
         if (viewMode == CalendarViewMode.Month && sheetOpen) {
             ModalBottomSheet(
                 onDismissRequest = { sheetOpen = false },
-                sheetState = rememberModalBottomSheetState(),
+                sheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden),
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow
             ) {
                 DaySheet(
