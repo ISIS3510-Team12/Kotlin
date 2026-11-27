@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.team12kotlin.juggle.data.local.DevicePhoto
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
 
 // Same limit as the server.
 private const val MAX_CAPTION_LENGTH = 200
@@ -64,6 +65,7 @@ private fun hasPhotoAccess(context: Context) = PHOTO_PERMISSIONS.any {
 @Composable
 fun AddPhotoSheet(
     recent: List<DevicePhoto>,
+    isOffline: Boolean,
     onLoadRecent: () -> Unit,
     onUpload: (List<Uri>, String?) -> Unit,
     onDismiss: () -> Unit
@@ -138,12 +140,13 @@ fun AddPhotoSheet(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
             )
+            OfflineActionNotice(isOffline = isOffline, modifier = Modifier.padding(top = 8.dp))
             Button(
                 onClick = {
                     onUpload(selected, caption.trim().ifEmpty { null })
                     onDismiss()
                 },
-                enabled = selected.isNotEmpty(),
+                enabled = selected.isNotEmpty() && !isOffline,
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp)
             ) {
                 Text(if (selected.size > 1) "Upload ${selected.size} photos" else "Upload photo")

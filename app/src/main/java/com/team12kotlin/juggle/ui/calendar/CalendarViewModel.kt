@@ -22,7 +22,7 @@ import java.time.temporal.TemporalAdjusters
 private const val MAX_CACHED_MONTHS = 6
 private const val MONTH_CACHE_TTL_MS = 2 * 60 * 1000L
 
-/** A fetched month grid. [fetchedAt] = 0 marks data that must be revalidated (e.g. offline fallback). */
+// A month grid fetched from the server.
 private class MonthEntry(val tasks: Map<LocalDate, List<Task>>, val fetchedAt: Long) {
     fun isFresh(now: Long) = now - fetchedAt < MONTH_CACHE_TTL_MS
 }
@@ -137,9 +137,9 @@ class CalendarViewModel(
                 }
                 val isFresh = result is CacheResult.Fresh
                 val hasLocalRange = isFresh || (result is CacheResult.Stale && !result.isCacheMiss)
-                if (hasLocalRange) {
-                    // Offline/stale data is cached with fetchedAt = 0 so it is revalidated next time.
-                    monthCache.put(month, MonthEntry(grouped, if (isFresh) System.currentTimeMillis() else 0L))
+                // Offline results may be incomplete, so only server data is cached.
+                if (isFresh) {
+                    monthCache.put(month, MonthEntry(grouped, System.currentTimeMillis()))
                 }
                 _uiState.update {
                     if (it.visibleMonth != month) it.copy(isLoading = false, isRefreshing = false)

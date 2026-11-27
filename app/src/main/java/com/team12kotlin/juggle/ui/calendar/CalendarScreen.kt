@@ -108,7 +108,10 @@ fun CalendarScreen(
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
         dayNotLoaded = uiState.dayNotLoaded,
-        showCachedData = isOnline == false && uiState.tasksByDate.isNotEmpty(),
+        showCachedData = isOnline == false &&
+            (if (uiState.viewMode == CalendarViewMode.Month) uiState.monthTasks else uiState.tasksByDate)
+                .isNotEmpty(),
+        isOffline = isOnline == false,
         onProfileClick = onProfileClick,
         onDateSelected = viewModel::onDateSelected,
         onRetry = viewModel::retry,
@@ -137,6 +140,7 @@ private fun CalendarContent(
     errorMessage: String? = null,
     dayNotLoaded: Boolean = false,
     showCachedData: Boolean = false,
+    isOffline: Boolean = false,
     onProfileClick: (NavigationDestination) -> Unit = {},
     onDateSelected: (LocalDate) -> Unit = {},
     onRetry: () -> Unit = {},
@@ -200,6 +204,15 @@ private fun CalendarContent(
                     onNext = { onMonthChange(visibleMonth.plusMonths(1)) },
                     onToday = onTodayClick
                 )
+                if (isOffline) {
+                    // An empty day may just not have been loaded, so don't let it read as "no tasks".
+                    Text(
+                        text = "You're offline. Some tasks may be missing.",
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 MonthGrid(
                     month = visibleMonth,
                     selectedDate = selectedDate,

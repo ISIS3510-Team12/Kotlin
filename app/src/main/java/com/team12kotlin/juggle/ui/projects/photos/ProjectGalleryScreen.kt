@@ -34,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -42,6 +44,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Add_a_photo
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
 import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
@@ -62,6 +65,7 @@ fun ProjectGalleryScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.ProjectGallery, uiState.isLoading)
     val isOnline = rememberIsOnline()
+    val isOffline = isOnline == false
     RefreshOnReconnect(isOnline = isOnline, onReconnect = viewModel::load)
     LaunchedEffect(Unit) { viewModel.load() }
     LaunchedEffect(uiState.notice) {
@@ -92,6 +96,12 @@ fun ProjectGalleryScreen(
             )
         }
     }
+    // Offline, only the saved photos can be viewed. Waits for the viewer to close,
+    // so the photos behind it don't change while it is open.
+    LaunchedEffect(isOffline, viewerIndex == null) {
+        if (isOffline && viewerIndex == null) viewModel.onFilterSelected(GalleryFilter.SAVED)
+    }
+
     val showAll = uiState.filter == GalleryFilter.ALL
     val isEmpty = !uiState.isLoading && uiState.errorMessage == null &&
         uiState.photos.isEmpty() && uiState.uploads.isEmpty()
@@ -100,11 +110,17 @@ fun ProjectGalleryScreen(
         modifier = modifier,
         topBar = { BackTopBar(title = uiState.projectName.ifBlank { "Photos" }, onBack = onBackClick) },
         floatingActionButton = {
+            val fabColors = MaterialTheme.colorScheme
             ExtendedFloatingActionButton(
-                onClick = { addOpen = true },
+                onClick = { if (!isOffline) addOpen = true },
+                containerColor = if (isOffline) fabColors.surfaceContainerHighest else fabColors.primaryContainer,
+                contentColor = if (isOffline) fabColors.onSurface.copy(alpha = 0.38f)
+                else fabColors.onPrimaryContainer,
                 icon = { Icon(MaterialSymbols.Outlined.Add_a_photo, contentDescription = null) },
                 text = { Text("Add photo") },
-                modifier = Modifier.padding(bottom = 96.dp)
+                modifier = Modifier
+                    .padding(bottom = 96.dp)
+                    .semantics { if (isOffline) disabled() }
             )
         }
     ) { innerPadding ->
@@ -125,9 +141,13 @@ fun ProjectGalleryScreen(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                if (isOffline) fullWidth { OfflineActionNotice(isOffline = true) }
                 uiState.notice?.let { fullWidth { Text(it, style = MaterialTheme.typography.bodyMedium) } }
 
-                if (showAll) {
+                if (showAll && isOffline) {
+                    fullWidth { EmptyMessage("You're offline. Only saved photos can be viewed.") }
+                    uploadTiles(uiState.uploads, isOffline, viewModel::retry)
+                } else if (showAll) {
                     uiState.errorMessage?.let { message ->
                         fullWidth { ErrorCard(message = message, onRetry = viewModel::load) }
                     }
@@ -139,9 +159,7 @@ fun ProjectGalleryScreen(
                         }
                     }
                     if (isEmpty) fullWidth { EmptyMessage("No photos yet") }
-                    items(uiState.uploads, key = { "upload:${it.clientUploadId}" }) { upload ->
-                        UploadTile(upload, onRetry = { viewModel.retry(upload) })
-                    }
+                    uploadTiles(uiState.uploads, isOffline, viewModel::retry)
                     items(uiState.photos.size, key = { uiState.photos[it].id }) { index ->
                         PhotoTile(PhotoSource.Remote(uiState.photos[index]), onClick = { viewerIndex = index })
                     }
@@ -160,6 +178,7 @@ fun ProjectGalleryScreen(
     if (addOpen) {
         AddPhotoSheet(
             recent = uiState.recent,
+            isOffline = isOffline,
             onLoadRecent = viewModel::loadRecent,
             onUpload = viewModel::upload,
             onDismiss = { addOpen = false }
@@ -173,6 +192,7 @@ fun ProjectGalleryScreen(
                 initialIndex = index.coerceIn(0, viewerPhotos.lastIndex),
                 projectName = uiState.projectName,
                 notice = uiState.notice,
+                isOffline = isOffline,
                 onSave = viewModel::save,
                 onDelete = viewModel::delete,
                 onDismiss = { viewerIndex = null }
@@ -187,6 +207,16 @@ private fun LazyGridScope.fullWidth(content: @Composable () -> Unit) {
     item(span = { GridItemSpan(maxLineSpan) }) { content() }
 }
 
+private fun LazyGridScope.uploadTiles(
+    uploads: List<PhotoUpload>,
+    isOffline: Boolean,
+    onRetry: (PhotoUpload) -> Unit
+) {
+    items(uploads, key = { "upload:${it.clientUploadId}" }) { upload ->
+        UploadTile(upload, isOffline = isOffline, onRetry = { onRetry(upload) })
+    }
+}
+
 @Composable
 private fun PhotoTile(source: PhotoSource, onClick: () -> Unit) {
     PhotoImage(
@@ -197,12 +227,12 @@ private fun PhotoTile(source: PhotoSource, onClick: () -> Unit) {
 }
 
 @Composable
-private fun UploadTile(upload: PhotoUpload, onRetry: () -> Unit) {
+private fun UploadTile(upload: PhotoUpload, isOffline: Boolean, onRetry: () -> Unit) {
     Box(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(8.dp))
-            .clickable(enabled = upload.failed, onClick = onRetry),
+            .clickable(enabled = upload.failed && !isOffline, onClick = onRetry),
         contentAlignment = Alignment.Center
     ) {
         PhotoImage(source = PhotoSource.Local(upload.uri), modifier = Modifier.fillMaxSize())
@@ -211,7 +241,11 @@ private fun UploadTile(upload: PhotoUpload, onRetry: () -> Unit) {
             contentAlignment = Alignment.Center
         ) {
             if (upload.failed) {
-                Text("Tap to retry", style = MaterialTheme.typography.labelLarge, color = Color.White)
+                Text(
+                    text = if (isOffline) "No connection" else "Tap to retry",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White
+                )
             } else {
                 CircularProgressIndicator(color = Color.White)
             }

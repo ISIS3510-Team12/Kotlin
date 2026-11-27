@@ -36,6 +36,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Close
+import com.team12kotlin.juggle.ui.components.OfflineActionNotice
 import com.team12kotlin.juggle.ui.dto.ProjectPhoto
 
 private val VIEWER_BACKGROUND = Color(0xFF131314)
@@ -56,6 +57,7 @@ fun PhotoViewer(
     initialIndex: Int,
     projectName: String,
     notice: String?,
+    isOffline: Boolean,
     onSave: (ProjectPhoto) -> Unit,
     onDelete: (ProjectPhoto) -> Unit,
     onDismiss: () -> Unit
@@ -111,17 +113,27 @@ fun PhotoViewer(
                     )
                 }
                 if (remote != null) {
+                    OfflineActionNotice(isOffline = isOffline, modifier = Modifier.padding(top = 8.dp))
                     Row(
                         modifier = Modifier.padding(top = 16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
                             onClick = { onSave(remote) },
+                            enabled = !isOffline,
+                            colors = ButtonDefaults.buttonColors(
+                                disabledContainerColor = Color.White.copy(alpha = 0.12f),
+                                disabledContentColor = Color.White.copy(alpha = 0.38f)
+                            ),
                         ) { Text("Save to device") }
                         if (current.canDelete) {
                             OutlinedButton(
                                 onClick = { toDelete = remote },
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                                enabled = !isOffline,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = Color.White,
+                                    disabledContentColor = Color.White.copy(alpha = 0.38f)
+                                )
                             ) { Text("Delete") }
                         }
                     }
@@ -135,7 +147,7 @@ fun PhotoViewer(
                 title = { Text("Delete photo?") },
                 text = { Text("It will be removed for everyone in the project.") },
                 confirmButton = {
-                    TextButton(onClick = {
+                    TextButton(enabled = !isOffline, onClick = {
                         toDelete = null
                         onDelete(photo)
                     }) { Text("Delete") }
