@@ -22,6 +22,9 @@ class MainActivity : ComponentActivity() {
                 AppRoot()
             }
         }
+        // Compose paints the whole screen, so the window background would only be painted over.
+        // It has to be cleared after setContent, or the theme's background replaces it again.
+        window.setBackgroundDrawable(null)
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.team12kotlin.juggle.ui.tasks
 
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -61,13 +62,15 @@ fun TaskCard(
                 if (task.needsHelp) {
                     Text(
                         text = "Needs Help.",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
                     text = task.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -82,7 +85,9 @@ fun TaskCard(
                         overflow = TextOverflow.Ellipsis
                     )
                 }
-                taskDue(task.deadline)?.let { due ->
+                // Parsed once per deadline, not on every recomposition.
+                val taskDue = remember(task.deadline) { taskDue(task.deadline) }
+                taskDue?.let { due ->
                     Text(
                         text = due.text,
                         style = MaterialTheme.typography.bodyMedium,
@@ -94,7 +99,8 @@ fun TaskCard(
                     )
                 }
                 if (task.id >= 0) {
-                    lastUpdateText(task.lastChangedAt)?.let { text ->
+                    val lastUpdate = remember(task.lastChangedAt) { lastUpdateText(task.lastChangedAt) }
+                    lastUpdate?.let { text ->
                         Text(
                             text = text,
                             style = MaterialTheme.typography.bodySmall,

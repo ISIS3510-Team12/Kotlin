@@ -376,6 +376,8 @@ private val CHIP_BACKGROUND = Color(0xFFE1DFFF)
 private val CHIP_CONTENT = Color(0xFF0C0664)
 
 private const val MAX_CHIPS_PER_DAY = 3
+// Created once instead of on every recomposition of the grid.
+private val WEEKDAY_LABELS = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
 
 @Composable
 private fun MonthGrid(
@@ -387,11 +389,10 @@ private fun MonthGrid(
 ) {
     val today = remember { LocalDate.now() }
     val weeks = remember(month) { monthWeeks(month) }
-    val dayLabels = listOf("Su", "Mo", "Tu", "We", "Th", "Fr", "Sa")
 
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 7.dp)) {
         Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 6.dp)) {
-            dayLabels.forEach { label ->
+            WEEKDAY_LABELS.forEach { label ->
                 Text(
                     text = label,
                     modifier = Modifier.weight(1f),
@@ -461,7 +462,9 @@ private fun MonthDayCell(
                 color = numberColor.copy(alpha = if (inMonth) 1f else 0.4f)
             )
         }
-        tasks.take(MAX_CHIPS_PER_DAY).forEach { task ->
+        // Indexed loop: no sublist or iterator for each of the 42 cells.
+        for (index in 0 until minOf(tasks.size, MAX_CHIPS_PER_DAY)) {
+            val task = tasks[index]
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -554,7 +557,9 @@ private fun DaySheet(
 @Composable
 private fun DaySheetTaskRow(task: Task, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    val time = task.deadline?.let { parseDeadline(it) }?.toLocalTime()?.format(DAY_SHEET_TIME)
+    val time = remember(task.deadline) {
+        task.deadline?.let { parseDeadline(it) }?.toLocalTime()?.format(DAY_SHEET_TIME)
+    }
     Surface(
         shape = RoundedCornerShape(12.dp),
         color = scheme.surfaceContainerLowest,
