@@ -33,7 +33,7 @@ data class PomodoroUiState(
 }
 
 class PomodoroViewModel(
-    private val manager: PomodoroTimerManager = Dependencies.PomodoroTimerManager
+    private val manager: PomodoroTimerManager = Dependencies.pomodoroTimerManager
 ): ViewModel() {
     val uiState: StateFlow<PomodoroUiState> = manager.uiState
 
