@@ -16,7 +16,9 @@ val localProperties = Properties().apply {
 android {
     namespace = "com.team12kotlin.juggle"
     compileSdk {
-        version = release(37)
+        version = release(37) {
+            minorApiLevel = 1
+        }
     }
 
     defaultConfig {

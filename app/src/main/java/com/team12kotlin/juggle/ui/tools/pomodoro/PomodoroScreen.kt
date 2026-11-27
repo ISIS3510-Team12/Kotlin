@@ -1,5 +1,10 @@
 package com.team12kotlin.juggle.ui.tools.pomodoro
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,20 +32,22 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Play_arrow
-import com.composables.icons.materialsymbols.outlined.Refresh
 import com.composables.icons.materialsymbols.outlined.Replay
 import com.composables.icons.materialsymbols.outlined.Skip_next
 import com.composables.icons.materialsymbols.outlinedfilled.Add
 import com.composables.icons.materialsymbols.outlinedfilled.Circle
 import com.composables.icons.materialsymbols.outlinedfilled.Remove
 import com.composables.icons.materialsymbols.outlinedfilled.Square
+import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.ui.components.BackTopBar
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
@@ -55,10 +62,26 @@ fun PomodoroScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.PomodoroTimer)
 
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val context = LocalContext.current
+    val settings = Dependencies.pomodoroSettingsStore
+
+    val onToggle = {
+        val needsPermission = Build.VERSION.SDK_INT >= 33 &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+
+        if (needsPermission && !settings.notificationPermissionAsked) {
+            settings.notificationPermissionAsked = true
+            launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        viewModel.toggleTimer()
+    }
+
     PomodoroScreenContent(
         uiState=uiState,
         modifier = modifier,
-        toggleTimer = viewModel::toggleTimer,
+        toggleTimer = onToggle,
         reset = viewModel::reset,
         nextPhase = viewModel::onNextPhase,
         onUpdateFocusMinutes = viewModel::updateFocusMinutes,

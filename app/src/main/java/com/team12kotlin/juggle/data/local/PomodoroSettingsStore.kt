@@ -14,9 +14,14 @@ class PomodoroSettingsStore(context: Context) {
         get() = prefs.getInt(KEY_BREAK, 5)
         set(value) = prefs.edit().putInt(KEY_BREAK, value).apply()
 
+    var notificationPermissionAsked: Boolean
+        get() = prefs.getBoolean(KEY_NOTIF_ASKED, false)
+        set(value) = prefs.edit().putBoolean(KEY_NOTIF_ASKED, value).apply()
+
     private companion object {
         const val PREFS_NAME = "pomodoro_prefs"
         const val KEY_FOCUS = "focus_minutes"
         const val KEY_BREAK = "break_minutes"
+        const val KEY_NOTIF_ASKED = "notif_permission_asked"
     }
 }

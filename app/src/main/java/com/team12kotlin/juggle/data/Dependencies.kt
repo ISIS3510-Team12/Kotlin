@@ -30,6 +30,7 @@ import com.team12kotlin.juggle.data.repository.UserRepository
 import com.team12kotlin.juggle.sensors.ShakeEffectStore
 import com.team12kotlin.juggle.data.local.cache_structs.FormDraftCache
 import com.team12kotlin.juggle.data.local.cache_structs.PomodoroSessionCache
+import com.team12kotlin.juggle.ui.tools.pomodoro.PomodoroTimerManager
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -103,6 +104,9 @@ object Dependencies {
     val pendingTaskStore: PendingTaskStore by lazy { PendingTaskStore(appContext) }
     val pomodoroSettingsStore: PomodoroSettingsStore by lazy { PomodoroSettingsStore(appContext) }
     val pomodoroSessionCache: PomodoroSessionCache = PomodoroSessionCache()
+    val pomodoroTimerManager: PomodoroTimerManager by lazy {
+        PomodoroTimerManager(appContext, pomodoroSettingsStore, pomodoroSessionCache)
+    }
 
     suspend fun clearCachedData() {
         val user = authRepository.currentUser?.uid ?: return

@@ -175,7 +175,6 @@ enum class NavigationDestination(
         label = "Tools",
         contentDescription = "Tools",
         icon = MaterialSymbols.Outlined.Design_services,
-        showInNavBar = true
     ),
 
     PomodoroTimer(
@@ -183,6 +182,7 @@ enum class NavigationDestination(
         label = "Pomodoro timer",
         contentDescription = "Pomodoro timer",
         icon = MaterialSymbols.Outlined.Design_services,
+        showInNavBar = true
     );
 
     companion object {
