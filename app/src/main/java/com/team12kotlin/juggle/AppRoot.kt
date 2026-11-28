@@ -12,7 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.ui.connectivity.IsOnlineProvider
@@ -77,6 +81,24 @@ private val PROFILE_ROUTES = setOf(
 fun AppRoot(
     modifier: Modifier = Modifier,
     navbarViewModel: NavbarViewModel = viewModel()
+) {
+    // Every session gets its own navigation state. The tabs save their screens and view models when
+    // switching, and those would be restored for the next user who signs in.
+    var session by rememberSaveable { mutableIntStateOf(0) }
+    key(session) {
+        AppNavigation(
+            modifier = modifier,
+            navbarViewModel = navbarViewModel,
+            onSessionEnded = { session++ }
+        )
+    }
+}
+
+@Composable
+private fun AppNavigation(
+    modifier: Modifier,
+    navbarViewModel: NavbarViewModel,
+    onSessionEnded: () -> Unit
 ) {
     val context = LocalContext.current
     val navController = rememberNavController()
@@ -496,6 +518,7 @@ fun AppRoot(
                                 popUpTo(0) { inclusive = true }
                                 launchSingleTop = true
                             }
+                            onSessionEnded()
                         }
                     )
                 }
