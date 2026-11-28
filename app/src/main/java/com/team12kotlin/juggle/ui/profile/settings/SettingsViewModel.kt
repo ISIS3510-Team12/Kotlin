@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val soundAndVibrationEnabled: Boolean = true,
     val shakeEnabled: Boolean = true,
     val dailyRemindersEnabled: Boolean = true,
     val dailyReminderHour: Int = 18,
@@ -41,10 +40,6 @@ class SettingsViewModel(
         )
     )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
-
-    fun onSoundAndVibrationChange(enabled: Boolean) {
-        _uiState.update { it.copy(soundAndVibrationEnabled = enabled) }
-    }
 
     fun onShakeChange(enabled: Boolean) {
         shakeStore.enabled = enabled
@@ -84,10 +79,6 @@ class SettingsViewModel(
         _uiState.update {
             it.copy(dailyReminderHour = hour, dailyReminderMinute = minute)
         }
-    }
-
-    fun onThemeClick() {
-        // TODO: theme selection is not designed yet, the app follows the system appearance
     }
 
     fun onSignOutRequested(onSignedOut: () -> Unit) {
