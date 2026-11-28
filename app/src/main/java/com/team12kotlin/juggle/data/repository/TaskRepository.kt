@@ -56,7 +56,8 @@ class TaskRepository(
                 )
             },
             readLocal = {
-                getLocalByGroup(userId, groupId).filter { it.isOwn(userId) }
+                getLocalByGroup(userId, groupId)
+                    .filter { it.isOwn(userId) && it.status != TaskStatus.COMPLETED }
             }
         )
 
@@ -80,10 +81,31 @@ class TaskRepository(
             readLocal = {
                 taskDao.getByGroup(userId, groupId)
                     .mapNotNull { mapper.toDomainOrNull(it) }
-                    .filterNot { it.isOwn(userId) }
+                    .filterNot { it.isOwn(userId) || it.status == TaskStatus.COMPLETED }
             }
         ).withPending(pendingTaskStore.pendingForGroup(groupId).map { it.toTask() })
     }
+
+    /** The group endpoints leave out completed tasks, so the board gets them from the full list. */
+    suspend fun getCompletedTasksCached(groupId: Int): CacheResult<List<Task>> =
+        cache.fetch(
+            userId = userId,
+            resource = "completedTasks",
+            scopeId = groupId.toString(),
+            remote = {
+                api.getAllTasks().filter { it.groupId == groupId && it.status == TaskStatus.COMPLETED }
+            },
+            saveLocal = { tasks ->
+                taskDao.replaceCompletedForGroup(
+                    userId,
+                    groupId,
+                    tasks.map { mapper.toEntity(userId, it).copy(groupId = groupId) }
+                )
+            },
+            readLocal = {
+                taskDao.getCompletedByGroup(userId, groupId).mapNotNull { mapper.toDomainOrNull(it) }
+            }
+        )
 
     suspend fun getAllTasks(
         dueWithinDays: Int? = null,
