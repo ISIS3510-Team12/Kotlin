@@ -45,6 +45,8 @@ import com.team12kotlin.juggle.ui.dto.Group
 import com.team12kotlin.juggle.ui.utils.TaskFieldLimits
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 
+private const val NO_PROJECT = "No project"
+
 @Composable
 fun CreateTaskScreen(
     modifier: Modifier = Modifier,
@@ -174,9 +176,10 @@ internal fun CreateTaskContent(
                 )
 
                 DropdownField(
-                    value = uiState.selectedProjectName,
+                    value = uiState.selectedProjectName ?: NO_PROJECT,
                     label = "Associated project",
-                    options = uiState.projects.map { it.name },
+                    // Picking "No project" matches no project name, which clears the selection.
+                    options = listOf(NO_PROJECT) + uiState.projects.map { it.name },
                     onOptionSelected = onProjectSelected,
                     modifier = contentPadding
                 )

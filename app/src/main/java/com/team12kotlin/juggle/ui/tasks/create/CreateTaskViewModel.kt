@@ -66,7 +66,6 @@ data class CreateTaskUiState(
                 taskType != null &&
                 deadline.isNotBlank() &&
                 selectedGroupId != null &&
-                selectedProjectId != null &&
                 !isLoading
 
     val selectedGroupName: String?
