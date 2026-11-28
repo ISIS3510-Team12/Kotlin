@@ -24,5 +24,9 @@ enum class ScreenName(val value: String) {
     Notifications("notifications_kotlin"),
     Settings("settings_kotlin"),
     LocationReminders("location_reminders_kotlin"),
-    PomodoroTimer("Pomodoro timer")
+    Tools("tools_kotlin"),
+    PomodoroTimer("Pomodoro timer"),
+    DecisionWheel("decision_wheel_kotlin"),
+    NewWheel("new_wheel_kotlin"),
+    WheelEditor("wheel_editor_kotlin")
 }
