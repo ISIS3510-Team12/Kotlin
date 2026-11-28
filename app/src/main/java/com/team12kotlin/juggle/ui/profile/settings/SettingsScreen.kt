@@ -61,8 +61,6 @@ fun SettingsScreen(
         modifier = modifier,
         uiState = uiState,
         goBack = goBack,
-        onThemeClick = viewModel::onThemeClick,
-        onSoundAndVibrationChange = viewModel::onSoundAndVibrationChange,
         onShakeChange = viewModel::onShakeChange,
         onDailyRemindersChange = viewModel::onDailyRemindersChange,
         onDailyReminderTimeChange = viewModel::onDailyReminderTimeChange,
@@ -117,8 +115,6 @@ private fun SettingsContent(
     uiState: SettingsUiState,
     modifier: Modifier = Modifier,
     goBack: () -> Unit = {},
-    onThemeClick: () -> Unit = {},
-    onSoundAndVibrationChange: (Boolean) -> Unit = {},
     onShakeChange: (Boolean) -> Unit = {},
     onDailyRemindersChange: (Boolean) -> Unit = {},
     onDailyReminderTimeChange: (Int, Int) -> Unit = {_,_ -> },
@@ -145,23 +141,6 @@ private fun SettingsContent(
                 color = MaterialTheme.colorScheme.surfaceContainer
             ) {
                 Column(modifier = Modifier.padding(vertical = 4.dp)) {
-                    SettingsItem(
-                        title = "Theme",
-                        supportingText = "Use system appearance",
-                        onClick = onThemeClick
-                    ) {
-                        ChevronIcon()
-                    }
-                    SettingsItem(
-                        title = "Sound & vibration",
-                        supportingText = "Control app sounds and haptics",
-                        onClick = { onSoundAndVibrationChange(!uiState.soundAndVibrationEnabled) }
-                    ) {
-                        Switch(
-                            checked = uiState.soundAndVibrationEnabled,
-                            onCheckedChange = onSoundAndVibrationChange
-                        )
-                    }
                     SettingsItem(
                         title = "Shake detector enabled",
                         supportingText = "Shake phone to reset fields on forms",
