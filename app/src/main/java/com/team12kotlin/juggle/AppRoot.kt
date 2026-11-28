@@ -58,6 +58,9 @@ import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.tools.ToolsScreen
 import com.team12kotlin.juggle.ui.tools.pomodoro.PomodoroScreen
+import com.team12kotlin.juggle.ui.tools.wheel.DecisionWheelScreen
+import com.team12kotlin.juggle.ui.tools.wheel.NewWheelScreen
+import com.team12kotlin.juggle.ui.tools.wheel.WheelEditorScreen
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 
 private const val GROUPS_NOTICE_KEY = "groupsNotice"
@@ -512,7 +515,51 @@ fun AppRoot(
                             navController.navigate(NavigationDestination.PomodoroTimer.route) {
                                 launchSingleTop = true
                             }
+                        },
+                        onDecisionWheelClick = {
+                            navController.navigate(NavigationDestination.DecisionWheel.route) {
+                                launchSingleTop = true
+                            }
                         }
+                    )
+                }
+
+                composable(NavigationDestination.DecisionWheel.route) {
+                    DecisionWheelScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() },
+                        onWheelClick = { wheel ->
+                            navController.navigate(
+                                NavigationDestination.WheelEditor.route
+                                    .replace("{wheelId}", wheel.id.toString())
+                            ) {
+                                launchSingleTop = true
+                            }
+                        },
+                        onCreateWheelClick = {
+                            navController.navigate(NavigationDestination.NewWheel.route) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+
+                composable(NavigationDestination.NewWheel.route) {
+                    NewWheelScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = NavigationDestination.WheelEditor.route,
+                    arguments = listOf(navArgument("wheelId") { type = NavType.IntType })
+                ) { backStackEntry ->
+                    val wheelId = backStackEntry.arguments?.getInt("wheelId") ?: 0
+                    WheelEditorScreen(
+                        wheelId = wheelId,
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
 

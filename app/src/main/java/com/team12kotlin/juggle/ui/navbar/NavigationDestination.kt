@@ -190,6 +190,27 @@ enum class NavigationDestination(
         label = "Pomodoro timer",
         contentDescription = "Pomodoro timer",
         icon = MaterialSymbols.Outlined.Design_services
+    ),
+
+    DecisionWheel(
+        route = "tools/wheel",
+        label = "Decision Wheel",
+        contentDescription = "Decision Wheel",
+        icon = MaterialSymbols.Outlined.Design_services
+    ),
+
+    NewWheel(
+        route = "tools/wheel/new",
+        label = "New wheel",
+        contentDescription = "New wheel",
+        icon = MaterialSymbols.Outlined.Design_services
+    ),
+
+    WheelEditor(
+        route = "tools/wheel/{wheelId}",
+        label = "Wheel",
+        contentDescription = "Wheel",
+        icon = MaterialSymbols.Outlined.Design_services
     );
 
     companion object {

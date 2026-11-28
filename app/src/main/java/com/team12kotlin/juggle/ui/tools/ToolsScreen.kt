@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Alarm
 import com.composables.icons.materialsymbols.outlined.Chevron_right
+import com.composables.icons.materialsymbols.outlined.List_alt
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
@@ -32,7 +33,8 @@ import com.team12kotlin.juggle.ui.topbar.AppTopBar
 fun ToolsScreen(
     modifier: Modifier = Modifier,
     onProfileClick: (NavigationDestination) -> Unit = {},
-    onPomodoroClick: () -> Unit = {}
+    onPomodoroClick: () -> Unit = {},
+    onDecisionWheelClick: () -> Unit = {}
 ) {
     TrackScreenLoad(ScreenName.Tools)
 
@@ -55,6 +57,11 @@ fun ToolsScreen(
                 title = "Pomodoro timer",
                 icon = MaterialSymbols.Outlined.Alarm,
                 onClick = onPomodoroClick
+            )
+            ToolCard(
+                title = "Decision Wheel",
+                icon = MaterialSymbols.Outlined.List_alt,
+                onClick = onDecisionWheelClick
             )
         }
     }
