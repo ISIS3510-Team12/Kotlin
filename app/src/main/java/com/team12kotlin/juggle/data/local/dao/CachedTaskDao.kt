@@ -22,6 +22,12 @@ interface CachedTaskDao {
     """)
     suspend fun getByGroup(userId: String, groupId: Int): List<CachedTaskEntity>
 
+    @Query("""
+        SELECT * FROM cached_tasks
+        WHERE userId = :userId AND groupId = :groupId AND status = 'completed'
+    """)
+    suspend fun getCompletedByGroup(userId: String, groupId: Int): List<CachedTaskEntity>
+
     @Query("SELECT * FROM cached_tasks WHERE userId = :userId")
     suspend fun getAll(userId: String): List<CachedTaskEntity>
 
@@ -40,13 +46,36 @@ interface CachedTaskDao {
     @Query("DELETE FROM cached_tasks WHERE userId = :userId AND groupId = :groupId")
     suspend fun deleteForGroup(userId: String, groupId: Int)
 
+    @Query("""
+        DELETE FROM cached_tasks
+        WHERE userId = :userId AND groupId = :groupId AND status != 'completed'
+    """)
+    suspend fun deleteOpenForGroup(userId: String, groupId: Int)
+
+    @Query("""
+        DELETE FROM cached_tasks
+        WHERE userId = :userId AND groupId = :groupId AND status = 'completed'
+    """)
+    suspend fun deleteCompletedForGroup(userId: String, groupId: Int)
+
+    /** Keeps the completed tasks: the group endpoints do not return them, so they would be lost. */
     @Transaction
     suspend fun replaceForGroup(
         userId: String,
         groupId: Int,
         tasks: List<CachedTaskEntity>,
     ) {
-        deleteForGroup(userId, groupId)
+        deleteOpenForGroup(userId, groupId)
+        insertAll(tasks)
+    }
+
+    @Transaction
+    suspend fun replaceCompletedForGroup(
+        userId: String,
+        groupId: Int,
+        tasks: List<CachedTaskEntity>,
+    ) {
+        deleteCompletedForGroup(userId, groupId)
         insertAll(tasks)
     }
 }
