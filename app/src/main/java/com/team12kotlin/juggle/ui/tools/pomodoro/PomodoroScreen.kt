@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -107,6 +108,37 @@ internal fun PomodoroScreenContent(
         uiState.nextPhase == PomodoroPhase.BREAK -> "Up next: ${uiState.nextPhaseMinutes} min break"
         else -> "Up next: you're done!"
     }
+
+    val mainColor = when (uiState.phase) {
+        PomodoroPhase.FOCUS -> MaterialTheme.colorScheme.primary
+        PomodoroPhase.BREAK -> MaterialTheme.colorScheme.secondary
+        else -> MaterialTheme.colorScheme.tertiary
+    }
+
+    val mainContainerColor = when (uiState.phase) {
+        PomodoroPhase.FOCUS -> MaterialTheme.colorScheme.primaryContainer
+        PomodoroPhase.BREAK -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.tertiaryContainer
+    }
+
+    val mainOnContainerColor = when (uiState.phase) {
+        PomodoroPhase.FOCUS -> MaterialTheme.colorScheme.onPrimaryContainer
+        PomodoroPhase.BREAK -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.onTertiaryContainer
+    }
+
+    val title = when (uiState.phase) {
+        PomodoroPhase.FOCUS -> "Study Session"
+        PomodoroPhase.BREAK -> "Break Time"
+        else -> "All Cycles Completed"
+    }
+
+    val subtitle = when (uiState.phase) {
+        PomodoroPhase.FOCUS -> "Stay focused on your task"
+        PomodoroPhase.BREAK -> "You're on a break. Rest and recharge"
+        else -> "Great work!, Press play to start a new round"
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = { BackTopBar(title = "Pomodoro Timer", onBack = onBackClick) }
@@ -121,13 +153,13 @@ internal fun PomodoroScreenContent(
             Spacer(Modifier.height(16.dp))
 
             Text(
-                text = "Study Session",
+                text = title,
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = mainColor
             )
             Text(
-                text = "Stay focused on your task",
+                text = subtitle,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -139,8 +171,8 @@ internal fun PomodoroScreenContent(
                     progress = { uiState.progress },
                     modifier = Modifier.size(270.dp),
                     strokeWidth = 15.dp,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    trackColor = MaterialTheme.colorScheme.primary
+                    color = mainContainerColor,
+                    trackColor = mainColor
                 )
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -149,7 +181,7 @@ internal fun PomodoroScreenContent(
                         text = "%02d:%02d".format(uiState.remainingSeconds / 60, uiState.remainingSeconds % 60),
                         style = MaterialTheme.typography.displayLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = mainColor
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -159,14 +191,14 @@ internal fun PomodoroScreenContent(
                             Icon(
                                 imageVector = MaterialSymbols.OutlinedFilled.Circle,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = mainColor
                             )
                         }
                         for (session in 1..4-uiState.completedSessions) {
                             Icon(
                                 imageVector = MaterialSymbols.OutlinedFilled.Circle,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primaryContainer
+                                tint = mainContainerColor
                             )
                         }
                     }
@@ -185,8 +217,8 @@ internal fun PomodoroScreenContent(
                     shape = CircleShape,
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = mainContainerColor,
+                        contentColor = mainOnContainerColor
                     )
                 ) {
                     Icon(
@@ -198,7 +230,11 @@ internal fun PomodoroScreenContent(
                     onClick = toggleTimer,
                     modifier = Modifier.size(60.dp),
                     shape = CircleShape,
-                    contentPadding = PaddingValues(0.dp)
+                    contentPadding = PaddingValues(0.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = mainOnContainerColor,
+                        contentColor = mainContainerColor
+                    )
                 ) {
                     if (uiState.isRunning) {
                         Icon(
@@ -218,8 +254,8 @@ internal fun PomodoroScreenContent(
                     shape = CircleShape,
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = mainContainerColor,
+                        contentColor = mainOnContainerColor
                     )
                 ) {
                     Icon(
@@ -235,6 +271,9 @@ internal fun PomodoroScreenContent(
             ) {
                 SettingsSection(
                     uiState= uiState,
+                    mainColor= mainColor,
+                    mainContainerColor= mainContainerColor,
+                    mainOnContainerColor= mainOnContainerColor,
                     onFocus = onUpdateFocusMinutes,
                     onBreak = onUpdateBreakMinutes
                 )
@@ -246,6 +285,9 @@ internal fun PomodoroScreenContent(
 @Composable
 private fun SettingsSection(
     uiState: PomodoroUiState,
+    mainColor: Color,
+    mainContainerColor: Color,
+    mainOnContainerColor: Color,
     onFocus: (Int) -> Unit,
     onBreak: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -257,13 +299,25 @@ private fun SettingsSection(
             .padding(horizontal = 24.dp, vertical = 16.dp),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(
-            contentColor = MaterialTheme.colorScheme.primary,
+            contentColor = mainColor,
             containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Column(Modifier.padding(vertical = 4.dp)) {
-            PomodoroSettingsCard("Focus", uiState.focusMinutes, onFocus)
-            PomodoroSettingsCard("Break", uiState.breakMinutes, onBreak)
+            PomodoroSettingsCard(
+                phase = "Focus",
+                minuteValue = uiState.focusMinutes,
+                mainContainerColor= mainContainerColor,
+                mainOnContainerColor = mainOnContainerColor,
+                onChange = onFocus
+            )
+            PomodoroSettingsCard(
+                phase = "Break",
+                minuteValue = uiState.breakMinutes,
+                mainContainerColor = mainContainerColor,
+                mainOnContainerColor = mainOnContainerColor,
+                onChange = onBreak
+            )
         }
     }
 }
@@ -272,6 +326,8 @@ private fun SettingsSection(
 fun PomodoroSettingsCard(
     phase: String,
     minuteValue: Int,
+    mainContainerColor: Color,
+    mainOnContainerColor: Color,
     onChange: (Int)-> Unit = {},
 ) {
     Row(
@@ -296,8 +352,8 @@ fun PomodoroSettingsCard(
                 shape = CircleShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = mainContainerColor,
+                    contentColor = mainOnContainerColor
                 )
             ) {
                 Icon(
@@ -316,8 +372,8 @@ fun PomodoroSettingsCard(
                 shape = CircleShape,
                 contentPadding = PaddingValues(0.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = mainContainerColor,
+                    contentColor = mainOnContainerColor
                 )
             ) {
                 Icon(
@@ -331,10 +387,42 @@ fun PomodoroSettingsCard(
 
 @Preview(showBackground = true, widthDp = 414, heightDp = 892)
 @Composable
-private fun PomodoroContentPreview() {
+private fun PomodoroFocusContentPreview() {
     JuggleTheme {
         PomodoroScreenContent(
-            uiState = PomodoroUiState()
+            uiState = PomodoroUiState(
+                phase = PomodoroPhase.FOCUS,
+                remainingSeconds = 25*60
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 414, heightDp = 892)
+@Composable
+private fun PomodoroBreakContentPreview() {
+    JuggleTheme {
+        PomodoroScreenContent(
+            uiState = PomodoroUiState(
+                phase = PomodoroPhase.BREAK,
+                remainingSeconds = 5*60,
+                totalSeconds = 5*60
+            )
+        )
+    }
+}
+
+
+@Preview(showBackground = true, widthDp = 414, heightDp = 892)
+@Composable
+private fun PomodoroFinishedContentPreview() {
+    JuggleTheme {
+        PomodoroScreenContent(
+            uiState = PomodoroUiState(
+                phase = PomodoroPhase.FINISHED,
+                remainingSeconds = 0,
+                totalSeconds = 1
+            )
         )
     }
 }
