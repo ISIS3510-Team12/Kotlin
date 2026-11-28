@@ -200,6 +200,7 @@ object Dependencies {
         groupRepositoryInstance = null
         projectRepositoryInstance = null
         wheelRepositoryInstance = null
+        formDraftCache.clearAll()
     }
     val userRepository: UserRepository by lazy { UserRepository(api, profileCache) }
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }

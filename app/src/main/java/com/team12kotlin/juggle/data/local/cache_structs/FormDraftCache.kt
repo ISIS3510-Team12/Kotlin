@@ -15,4 +15,9 @@ class FormDraftCache {
     fun clear(key: String) {
         formDrafts.clear()
     }
+
+    /** Drops every draft, so the next session does not find what the previous one left half written. */
+    fun clearAll() {
+        formDrafts.clear()
+    }
 }
