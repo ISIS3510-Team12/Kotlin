@@ -9,6 +9,7 @@ import com.team12kotlin.juggle.data.local.CacheConverter
 import com.team12kotlin.juggle.data.local.DeviceGallery
 import com.team12kotlin.juggle.data.local.EvidenceCache
 import com.team12kotlin.juggle.data.local.MIGRATION_1_2
+import com.team12kotlin.juggle.data.local.MIGRATION_2_3
 import com.team12kotlin.juggle.data.local.NotificationsCache
 import com.team12kotlin.juggle.data.local.PendingTaskStore
 import com.team12kotlin.juggle.data.local.ProfileCache
@@ -29,9 +30,11 @@ import com.team12kotlin.juggle.data.repository.SmartRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
 import com.team12kotlin.juggle.data.repository.TelemetryRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
+import com.team12kotlin.juggle.data.repository.WheelRepository
 import com.team12kotlin.juggle.sensors.ShakeEffectStore
 import com.team12kotlin.juggle.data.local.cache_structs.FormDraftCache
 import com.team12kotlin.juggle.data.local.cache_structs.PomodoroSessionCache
+import com.team12kotlin.juggle.data.local.cache_structs.WheelOptionsCache
 import com.team12kotlin.juggle.ui.tools.pomodoro.PomodoroTimerManager
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -94,7 +97,7 @@ object Dependencies {
 
     private val database: AppDatabase by lazy {
         Room.databaseBuilder(appContext, AppDatabase::class.java, "juggle.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
     }
 
@@ -106,6 +109,7 @@ object Dependencies {
     val pendingTaskStore: PendingTaskStore by lazy { PendingTaskStore(appContext) }
     val pomodoroSettingsStore: PomodoroSettingsStore by lazy { PomodoroSettingsStore(appContext) }
     val pomodoroSessionCache: PomodoroSessionCache = PomodoroSessionCache()
+    private val wheelOptionsCache: WheelOptionsCache = WheelOptionsCache()
     val pomodoroTimerManager: PomodoroTimerManager by lazy {
         PomodoroTimerManager(appContext, pomodoroSettingsStore, pomodoroSessionCache)
     }
@@ -177,6 +181,17 @@ object Dependencies {
             ).also { projectRepositoryInstance = it }
         }
 
+    @Volatile
+    private var wheelRepositoryInstance: WheelRepository? = null
+    val wheelRepository: WheelRepository
+        get() = wheelRepositoryInstance ?: synchronized(this) {
+            wheelRepositoryInstance ?: WheelRepository(
+                database.wheelDao(),
+                wheelOptionsCache,
+                authRepository.currentUserId()
+            ).also { wheelRepositoryInstance = it }
+        }
+
     val projectPhotoRepository: ProjectPhotoRepository by lazy { ProjectPhotoRepository(api, appContext) }
     val deviceGallery: DeviceGallery by lazy { DeviceGallery(appContext) }
 
@@ -184,6 +199,7 @@ object Dependencies {
         taskRepositoryInstance = null
         groupRepositoryInstance = null
         projectRepositoryInstance = null
+        wheelRepositoryInstance = null
     }
     val userRepository: UserRepository by lazy { UserRepository(api, profileCache) }
     val locationRepository: LocationRepository by lazy { LocationRepository(api) }
