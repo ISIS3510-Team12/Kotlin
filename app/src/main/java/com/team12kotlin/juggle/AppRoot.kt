@@ -56,6 +56,7 @@ import com.team12kotlin.juggle.ui.tasks.create.CreateTaskScreen
 import com.team12kotlin.juggle.ui.tasks.edit.EditTaskScreen
 import com.team12kotlin.juggle.ui.tasks.view.ViewTaskScreen
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
+import com.team12kotlin.juggle.ui.tools.ToolsScreen
 import com.team12kotlin.juggle.ui.tools.pomodoro.PomodoroScreen
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 
@@ -86,9 +87,13 @@ fun AppRoot(
 
     // Make the bottom nav bar in sync with the screen in case of system back
     LaunchedEffect(currentRoute) {
-        NavigationDestination.fromRoute(currentRoute)?.let {
-            navbarViewModel.onDestinationSelected(it)
+        // Screens opened from Tools keep its tab selected.
+        val destination = if (currentRoute?.startsWith(NavigationDestination.Tools.route) == true) {
+            NavigationDestination.Tools
+        } else {
+            NavigationDestination.fromRoute(currentRoute)
         }
+        destination?.let { navbarViewModel.onDestinationSelected(it) }
     }
 
     IsOnlineProvider {
@@ -496,6 +501,18 @@ fun AppRoot(
                     LocationRemindersScreen(
                         modifier = Modifier.fillMaxSize(),
                         goBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable(NavigationDestination.Tools.route) {
+                    ToolsScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onProfileClick = { navController.navigate(it.route) },
+                        onPomodoroClick = {
+                            navController.navigate(NavigationDestination.PomodoroTimer.route) {
+                                launchSingleTop = true
+                            }
+                        }
                     )
                 }
 
