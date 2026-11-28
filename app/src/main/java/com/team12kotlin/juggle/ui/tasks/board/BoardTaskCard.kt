@@ -1,6 +1,8 @@
 package com.team12kotlin.juggle.ui.tasks.board
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,13 +16,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -38,16 +52,59 @@ internal fun BoardTaskCard(
     locked: Boolean,
     moving: Boolean,
     modifier: Modifier = Modifier,
+    // The faded card left behind while its copy is dragged, and the copy that follows the finger.
+    dragging: Boolean = false,
+    floating: Boolean = false,
     onClick: () -> Unit = {},
-    onMoveClick: () -> Unit = {}
+    onMoveClick: () -> Unit = {},
+    onDragStart: (pointer: Offset, grab: Offset, size: IntSize) -> Unit = { _, _, _ -> },
+    onDrag: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {},
+    onLockedLongPress: () -> Unit = {}
 ) {
     val waitingToUpload = task.id < 0
+    val canDrag = !floating && !waitingToUpload && !moving
+    val haptics = LocalHapticFeedback.current
+    val currentOnDragStart by rememberUpdatedState(onDragStart)
+    val currentOnDrag by rememberUpdatedState(onDrag)
+    val currentOnDragEnd by rememberUpdatedState(onDragEnd)
+    val currentOnLockedLongPress by rememberUpdatedState(onLockedLongPress)
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+
+    val gestures = when {
+        !canDrag -> Modifier
+        locked -> Modifier.pointerInput(task.id) {
+            detectTapGestures(onLongPress = { currentOnLockedLongPress() })
+        }
+        else -> Modifier.pointerInput(task.id) {
+            detectDragGesturesAfterLongPress(
+                onDragStart = { local ->
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    currentOnDragStart(origin + local, local, size)
+                },
+                onDrag = { change, amount ->
+                    change.consume()
+                    currentOnDrag(amount)
+                },
+                onDragEnd = { currentOnDragEnd() },
+                onDragCancel = { currentOnDragEnd() }
+            )
+        }
+    }
 
     Card(
         onClick = onClick,
-        modifier = modifier.alpha(if (moving) 0.6f else 1f),
+        modifier = modifier
+            .alpha(if (dragging) 0.35f else if (moving) 0.6f else 1f)
+            .onGloballyPositioned {
+                origin = it.positionInRoot()
+                size = it.size
+            }
+            .then(gestures),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (floating) 8.dp else 0.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(

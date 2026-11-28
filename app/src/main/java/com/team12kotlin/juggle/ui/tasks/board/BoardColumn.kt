@@ -19,11 +19,22 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.composables.icons.materialsymbols.MaterialSymbols
@@ -39,12 +50,38 @@ internal fun BoardColumn(
     unavailable: Boolean,
     locked: Boolean,
     movingTaskIds: Set<Int>,
+    draggingTaskId: Int?,
+    highlighted: Boolean,
     modifier: Modifier = Modifier,
+    onBoundsChange: (Rect) -> Unit = {},
     onTaskClick: (Task) -> Unit = {},
-    onMoveClick: (Task) -> Unit = {}
+    onMoveClick: (Task) -> Unit = {},
+    onDragStart: (Task, Offset, Offset, IntSize) -> Unit = { _, _, _, _ -> },
+    onDrag: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {},
+    onLockedLongPress: () -> Unit = {}
 ) {
+    // The column under the dragged card gets a dashed border and a light tint.
+    val highlight by animateFloatAsState(if (highlighted) 1f else 0f, label = "columnHighlight")
+    val accent = MaterialTheme.colorScheme.primary
+
     Surface(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .onGloballyPositioned { onBoundsChange(it.boundsInRoot()) }
+            .drawWithContent {
+                drawContent()
+                val corner = CornerRadius(16.dp.toPx())
+                drawRoundRect(accent.copy(alpha = 0.08f * highlight), cornerRadius = corner)
+                drawRoundRect(
+                    color = accent.copy(alpha = highlight),
+                    cornerRadius = corner,
+                    style = Stroke(
+                        width = 2.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(18f, 12f))
+                    )
+                )
+            },
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceContainer
     ) {
@@ -63,9 +100,14 @@ internal fun BoardColumn(
                             task = task,
                             locked = locked,
                             moving = task.id in movingTaskIds,
+                            dragging = task.id == draggingTaskId,
                             modifier = Modifier.animateItem(),
                             onClick = { onTaskClick(task) },
-                            onMoveClick = { onMoveClick(task) }
+                            onMoveClick = { onMoveClick(task) },
+                            onDragStart = { pointer, grab, size -> onDragStart(task, pointer, grab, size) },
+                            onDrag = onDrag,
+                            onDragEnd = onDragEnd,
+                            onLockedLongPress = onLockedLongPress
                         )
                     }
                 }
@@ -118,9 +160,9 @@ private fun EmptyColumn(
 ) {
     val (title, hint) = when {
         unavailable -> "Couldn't load completed tasks" to "Check your connection and open the board again."
-        status == TaskStatus.NOT_STARTED -> "No tasks to start" to "Move a task back here from its menu."
-        status == TaskStatus.IN_PROGRESS -> "Nothing in progress" to "Move a task here from its menu to start it."
-        else -> "No completed tasks yet" to "Move a task here from its menu to mark it as done."
+        status == TaskStatus.NOT_STARTED -> "No tasks to start" to "Drag a task here, or use its menu, to move it back."
+        status == TaskStatus.IN_PROGRESS -> "Nothing in progress" to "Drag a task here, or use its menu, to start it."
+        else -> "No completed tasks yet" to "Drag a task here, or use its menu, to mark it as done."
     }
     Column(
         modifier = modifier
