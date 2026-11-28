@@ -8,6 +8,7 @@ import com.team12kotlin.juggle.ui.dto.NextTaskResponse
 import com.team12kotlin.juggle.ui.dto.Project
 import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
 import com.team12kotlin.juggle.ui.dto.ProjectDeadlinePrediction
+import com.team12kotlin.juggle.ui.dto.ProjectPhoto
 import com.team12kotlin.juggle.ui.dto.ProjectUpdateRequest
 import com.team12kotlin.juggle.ui.dto.Reminder
 import com.team12kotlin.juggle.ui.dto.ReminderRequest
@@ -25,6 +26,7 @@ import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.dto.UserCreateRequest
 import com.team12kotlin.juggle.ui.dto.UserLocation
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -176,6 +178,33 @@ interface JuggleApi {
         @Path("project_id") projectId: Int,
         @Body body: ProjectUpdateRequest
     ): Project
+
+    @GET("/projects/{project_id}/photos")
+    suspend fun getProjectPhotos(@Path("project_id") projectId: Int): List<ProjectPhoto>
+
+    @Multipart
+    @POST("/projects/{project_id}/photos")
+    suspend fun uploadProjectPhoto(
+        @Path("project_id") projectId: Int,
+        @Part file: MultipartBody.Part,
+        @Part thumbnail: MultipartBody.Part,
+        @Part("client_upload_id") clientUploadId: RequestBody,
+        @Part("caption") caption: RequestBody?
+    ): ProjectPhoto
+
+    @Streaming
+    @GET("/projects/{project_id}/photos/{photo_id}")
+    suspend fun getProjectPhotoFile(
+        @Path("project_id") projectId: Int,
+        @Path("photo_id") photoId: Int,
+        @Query("variant") variant: String
+    ): ResponseBody
+
+    @DELETE("/projects/{project_id}/photos/{photo_id}")
+    suspend fun deleteProjectPhoto(
+        @Path("project_id") projectId: Int,
+        @Path("photo_id") photoId: Int
+    )
 
     @GET("/smart/next-task")
     suspend fun getNextTask(): NextTaskResponse

@@ -48,6 +48,7 @@ import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.projects.PaceWarningBanner
 import com.team12kotlin.juggle.ui.projects.ProjectProgressBar
 import com.team12kotlin.juggle.ui.projects.StatSummary
+import com.team12kotlin.juggle.ui.projects.photos.ProjectPhotosCard
 import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.utils.splitDeadline
@@ -60,6 +61,7 @@ fun ProjectDetailScreen(
     onTaskClick: (Int) -> Unit = {},
     onEditProjectClick: (Int) -> Unit = {},
     onAddTaskClick: () -> Unit = {},
+    onPhotosClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.ProjectDetail, uiState.isLoading)
@@ -81,6 +83,7 @@ fun ProjectDetailScreen(
         onFilterSelected = viewModel::onFilterSelected,
         onEditProjectClick = onEditProjectClick,
         onRetry = viewModel::load,
+        onPhotosClick = onPhotosClick,
     )
 }
 
@@ -95,6 +98,7 @@ internal fun ProjectDetailContent(
     onFilterSelected: (ProjectTaskFilter) -> Unit = {},
     onEditProjectClick: (Int) -> Unit = {},
     onRetry: () -> Unit = {},
+    onPhotosClick: () -> Unit = {},
 ) {
     Scaffold(
         modifier = modifier,
@@ -206,6 +210,10 @@ internal fun ProjectDetailContent(
                             message = "Your current pace won't complete all planned tasks before the deadline."
                         )
                     }
+                }
+
+                item {
+                    ProjectPhotosCard(photos = uiState.photos, onClick = onPhotosClick)
                 }
 
                 item {

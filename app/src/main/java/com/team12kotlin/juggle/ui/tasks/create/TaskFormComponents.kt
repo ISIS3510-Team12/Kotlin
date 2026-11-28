@@ -65,6 +65,7 @@ import com.composables.icons.materialsymbols.outlined.Schedule
 import com.composables.icons.materialsymbols.outlined.Search
 import com.composables.icons.materialsymbols.outlined.Upload
 import com.team12kotlin.juggle.ui.components.TextMonogram
+import com.team12kotlin.juggle.utils.decodeSampledBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -531,31 +532,10 @@ internal fun EvidenceView(
     }
 }
 
-/**
- * Decodes a compressed version of the photo, so the preview does not need the whole full-sized image.
- * ImageDecoder applies the EXIF orientation, so portrait photos are not shown sideways.
- */
+// Decodes a compressed version of the photo, so the preview does not need the whole full-sized image.
 private suspend fun decodeEvidencePreview(bytes: ByteArray): ImageBitmap? =
-    withContext(Dispatchers.Default) {
-        runCatching {
-            val source = ImageDecoder.createSource(ByteBuffer.wrap(bytes))
-            ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
-                decoder.setTargetSampleSize(
-                    previewSampleSize(info.size.width, info.size.height)
-                )
-            }.asImageBitmap()
-        }.getOrNull()
-    }
-
-/** How much to shrink the photo so it is not decoded at full resolution. */
-private fun previewSampleSize(width: Int, height: Int): Int {
-    val longestSide = maxOf(width, height)
-    var sample = 1
-    while (longestSide / sample > PREVIEW_MAX_PX) {
-        sample *= 2
-    }
-    return sample
-}
+    decodeSampledBitmap(ImageDecoder.createSource(ByteBuffer.wrap(bytes)), PREVIEW_MAX_PX)
+        ?.asImageBitmap()
 
 private const val PREVIEW_MAX_PX = 1080
 

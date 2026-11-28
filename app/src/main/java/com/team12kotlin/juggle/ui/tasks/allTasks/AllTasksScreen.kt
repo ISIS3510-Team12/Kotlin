@@ -1,5 +1,7 @@
 package com.team12kotlin.juggle.ui.tasks.allTasks
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -70,27 +70,32 @@ fun AllTasksScreen(
         }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {
-            Column(
+            // Only the cards on screen are composed, instead of every task at once.
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(innerPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                contentPadding = PaddingValues(bottom = 136.dp)
             ) {
                 uiState.errorMessage?.let { message ->
-                    ErrorCard(
-                        message = message,
-                        onRetry = viewModel::loadTasks,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                    item {
+                        ErrorCard(
+                            message = message,
+                            onRetry = viewModel::loadTasks,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+                item {
+                    ButtonGroupFilter(
+                        filters = AllTasksFilter.entries.map { it.label },
+                        selectedIndex = uiState.selectedFilterIndex,
+                        onFilterSelected = { viewModel.onFilterSelected(it) },
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
                     )
                 }
-                ButtonGroupFilter(
-                    filters = AllTasksFilter.entries.map { it.label },
-                    selectedIndex = uiState.selectedFilterIndex,
-                    onFilterSelected = { viewModel.onFilterSelected(it) },
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
-                )
-                uiState.tasks.forEach { task ->
+                items(uiState.tasks, key = { it.id }) { task ->
                     TaskCard(
                         task = task,
                         onClick = {
@@ -99,7 +104,6 @@ fun AllTasksScreen(
                         }
                     )
                 }
-                Spacer(modifier = Modifier.height(136.dp))
             }
         }
     }

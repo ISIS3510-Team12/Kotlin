@@ -1,12 +1,13 @@
 package com.team12kotlin.juggle.ui.profile.notifications
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -77,35 +78,31 @@ fun NotificationsContent(
         }
     ) { innerPadding ->
         LoadingContent(isLoading = uiState.isLoading) {
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState()),
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 10.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .padding(horizontal = 5.dp, vertical = 10.dp)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(0.dp, Alignment.Top),
-                    horizontalAlignment = Alignment.Start,
-                ) {
-                    uiState.errorMessage?.let { message ->
+                uiState.errorMessage?.let { message ->
+                    item {
                         ErrorCard(
                             message = message,
                             onRetry = onRetry
                         )
                     }
-                    if (uiState.notifications.isNotEmpty()) {
-                        uiState.notifications.forEach { notification ->
-                            NotificationCard(
-                                notification= notification,
-                                showDismiss = true,
-                                outlined = true,
-                                onDismiss = { onNotificationDismissed(notification.id) }
-                            )
-                        }
-                    } else if (!uiState.isLoading && !uiState.loadFailed) {
+                }
+                if (uiState.notifications.isNotEmpty()) {
+                    items(uiState.notifications) { notification ->
+                        NotificationCard(
+                            notification= notification,
+                            showDismiss = true,
+                            outlined = true,
+                            onDismiss = { onNotificationDismissed(notification.id) }
+                        )
+                    }
+                } else if (!uiState.isLoading && !uiState.loadFailed) {
+                    item {
                         Text(
                             text = "No pending notifications",
                             style = MaterialTheme.typography.bodyLarge,

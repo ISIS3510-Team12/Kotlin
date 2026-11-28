@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.team12kotlin.juggle.BuildConfig
 import com.team12kotlin.juggle.data.local.AppDatabase
 import com.team12kotlin.juggle.data.local.CacheConverter
+import com.team12kotlin.juggle.data.local.DeviceGallery
 import com.team12kotlin.juggle.data.local.EvidenceCache
 import com.team12kotlin.juggle.data.local.MIGRATION_1_2
 import com.team12kotlin.juggle.data.local.NotificationsCache
@@ -22,6 +23,7 @@ import com.team12kotlin.juggle.data.repository.AuthRepository
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.LocationRepository
 import com.team12kotlin.juggle.data.repository.NotificationRepository
+import com.team12kotlin.juggle.data.repository.ProjectPhotoRepository
 import com.team12kotlin.juggle.data.repository.ProjectRepository
 import com.team12kotlin.juggle.data.repository.SmartRepository
 import com.team12kotlin.juggle.data.repository.TaskRepository
@@ -174,6 +176,9 @@ object Dependencies {
                 authRepository.currentUserId()
             ).also { projectRepositoryInstance = it }
         }
+
+    val projectPhotoRepository: ProjectPhotoRepository by lazy { ProjectPhotoRepository(api, appContext) }
+    val deviceGallery: DeviceGallery by lazy { DeviceGallery(appContext) }
 
     fun resetSessionScopedRepositories() {
         taskRepositoryInstance = null

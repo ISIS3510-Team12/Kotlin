@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
                 AppRoot()
             }
         }
+        window.setBackgroundDrawable(null)
     }
 
     /**

@@ -127,6 +127,13 @@ enum class NavigationDestination(
         icon = MaterialSymbols.OutlinedFilled.Groups,
     ),
 
+    ProjectGallery(
+        route = "projects/{projectId}/photos",
+        label = "Gallery",
+        contentDescription = "Gallery",
+        icon = MaterialSymbols.OutlinedFilled.Groups,
+    ),
+
     Calendar(
         route = "calendar",
         label = "Calendar",

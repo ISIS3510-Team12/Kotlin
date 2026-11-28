@@ -43,6 +43,7 @@ import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.onboarding.OnboardingScreen
 import com.team12kotlin.juggle.ui.projects.create.CreateProjectScreen
 import com.team12kotlin.juggle.ui.projects.detail.ProjectDetailScreen
+import com.team12kotlin.juggle.ui.projects.photos.ProjectGalleryScreen
 import com.team12kotlin.juggle.ui.profile.ProfileScreen
 import com.team12kotlin.juggle.ui.profile.information.ProfileInformationScreen
 import com.team12kotlin.juggle.ui.profile.notifications.NotificationsScreen
@@ -387,6 +388,14 @@ fun AppRoot(
                                 launchSingleTop = true
                             }
                         },
+                        onPhotosClick = {
+                            navController.navigate(
+                                NavigationDestination.ProjectGallery.route
+                                    .replace("{projectId}", projectId.toString())
+                            ) {
+                                launchSingleTop = true
+                            }
+                        },
                         onEditProjectClick = {projectId ->
                             navController.navigate("projects/$projectId/edit")
                         },
@@ -395,6 +404,15 @@ fun AppRoot(
                                 launchSingleTop = true
                             }
                         }
+                    )
+                }
+                composable(
+                    route = NavigationDestination.ProjectGallery.route,
+                    arguments = listOf(navArgument("projectId") { type = NavType.IntType })
+                ) {
+                    ProjectGalleryScreen(
+                        modifier = Modifier.fillMaxSize(),
+                        onBackClick = { navController.popBackStack() }
                     )
                 }
                 composable(

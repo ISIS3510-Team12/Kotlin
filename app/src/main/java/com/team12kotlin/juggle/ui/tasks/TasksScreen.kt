@@ -1,5 +1,9 @@
 package com.team12kotlin.juggle.ui.tasks
 
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -144,74 +146,78 @@ fun TasksScreen(
             }
         ) { innerPadding ->
             LoadingContent(isLoading = uiState.isLoading) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .padding(innerPadding)
-                        .verticalScroll(rememberScrollState())
+                        .fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 136.dp)
                 ) {
-                    uiState.errorMessage?.let { message ->
-                        ErrorCard(
-                            message = message,
-                            onRetry = viewModel::loadGroups,
-                            modifier = Modifier.padding(horizontal = 18.dp)
-                        )
-                    }
-                    if (uiState.selectedGroupId != null) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 18.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    text = "Current Group"
-                                )
-                                Text(
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    text = uiState.currentGroup
-                                )
-                            }
-                            TextButton(
-                                onClick = {
-                                    viewModel.onEditGroupClick()
-                                    uiState.selectedGroupId?.let(onEditGroupClick)
-                                },
-                                enabled = !isOffline,
-
+                    item {
+                        uiState.errorMessage?.let { message ->
+                            ErrorCard(
+                                message = message,
+                                onRetry = viewModel::loadGroups,
+                                modifier = Modifier.padding(horizontal = 18.dp)
+                            )
+                        }
+                        if (uiState.selectedGroupId != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 18.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Icon(
-                                    imageVector = MaterialSymbols.OutlinedFilled.Edit,
-                                    contentDescription = "Edit group"
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Edit group")
+                                Column {
+                                    Text(
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        text = "Current Group"
+                                    )
+                                    Text(
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        text = uiState.currentGroup
+                                    )
+                                }
+                                TextButton(
+                                    onClick = {
+                                        viewModel.onEditGroupClick()
+                                        uiState.selectedGroupId?.let(onEditGroupClick)
+                                    },
+                                    enabled = !isOffline,
+
+                                ) {
+                                    Icon(
+                                        imageVector = MaterialSymbols.OutlinedFilled.Edit,
+                                        contentDescription = "Edit group"
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Edit group")
+                                }
                             }
                         }
+                        OutlinedTextField(
+                            value = uiState.query,
+                            onValueChange = viewModel::onQueryChange,
+                            singleLine = true,
+                            shape = RoundedCornerShape(100.dp),
+                            placeholder = { Text("Search for a task...") },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = MaterialSymbols.Outlined.Search,
+                                    contentDescription = "Search"
+                                )
+                            },
+                            modifier = Modifier
+                                .padding(20.dp)
+                                .fillMaxWidth()
+                        )
                     }
-                    OutlinedTextField(
-                        value = uiState.query,
-                        onValueChange = viewModel::onQueryChange,
-                        singleLine = true,
-                        shape = RoundedCornerShape(100.dp),
-                        placeholder = { Text("Search for a task...") },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = MaterialSymbols.Outlined.Search,
-                                contentDescription = "Search"
-                            )
-                        },
-                        modifier = Modifier
-                            .padding(20.dp)
-                            .fillMaxWidth()
-                    )
                     val couldNotLoad = uiState.loadFailed
                     val hasAnyTasks =
                         uiState.filteredOwnTasks.isNotEmpty() || uiState.filteredGroupTasks.isNotEmpty()
                     if (hasAnyTasks || !couldNotLoad) {
-                        TasksSection(
+                        tasksSection(
+                            key = "own",
                             title = "Your pending tasks",
                             tasks = uiState.filteredOwnTasks,
                             emptyMessage = "No pending tasks.",
@@ -220,7 +226,8 @@ fun TasksScreen(
                                 onTaskClick(it)
                             }
                         )
-                        TasksSection(
+                        tasksSection(
+                            key = "group",
                             title = "Pending group tasks",
                             tasks = uiState.filteredGroupTasks,
                             emptyMessage = "No pending group tasks.",
@@ -230,22 +237,21 @@ fun TasksScreen(
                             }
                         )
                     }
-                    Spacer(modifier = Modifier.height(136.dp))
                 }
             }
         }
     }
 }
 
-@Composable
-private fun TasksSection(
+// A title and its tasks inside the screen's lazy list. A task can be in both sections, so keys are per section.
+private fun LazyListScope.tasksSection(
+    key: String,
     title: String,
     tasks: List<Task>,
     emptyMessage: String,
-    onTaskClick: (Task) -> Unit,
-    modifier: Modifier = Modifier
+    onTaskClick: (Task) -> Unit
 ) {
-    Column(modifier = modifier) {
+    item(key = "$key-title") {
         Text(
             text = title,
             modifier = Modifier.padding(horizontal = 18.dp),
@@ -259,12 +265,12 @@ private fun TasksSection(
                 modifier = Modifier.padding(horizontal = 18.dp, vertical = 4.dp)
             )
         }
-        tasks.forEach { task ->
-            TaskCard(
-                task = task,
-                onClick = { onTaskClick(task) }
-            )
-        }
+    }
+    items(tasks, key = { "$key-${it.id}" }) { task ->
+        TaskCard(
+            task = task,
+            onClick = { onTaskClick(task) }
+        )
     }
 }
 
