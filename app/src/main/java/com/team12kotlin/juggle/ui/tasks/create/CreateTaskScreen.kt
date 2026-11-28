@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.team12kotlin.juggle.ui.telemetry.ScreenName
 import com.team12kotlin.juggle.ui.telemetry.TrackScreenLoad
@@ -53,6 +54,11 @@ fun CreateTaskScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     TrackScreenLoad(ScreenName.CreateTask, uiState.isLoading)
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshGroupData()
+        onPauseOrDispose { }
+    }
 
     val context = LocalContext.current
     LaunchedEffect(uiState.createdTaskId) {

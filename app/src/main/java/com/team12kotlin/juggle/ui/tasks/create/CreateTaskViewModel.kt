@@ -147,6 +147,11 @@ class CreateTaskViewModel(
         }
     }
 
+    fun refreshGroupData() {
+        val groupId = _uiState.value.selectedGroupId ?: return
+        loadGroupData(groupId)
+    }
+
     fun onGroupSelected(groupName: String) {
         val group = _uiState.value.groups.firstOrNull { it.name == groupName }
         _uiState.update {
