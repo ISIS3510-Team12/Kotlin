@@ -47,7 +47,7 @@ fun DecisionWheel(
         colors.inversePrimary
     )
     val measurer = rememberTextMeasurer()
-    val labelStyle = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold)
+    val labelStyle = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
     val labelWidth = with(LocalDensity.current) { ((size - 28.dp) / 2 * LABEL_RADIUS).roundToPx() }
     val labels = remember(options, labelStyle, labelWidth) {
         options.map {

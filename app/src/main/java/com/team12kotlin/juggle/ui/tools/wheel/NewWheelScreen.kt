@@ -9,12 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,13 +27,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Check
 import com.composables.icons.materialsymbols.outlined.Close
 import com.composables.icons.materialsymbols.outlined.Delete
@@ -155,14 +152,11 @@ private fun NewWheelContent(
                 }
             }
 
-            FilledTonalButton(
-                onClick = onAddOptionClick,
+            AddOptionButton(
                 enabled = uiState.canAddOption,
+                onClick = onAddOptionClick,
                 modifier = Modifier.padding(horizontal = 18.dp)
-            ) {
-                Icon(imageVector = MaterialSymbols.Outlined.Add, contentDescription = null)
-                Text(text = "Add option", modifier = Modifier.padding(start = 4.dp))
-            }
+            )
 
             uiState.errorMessage?.let { message ->
                 ErrorCard(message = message, modifier = Modifier.padding(horizontal = 16.dp))
@@ -196,11 +190,7 @@ private fun OptionRow(
     modifier: Modifier = Modifier,
     onRemove: () -> Unit = {}
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-    ) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(start = 16.dp, end = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -209,7 +199,7 @@ private fun OptionRow(
             Text(
                 text = text,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

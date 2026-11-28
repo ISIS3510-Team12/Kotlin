@@ -12,14 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,13 +38,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.composables.icons.materialsymbols.MaterialSymbols
-import com.composables.icons.materialsymbols.outlined.Add
 import com.composables.icons.materialsymbols.outlined.Delete
 import com.composables.icons.materialsymbols.outlined.Edit
 import com.composables.icons.materialsymbols.outlined.Replay
@@ -269,13 +266,10 @@ private fun WheelEditorContent(
                             onDelete = { onDeleteOption(option) }
                         )
                     }
-                    FilledTonalButton(
-                        onClick = onAddOptionClick,
-                        enabled = uiState.canAddOption && !uiState.isSpinning
-                    ) {
-                        Icon(imageVector = MaterialSymbols.Outlined.Add, contentDescription = null)
-                        Text(text = "Add option", modifier = Modifier.padding(start = 4.dp))
-                    }
+                    AddOptionButton(
+                        enabled = uiState.canAddOption && !uiState.isSpinning,
+                        onClick = onAddOptionClick
+                    )
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -317,7 +311,7 @@ private fun WheelEditorContent(
                 )
                 Text(
                     text = result.text,
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.primary
                 )
                 Button(onClick = onSpinAgain, modifier = Modifier.fillMaxWidth()) {
@@ -340,11 +334,7 @@ private fun OptionRow(
     onEdit: () -> Unit = {},
     onDelete: () -> Unit = {}
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
-    ) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(start = 16.dp, end = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -353,7 +343,7 @@ private fun OptionRow(
             Text(
                 text = option.text,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
