@@ -108,9 +108,7 @@ fun CalendarScreen(
         isLoading = uiState.isLoading,
         errorMessage = uiState.errorMessage,
         dayNotLoaded = uiState.dayNotLoaded,
-        showCachedData = isOnline == false &&
-            (if (uiState.viewMode == CalendarViewMode.Month) uiState.monthTasks else uiState.tasksByDate)
-                .isNotEmpty(),
+        showCachedData = isOnline == false && uiState.visibleTasks.isNotEmpty(),
         isOffline = isOnline == false,
         onProfileClick = onProfileClick,
         onDateSelected = viewModel::onDateSelected,

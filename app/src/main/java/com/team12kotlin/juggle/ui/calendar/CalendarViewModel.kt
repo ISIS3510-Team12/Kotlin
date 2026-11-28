@@ -42,8 +42,15 @@ data class CalendarUiState(
     val monthTasks: Map<LocalDate, List<Task>> = emptyMap(),
     val isRefreshing: Boolean = false
 ) {
+    // Tasks backing the current view mode. A new mode has to be added here.
+    val visibleTasks: Map<LocalDate, List<Task>>
+        get() = when (viewMode) {
+            CalendarViewMode.Week -> tasksByDate
+            CalendarViewMode.Month -> monthTasks
+        }
+
     val tasksForSelectedDate: List<Task>
-        get() = (if (viewMode == CalendarViewMode.Month) monthTasks else tasksByDate)[selectedDate].orEmpty()
+        get() = visibleTasks[selectedDate].orEmpty()
 }
 
 class CalendarViewModel(
