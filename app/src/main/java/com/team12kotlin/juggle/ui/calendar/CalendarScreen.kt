@@ -65,6 +65,7 @@ import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.components.ErrorCard
+import com.team12kotlin.juggle.ui.components.ViewToggle
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
 import com.team12kotlin.juggle.ui.tasks.TaskCard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
@@ -168,8 +169,10 @@ private fun CalendarContent(
                 .verticalScroll(rememberScrollState())
         ) {
             ViewToggle(
-                mode = viewMode,
-                onModeChange = onViewModeChange,
+                entries = CalendarViewMode.entries,
+                selected = viewMode,
+                label = { it.name },
+                onSelect = onViewModeChange,
                 modifier = Modifier.padding(start = 20.dp, top = 6.dp, end = 20.dp, bottom = 2.dp)
             )
 
@@ -274,40 +277,6 @@ private fun CalendarContent(
                         sheetOpen = false
                         onTaskClick(it)
                     }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ViewToggle(
-    mode: CalendarViewMode,
-    onModeChange: (CalendarViewMode) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(3.dp)
-    ) {
-        CalendarViewMode.entries.forEach { entry ->
-            val selected = entry == mode
-            Box(
-                modifier = Modifier
-                    .width(88.dp)
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(17.dp))
-                    .background(if (selected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onModeChange(entry) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = entry.name,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = if (selected) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
