@@ -1,5 +1,6 @@
 package com.team12kotlin.juggle.ui.tasks
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyListScope
@@ -23,11 +24,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -47,10 +54,12 @@ import com.composables.icons.materialsymbols.outlined.Search
 import com.composables.icons.materialsymbols.outlinedfilled.Edit
 import com.team12kotlin.juggle.ui.components.ErrorCard
 import com.team12kotlin.juggle.ui.components.LoadingContent
+import com.team12kotlin.juggle.ui.components.ViewToggle
 import com.team12kotlin.juggle.ui.connectivity.RefreshOnReconnect
 import com.team12kotlin.juggle.ui.connectivity.rememberIsOnline
 import com.team12kotlin.juggle.ui.dto.Task
 import com.team12kotlin.juggle.ui.navbar.NavigationDestination
+import com.team12kotlin.juggle.ui.tasks.board.TaskBoard
 import com.team12kotlin.juggle.ui.theme.JuggleTheme
 import com.team12kotlin.juggle.ui.topbar.AppTopBar
 import kotlinx.coroutines.FlowPreview
@@ -85,6 +94,23 @@ fun TasksScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.moveResult) {
+        when (val result = uiState.moveResult ?: return@LaunchedEffect) {
+            is MoveResult.Moved -> {
+                val answer = snackbarHostState.showSnackbar(
+                    message = "Moved to ${result.task.status.label}",
+                    actionLabel = "Undo",
+                    duration = SnackbarDuration.Long
+                )
+                if (answer == SnackbarResult.ActionPerformed) viewModel.moveTask(result.task, result.from)
+            }
+            MoveResult.Offline -> snackbarHostState.showSnackbar(OFFLINE_MOVE_MESSAGE)
+            MoveResult.Failed -> snackbarHostState.showSnackbar("We couldn't move the task. Try again.")
+        }
+        viewModel.onMoveResultShown()
+    }
+
     // The "Your Groups" drawer lives in the Tasks view and opens from the top bar menu button.
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -118,8 +144,12 @@ fun TasksScreen(
                     onProfileClick = onProfileClick
                 )
             },
+            snackbarHost = {
+                SnackbarHost(snackbarHostState, modifier = Modifier.padding(bottom = 104.dp))
+            },
             floatingActionButton = {
-                if (uiState.selectedGroupId != null) {
+                // The board uses the whole screen, so the button would cover its columns.
+                if (uiState.selectedGroupId != null && uiState.viewMode == TasksViewMode.List) {
                     ExtendedFloatingActionButton(
                         onClick = {
                             viewModel.onCreateTask()
@@ -146,100 +176,158 @@ fun TasksScreen(
             }
         ) { innerPadding ->
             LoadingContent(isLoading = uiState.isLoading) {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 136.dp)
-                ) {
-                    item {
-                        uiState.errorMessage?.let { message ->
-                            ErrorCard(
-                                message = message,
-                                onRetry = viewModel::loadGroups,
-                                modifier = Modifier.padding(horizontal = 18.dp)
+                val tasksHeader: @Composable () -> Unit = {
+                    TasksHeader(
+                        uiState = uiState,
+                        isOffline = isOffline,
+                        onRetry = viewModel::loadGroups,
+                        onEditGroupClick = {
+                            viewModel.onEditGroupClick()
+                            uiState.selectedGroupId?.let(onEditGroupClick)
+                        },
+                        onViewModeChange = { mode ->
+                            if (mode == TasksViewMode.Board) viewModel.showBoard() else viewModel.showList()
+                        },
+                        onQueryChange = viewModel::onQueryChange
+                    )
+                }
+
+                Crossfade(targetState = uiState.viewMode, label = "tasksView") { mode ->
+                    if (mode == TasksViewMode.Board && uiState.selectedGroupId != null) {
+                        Column(
+                            modifier = Modifier
+                                .padding(innerPadding)
+                                .fillMaxSize()
+                        ) {
+                            tasksHeader()
+                            TaskBoard(
+                                uiState = uiState,
+                                isOffline = isOffline,
+                                modifier = Modifier.weight(1f),
+                                onTaskClick = {
+                                    viewModel.onTaskClick(it)
+                                    onTaskClick(it)
+                                },
+                                onMoveTask = viewModel::moveTask,
+                                onOfflineMoveAttempt = {
+                                    scope.launch { snackbarHostState.showSnackbar(OFFLINE_MOVE_MESSAGE) }
+                                }
                             )
                         }
-                        if (uiState.selectedGroupId != null) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 18.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
-                                    Text(
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        text = "Current Group"
-                                    )
-                                    Text(
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        text = uiState.currentGroup
-                                    )
-                                }
-                                TextButton(
-                                    onClick = {
-                                        viewModel.onEditGroupClick()
-                                        uiState.selectedGroupId?.let(onEditGroupClick)
-                                    },
-                                    enabled = !isOffline,
-
-                                ) {
-                                    Icon(
-                                        imageVector = MaterialSymbols.OutlinedFilled.Edit,
-                                        contentDescription = "Edit group"
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Edit group")
-                                }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .padding(innerPadding)
+                                .fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 136.dp)
+                        ) {
+                            item { tasksHeader() }
+                            val couldNotLoad = uiState.loadFailed
+                            val hasAnyTasks =
+                                uiState.filteredOwnTasks.isNotEmpty() || uiState.filteredGroupTasks.isNotEmpty()
+                            if (hasAnyTasks || !couldNotLoad) {
+                                tasksSection(
+                                    key = "own",
+                                    title = "Your pending tasks",
+                                    tasks = uiState.filteredOwnTasks,
+                                    emptyMessage = "No pending tasks.",
+                                    onTaskClick = {
+                                        viewModel.onTaskClick(it)
+                                        onTaskClick(it)
+                                    }
+                                )
+                                tasksSection(
+                                    key = "group",
+                                    title = "Pending group tasks",
+                                    tasks = uiState.filteredGroupTasks,
+                                    emptyMessage = "No pending group tasks.",
+                                    onTaskClick = {
+                                        viewModel.onTaskClick(it)
+                                        onTaskClick(it)
+                                    }
+                                )
                             }
                         }
-                        OutlinedTextField(
-                            value = uiState.query,
-                            onValueChange = viewModel::onQueryChange,
-                            singleLine = true,
-                            shape = RoundedCornerShape(100.dp),
-                            placeholder = { Text("Search for a task...") },
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = MaterialSymbols.Outlined.Search,
-                                    contentDescription = "Search"
-                                )
-                            },
-                            modifier = Modifier
-                                .padding(20.dp)
-                                .fillMaxWidth()
-                        )
-                    }
-                    val couldNotLoad = uiState.loadFailed
-                    val hasAnyTasks =
-                        uiState.filteredOwnTasks.isNotEmpty() || uiState.filteredGroupTasks.isNotEmpty()
-                    if (hasAnyTasks || !couldNotLoad) {
-                        tasksSection(
-                            key = "own",
-                            title = "Your pending tasks",
-                            tasks = uiState.filteredOwnTasks,
-                            emptyMessage = "No pending tasks.",
-                            onTaskClick = {
-                                viewModel.onTaskClick(it)
-                                onTaskClick(it)
-                            }
-                        )
-                        tasksSection(
-                            key = "group",
-                            title = "Pending group tasks",
-                            tasks = uiState.filteredGroupTasks,
-                            emptyMessage = "No pending group tasks.",
-                            onTaskClick = {
-                                viewModel.onTaskClick(it)
-                                onTaskClick(it)
-                            }
-                        )
                     }
                 }
             }
         }
+    }
+}
+
+private const val OFFLINE_MOVE_MESSAGE = "No connection. Reconnect to move this task."
+
+@Composable
+private fun TasksHeader(
+    uiState: TasksUiState,
+    isOffline: Boolean,
+    onRetry: () -> Unit,
+    onEditGroupClick: () -> Unit,
+    onViewModeChange: (TasksViewMode) -> Unit,
+    onQueryChange: (String) -> Unit
+) {
+    Column {
+        uiState.errorMessage?.let { message ->
+            ErrorCard(
+                message = message,
+                onRetry = onRetry,
+                modifier = Modifier.padding(horizontal = 18.dp)
+            )
+        }
+        if (uiState.selectedGroupId != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        style = MaterialTheme.typography.headlineMedium,
+                        text = "Current Group"
+                    )
+                    Text(
+                        style = MaterialTheme.typography.headlineSmall,
+                        text = uiState.currentGroup
+                    )
+                }
+                TextButton(
+                    onClick = onEditGroupClick,
+                    enabled = !isOffline,
+                ) {
+                    Icon(
+                        imageVector = MaterialSymbols.OutlinedFilled.Edit,
+                        contentDescription = "Edit group"
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Edit group")
+                }
+            }
+            ViewToggle(
+                entries = TasksViewMode.entries,
+                selected = uiState.viewMode,
+                label = { it.label },
+                onSelect = onViewModeChange,
+                modifier = Modifier.padding(start = 18.dp, top = 6.dp, end = 18.dp)
+            )
+        }
+        OutlinedTextField(
+            value = uiState.query,
+            onValueChange = onQueryChange,
+            singleLine = true,
+            shape = RoundedCornerShape(100.dp),
+            placeholder = { Text("Search for a task...") },
+            trailingIcon = {
+                Icon(
+                    imageVector = MaterialSymbols.Outlined.Search,
+                    contentDescription = "Search"
+                )
+            },
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
+        )
     }
 }
 
