@@ -10,7 +10,7 @@ import com.team12kotlin.juggle.ui.dto.ProjectCreateRequest
 import com.team12kotlin.juggle.ui.utils.ProjectFieldLimits
 import com.team12kotlin.juggle.utils.toIsoDateTime
 import com.team12kotlin.juggle.ui.utils.toUserMessage
-import com.team12kotlin.juggle.utils.FormDraftCache
+import com.team12kotlin.juggle.data.local.cache_structs.FormDraftCache
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.team12kotlin.juggle.data.Dependencies
 import com.team12kotlin.juggle.data.repository.GroupRepository
 import com.team12kotlin.juggle.data.repository.UserRepository
-import com.team12kotlin.juggle.utils.FormDraftCache
+import com.team12kotlin.juggle.data.local.cache_structs.FormDraftCache
 import com.team12kotlin.juggle.ui.dto.User
 import com.team12kotlin.juggle.ui.utils.GroupFieldLimits
 import com.team12kotlin.juggle.ui.utils.toUserMessage

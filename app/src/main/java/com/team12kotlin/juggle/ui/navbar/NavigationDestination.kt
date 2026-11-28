@@ -5,6 +5,7 @@ import com.composables.icons.materialsymbols.MaterialSymbols
 import com.composables.icons.materialsymbols.outlined.Account_circle
 import com.composables.icons.materialsymbols.outlined.Calendar_month
 import com.composables.icons.materialsymbols.outlined.Checklist
+import com.composables.icons.materialsymbols.outlined.Design_services
 import com.composables.icons.materialsymbols.outlined.Home
 import com.composables.icons.materialsymbols.outlined.Location_on
 import com.composables.icons.materialsymbols.outlined.Notifications
@@ -167,6 +168,21 @@ enum class NavigationDestination(
         label = "Location reminders",
         contentDescription = "Location reminders",
         icon = MaterialSymbols.Outlined.Location_on
+    ),
+
+    Tools(
+        route = "tools",
+        label = "Tools",
+        contentDescription = "Tools",
+        icon = MaterialSymbols.Outlined.Design_services,
+    ),
+
+    PomodoroTimer(
+        route = "tools/pomodoro",
+        label = "Pomodoro timer",
+        contentDescription = "Pomodoro timer",
+        icon = MaterialSymbols.Outlined.Design_services,
+        showInNavBar = true
     );
 
     companion object {

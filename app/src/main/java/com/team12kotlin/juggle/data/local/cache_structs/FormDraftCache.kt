@@ -1,4 +1,4 @@
-package com.team12kotlin.juggle.utils
+package com.team12kotlin.juggle.data.local.cache_structs
 
 import java.util.concurrent.ConcurrentHashMap
 
